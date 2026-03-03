@@ -1,0 +1,22 @@
+thietkeweb_cuoiki
+
+# dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+server/.env
+client/.env
+
+# Next.js build output
+server/.next/
+client/dist/
+
+# System files
+.DS_Store
