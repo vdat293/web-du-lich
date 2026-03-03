@@ -24,7 +24,7 @@ export async function POST(req) {
 
         // Name and default values for user
         const fullName = `${firstName} ${lastName}`;
-        const defaultAvatar = 'https://i.pravatar.cc/150?img=12'; // Default avatar
+        const defaultAvatar = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; // Default unknown people avatar
 
         // Insert into users table
         const [userResult] = await db.execute(

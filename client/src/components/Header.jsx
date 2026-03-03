@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 export default function Header() {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
@@ -20,10 +22,24 @@ export default function Header() {
     const [regSuccess, setRegSuccess] = useState('');
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('currentUser');
-        if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
-        }
+        const checkUser = () => {
+            const storedUser = localStorage.getItem('currentUser');
+            if (storedUser) {
+                setCurrentUser(JSON.parse(storedUser));
+            } else {
+                setCurrentUser(null);
+            }
+        };
+
+        // Check initially
+        checkUser();
+
+        // Listen for dynamic updates (like from the Profile page)
+        window.addEventListener('userUpdated', checkUser);
+
+        return () => {
+            window.removeEventListener('userUpdated', checkUser);
+        };
     }, []);
 
     const handleLogin = async (e) => {
@@ -104,6 +120,9 @@ export default function Header() {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');
         localStorage.removeItem('token');
+        if (location.pathname === '/profile') {
+            navigate('/');
+        }
     };
 
     const openLogin = () => {
@@ -171,7 +190,7 @@ export default function Header() {
                                     </div>
                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-neutral-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                                         <div className="p-2 flex flex-col">
-                                            <a href="#" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Thông tin</a>
+                                            <Link to="/profile" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Thông tin</Link>
                                             <a href="#" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Lịch sử</a>
                                             <hr className="my-1 border-neutral-100" />
                                             <button onClick={handleLogout} className="px-4 py-2 hover:bg-red-50 text-left rounded-lg text-sm text-red-500 font-medium transition-colors">
@@ -227,9 +246,9 @@ export default function Header() {
                                             <span className="text-lg font-medium text-charcoal">{currentUser.name}</span>
                                         </div>
                                         <div className="flex flex-col gap-3">
-                                            <a href="#" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
+                                            <Link to="/profile" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
                                                 Thông tin
-                                            </a>
+                                            </Link>
                                             <a href="#" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
                                                 Lịch sử
                                             </a>
