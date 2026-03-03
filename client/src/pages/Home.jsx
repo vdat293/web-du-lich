@@ -1,12 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { properties } from '../mockup_data/data';
 import Header from '../components/Header';
 
 export default function Home() {
+  const navigate = useNavigate();
   const containerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   const featuredProperties = properties.slice(0, 10);
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/search');
+    }
+  };
 
   const scrollToIndex = (index) => {
     if (!containerRef.current) return;
@@ -81,6 +91,9 @@ export default function Home() {
                         className="flex items-center h-14 px-5 rounded-xl bg-cream/50 hover:bg-cream transition-colors duration-300">
                         <span className="material-symbols-outlined text-accent mr-3">location_on</span>
                         <input type="text" id="home-search-input" placeholder="Bạn muốn đến đâu?"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit()}
                           className="search-input w-full bg-transparent text-charcoal placeholder-warm-gray text-sm font-medium border-none focus:ring-0" />
                       </div>
                     </div>
@@ -88,6 +101,7 @@ export default function Home() {
                     {/* Search Button */}
                     <div className="md:col-span-3">
                       <button id="home-search-btn"
+                        onClick={handleSearchSubmit}
                         className="btn-premium flex items-center justify-center w-full h-14 bg-primary rounded-xl text-white hover:bg-primary-light transition-all duration-300 gap-2">
                         <span className="material-symbols-outlined">search</span>
                         <span className="font-medium">Tìm kiếm</span>
@@ -101,7 +115,7 @@ export default function Home() {
             {/* Scroll Indicator */}
             <div
               className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce flex flex-col items-center gap-1 cursor-pointer"
-              onClick="document.getElementById('featured-properties-section').scrollIntoView({behavior: 'smooth'})">
+              onClick={() => document.getElementById('featured-properties-section')?.scrollIntoView({ behavior: 'smooth' })}>
               <span className="text-white/70 text-sm font-medium">Cuộn xuống</span>
               <span className="material-symbols-outlined text-white/70">keyboard_arrow_down</span>
             </div>
@@ -219,7 +233,7 @@ export default function Home() {
               {/* Bento Grid Layout */}
               <div className="grid grid-cols-12 gap-4 md:gap-6">
                 {/* Large Card - Đà Lạt */}
-                <div
+                <Link to="/search?q=Đà Lạt"
                   className="destination-card col-span-12 md:col-span-7 group relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden cursor-pointer">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0L8bkydJAWJQx57Q7ksAuRbRKUZW-AaThzJqlgXG9ZFj7K_C_egSpOJC0frng8q2pAte29kmGRscuoqw7ZKibcuo1zkX2i824MO-EDhBlFs1ob5lNT-CffvDv1qBFBSUvoFVxE4q7JDXa-3heKSAZQUoznqb9lVQFtL6Xzo7r4IQHyK6qhHhRIbHqHtV0Ki3-ZTXWkJyZ-C93wkZMlWiDk92z_ajZD7FW7NeIHONKeTIgNiShZmggJS5uB8h2nCJvln6JZmUKZh0"
@@ -231,17 +245,17 @@ export default function Home() {
                     <p className="text-white/80 text-sm max-w-md mb-4 hidden md:block">Thành phố ngàn hoa với khí hậu mát mẻ
                       quanh năm, kiến trúc Pháp cổ kính và những đồi thông bạt ngàn.</p>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Chi tiết</span>
+                      <span className="text-sm font-medium">Khám phá</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
                   </div>
-                </div>
+                </Link>
 
                 {/* Stacked Cards - Right Column */}
                 <div className="col-span-12 md:col-span-5 flex flex-col gap-4 md:gap-6">
                   {/* Hội An */}
-                  <div
+                  <Link to="/search?q=Hội An"
                     className="destination-card group relative h-[200px] md:h-[240px] rounded-2xl overflow-hidden cursor-pointer">
                     <img
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuBju5E-lEj3S9JfZf4BuDj5tw5R7zj3UKtKeD92_Ld2HiXYdZaxorGPgL1Wxee_Y8E-31sjSOFIkm9YdMvdDJ2urdGoSFcDFmq2gCJqK3iozAaGyxMGcuVkjbxfyQJpveNeOWHxQkMRyTc-c8TaQvYRorcRE2CSbPu2QkJp3qpeWLEdHRfPXtLFvVvZXQqnOpxprV0IPceLElnK48uA8F30O6q8MCkHcv3_jsqbznqgZCWWY93Ys8qz-0rNLvx6rDijlzTTLM4lMyI"
@@ -250,15 +264,15 @@ export default function Home() {
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="font-display text-2xl font-semibold text-white mb-1">Hội An</h3>
                       <div className="flex items-center gap-2 text-white/90">
-                        <span className="text-sm">Chi tiết</span>
+                        <span className="text-sm">Khám phá</span>
                         <span
                           className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   {/* Sa Pa */}
-                  <div
+                  <Link to="/search?q=Sapa"
                     className="destination-card group relative h-[200px] md:h-[240px] rounded-2xl overflow-hidden cursor-pointer">
                     <img
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsmBn1nQdrbUfMUlMj1uxWLEF08mDrd7xq9XKEy_AoCwlB0dzHBDHg5gAMGhGpgy2hGCw5XFrTHsg1B2-wHKEIL6-9WAtZytd0VlBdQpTg5tzTv2r9rdkd5-BqMacj1DH5EZT1iyke0FUIoW3tnkykoGWf0A2E11lbGHB7_XMTrG5GsJues75F9ir1w2_cI2ewqRhYSYdWxRjKaQ1zd-2Vqjpx9BEPkDAH2DV0Se37GsjGFaAkNN8_Z_oCouFYSoSN2mULyq59Q78"
@@ -267,16 +281,16 @@ export default function Home() {
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="font-display text-2xl font-semibold text-white mb-1">Sapa</h3>
                       <div className="flex items-center gap-2 text-white/90">
-                        <span className="text-sm">Chi tiết</span>
+                        <span className="text-sm">Khám phá</span>
                         <span
                           className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
 
                 {/* Bottom Row */}
-                <div
+                <Link to="/search?q=Đà Nẵng"
                   className="destination-card col-span-6 md:col-span-4 group relative h-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer">
                   <img
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7oMe5tRZ5a-pGzlafYvkeRBdHwFT42LKg_hIBOxQBIUMpOwAUs9jg8ZR8Oi14xsh1lojzqWcKlV8BTiTVGb7bbDgWMzxnnBzV-Z5iVWVKPq-gB7A4RK2kLEsxXcggVi6C4Anjt0Zp7lAtO2M_pSp_Y-Lqa_OBdUHxozHyn5WBGAyDBAuBDGCf70TFkG1J0T_kmQSOFIPfCvNwUggTSwG6ieyM6FQb6TJH_BISPxoJ6G_nsnvw38xJJSyplqYdS3sJS6ujV-rT55w"
@@ -285,40 +299,40 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Đà Nẵng</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Chi tiết</span>
+                      <span className="text-sm font-medium">Khám phá</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
                   </div>
-                </div>
+                </Link>
 
-                <div
+                <Link to="/search?q=Phan Thiết"
                   className="destination-card col-span-6 md:col-span-4 group relative h-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer">
                   <img src="assets/phan_thiet.png" alt="Phan Thiết" className="image-zoom w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Phan Thiết</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Chi tiết</span>
+                      <span className="text-sm font-medium">Khám phá</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
                   </div>
-                </div>
+                </Link>
 
-                <div
+                <Link to="/search?q=Nha Trang"
                   className="destination-card col-span-12 md:col-span-4 group relative h-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer">
                   <img src="assets/nha_trang.png" alt="Nha Trang" className="image-zoom w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Nha Trang</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Chi tiết</span>
+                      <span className="text-sm font-medium">Khám phá</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
                   </div>
-                </div>
+                </Link>
               </div>
             </div>
           </section>

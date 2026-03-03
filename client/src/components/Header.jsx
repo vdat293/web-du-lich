@@ -291,10 +291,31 @@ export default function Header() {
                                     <input type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50" />
                                 </div>
 
+                                <div className="flex items-center justify-between text-sm">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" className="rounded border-neutral-300 text-primary focus:ring-primary" />
+                                        <span className="text-warm-gray">Ghi nhớ đăng nhập</span>
+                                    </label>
+                                    <a href="#" className="text-primary font-medium hover:underline">Quên mật khẩu?</a>
+                                </div>
+
                                 <button type="submit" className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20">
                                     Đăng nhập
                                 </button>
                             </form>
+
+                            <div className="mt-6 pt-6 border-t border-neutral-100">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button className="flex items-center justify-center gap-2 py-2.5 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
+                                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
+                                        <span className="text-sm font-medium text-charcoal">Google</span>
+                                    </button>
+                                    <button className="flex items-center justify-center gap-2 py-2.5 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors">
+                                        <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" className="w-5 h-5" alt="Facebook" />
+                                        <span className="text-sm font-medium text-charcoal">Facebook</span>
+                                    </button>
+                                </div>
+                            </div>
 
                             <p className="mt-8 text-center text-sm text-warm-gray">
                                 Chưa có tài khoản?{' '}
@@ -317,7 +338,7 @@ export default function Header() {
                         <div className="p-8">
                             <div className="text-center mb-8">
                                 <h2 className="font-display text-2xl font-bold text-charcoal mb-2">Tạo tài khoản mới</h2>
-                                <p className="text-warm-gray text-sm">Tham gia cộng đồng Aoklevart</p>
+                                <p className="text-warm-gray text-sm">Tham gia cộng đồng Aoklevart ngay hôm nay</p>
                             </div>
 
                             <form className="space-y-4" onSubmit={handleRegister}>
@@ -346,6 +367,10 @@ export default function Header() {
                                     Đăng ký tài khoản
                                 </button>
                             </form>
+
+                            <p className="mt-6 text-center text-xs text-warm-gray px-4">
+                                Bằng việc đăng ký, bạn đồng ý với <a href="#" className="text-primary hover:underline">Điều khoản dịch vụ</a> & <a href="#" className="text-primary hover:underline">Chính sách bảo mật</a> của chúng tôi.
+                            </p>
 
                             <p className="mt-8 text-center text-sm text-warm-gray">
                                 Đã có tài khoản?{' '}

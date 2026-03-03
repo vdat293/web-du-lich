@@ -6,6 +6,9 @@ import Header from '../components/Header';
 export default function Details() {
     const { id } = useParams();
     const [property, setProperty] = useState(null);
+    const [checkIn, setCheckIn] = useState('');
+    const [checkOut, setCheckOut] = useState('');
+    const [roomType, setRoomType] = useState('single');
 
     useEffect(() => {
         // Fetch property by id
@@ -20,6 +23,28 @@ export default function Details() {
     }, [id]);
 
     if (!property) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+
+    // Price calculations
+    const priceString = property.price.replace(/\./g, '').replace('₫', '');
+    const pricePerNightBase = parseInt(priceString) || 0;
+
+    let checkInDate = checkIn ? new Date(checkIn) : new Date();
+    let checkOutDate = checkOut ? new Date(checkOut) : new Date(Date.now() + 86400000); // 1 night default
+
+    if (isNaN(checkInDate.getTime())) checkInDate = new Date();
+    if (isNaN(checkOutDate.getTime())) checkOutDate = new Date(Date.now() + 86400000);
+
+    const timeDiff = checkOutDate - checkInDate;
+    const nights = Math.max(0, Math.ceil(timeDiff / (1000 * 3600 * 24))); // Fix negative nights returning 0
+
+    let roomMultiplier = 1;
+    if (roomType === 'double') roomMultiplier = 1.3;
+    if (roomType === 'quad') roomMultiplier = 1.5;
+
+    const pricePerNight = Math.round(pricePerNightBase * roomMultiplier);
+    const totalBase = pricePerNight * nights;
+    const serviceFee = Math.round(totalBase * 0.1);
+    const total = totalBase + serviceFee;
 
     return (
         <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
@@ -234,7 +259,7 @@ export default function Details() {
                                                         htmlFor="check-in">Nhận phòng</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                        id="check-in" type="date" />
+                                                        id="check-in" type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
                                                 </div>
                                                 <div className="p-3 bg-background-light dark:bg-background-dark">
                                                     <label
@@ -242,7 +267,7 @@ export default function Details() {
                                                         htmlFor="check-out">Trả phòng</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                        id="check-out" type="date" />
+                                                        id="check-out" type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
                                                 </div>
                                             </div>
                                             <div className="p-3 border border-neutral-500 dark:border-neutral-200 rounded-lg">
@@ -251,36 +276,36 @@ export default function Details() {
                                                     htmlFor="room-type">Loại phòng</label>
                                                 <select
                                                     className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                    id="room-type">
+                                                    id="room-type" value={roomType} onChange={(e) => setRoomType(e.target.value)}>
                                                     <option value="single">Phòng đơn</option>
                                                     <option value="double">Phòng đôi</option>
                                                     <option value="quad">Phòng 4 người</option>
                                                 </select>
                                             </div>
-                                            <a href="#" id="book-now-link" className="w-full">
+                                            <Link to={`/payment?id=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&roomType=${roomType}`} className="w-full">
                                                 <button
                                                     className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
                                                     <span>Đặt ngay</span>
                                                 </button>
-                                            </a>
+                                            </Link>
                                             <p className="text-center text-sm text-neutral-500 dark:text-neutral-200">
                                                 Bạn chưa bị
                                                 trừ tiền</p>
                                             <div
                                                 className="flex flex-col gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                                                 <div className="flex justify-between text-neutral-500 dark:text-neutral-200">
-                                                    <span id="price-calculation">0₫ x 0 đêm</span>
-                                                    <span id="price-total-base">0₫</span>
+                                                    <span id="price-calculation">{pricePerNight.toLocaleString('vi-VN')}₫ x {nights} đêm</span>
+                                                    <span id="price-total-base">{totalBase.toLocaleString('vi-VN')}₫</span>
                                                 </div>
                                                 <div className="flex justify-between text-neutral-500 dark:text-neutral-200">
-                                                    <span>Phí dịch vụ (10%)</span>
-                                                    <span id="service-fee">0₫</span>
+                                                    <span>Phí dịch vụ 10%</span>
+                                                    <span id="service-fee">{serviceFee.toLocaleString('vi-VN')}₫</span>
                                                 </div>
                                             </div>
                                             <div
                                                 className="flex justify-between font-bold text-neutral-700 dark:text-white pt-4 border-t border-neutral-200 dark:border-neutral-700">
                                                 <span>Tổng cộng</span>
-                                                <span id="total-price">0₫</span>
+                                                <span id="total-price">{total.toLocaleString('vi-VN')}₫</span>
                                             </div>
                                         </div>
                                     </div>
