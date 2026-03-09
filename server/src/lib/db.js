@@ -20,29 +20,34 @@ if (missingVars.length > 0) {
     console.error('👉 Hãy kiểm tra file server/.env đã được tạo đúng chưa. Xem README.md để biết cách cấu hình.');
 }
 
-// === Tạo connection pool với cấu hình tối ưu cho Cloud Database ===
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT, 10) || 22669,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    ssl: {
-        rejectUnauthorized: false
-    },
+// === Tạo connection pool với cấu hình Local Database ===
+const dbConfig = {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: parseInt(process.env.DB_PORT, 10) || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'web_du_lich',
     waitForConnections: true,
-    connectionLimit: 5,          // Giảm xuống 5 vì Aiven free tier giới hạn
-    queueLimit: 0,
-    connectTimeout: 30000,       // 30s timeout cho kết nối lần đầu (cloud DB chậm hơn local)
-    enableKeepAlive: true,       // Giữ kết nối sống, tránh bị cloud ngắt
-    keepAliveInitialDelay: 10000 // Ping sau mỗi 10s
-});
+    connectionLimit: 10,
+    queueLimit: 0
+};
+
+// Sử dụng global var trong Next.js Dev để tránh làm tràn kết nối DB khi Hot Reload
+let pool;
+if (process.env.NODE_ENV === 'production') {
+    pool = mysql.createPool(dbConfig);
+} else {
+    if (!global.mysqlPool) {
+        global.mysqlPool = mysql.createPool(dbConfig);
+    }
+    pool = global.mysqlPool;
+}
 
 // === Test kết nối khi khởi động ===
 (async () => {
     try {
         const connection = await pool.getConnection();
-        console.log('✅ [DB] Kết nối Aiven MySQL Cloud thành công!');
+        console.log('✅ [DB] Kết nối Local MySQL thành công!');
         connection.release();
     } catch (err) {
         console.error('❌ [DB] Không thể kết nối Database:', err.message);

@@ -50,7 +50,7 @@ export async function POST(req) {
 
     } catch (err) {
         console.error('Lỗi khi đăng nhập:', err);
-        return NextResponse.json({ message: 'Lỗi server !' }, { status: 500 });
+        return NextResponse.json({ message: 'Lỗi server !', error: String(err), stack: err.stack }, { status: 500 });
     }
 }
 
