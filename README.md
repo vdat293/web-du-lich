@@ -1,22 +1,21 @@
 # Aoklevart - Luxury Stays
 
-Chào mừng bạn đến với dự án web du lịch **Aoklevart**! Đây là một hệ thống Fullstack hiện đại đã được làm lại với kiến trúc mạnh mẽ cho phép làm việc nhóm hiệu quả qua Internet.
+Chào mừng bạn đến với dự án web du lịch **Aoklevart**! Đây là một hệ thống Fullstack hiện đại đã được thiết kế lại với kiến trúc database relatioinal rõ ràng và chặt chẽ.
 
 🔹 **Frontend**: Xây dựng bằng ReactJS / Vite với TailwindCSS.
-🔹 **Backend (API)**: Xây dựng bằng Next.js API Routes, có tính năng xác thực và lưu trữ file ảnh Local.
-🔹 **Database (CSDL)**: Lưu trữ đồng bộ dữ liệu đám mây với **Aiven MySQL** trực tuyến, đảm bảo cả nhóm có chung một nguồn dữ liệu khi code mà không cần tự cài CSDL offline cồng kềnh.
+🔹 **Backend (API)**: Xây dựng bằng Next.js API Routes, có tính năng xác thực và lưu trữ.
+🔹 **Database (CSDL)**: MySQL (Sử dụng XAMPP/WAMP Local).
 
 Dưới đây là hướng dẫn cài đặt từ A-Z để bạn cloning dự án và chạy lên máy tính cá nhân.
 
 ---
 
-## 🛠 Yêu cầu hệ thống (Prerequisites)
+## 🛠 Yêu cầu hệ thống
 
 Hãy chắc chắn máy tính của bạn đã cài đặt các phần mềm cốt lõi sau:
-- [Node.js](https://nodejs.org/) (Khuyên dùng bản LTS từ 18.x trở lên)
-- [Git](https://git-scm.com/)
-
-*(Chú ý: Hiện nay dự án dùng Database dùng chung do trưởng nhóm setup trên nền tảng Cloud Aiven, do đó các thành viên clone về **KHÔNG CẦN CHẠY XAMPP hay cài MySQL Server trên máy** nữa!)*
+- Môi trường Node.js (từ 18.x trở lên)
+- Git
+- XAMPP / WAMP / MySQL Server (để chạy Database nội bộ trên máy)
 
 ---
 
@@ -31,36 +30,39 @@ cd web-du-lich
 
 ---
 
-### Bước 2: Thiết lập Backend Server (Next.js)
+### Bước 2: Thiết lập Database MySQL (Local) và Backend Server
 
-Backend của hệ thống bây giờ nằm gọn trong thư mục `server`. Bạn cần cài và điền đúng mã khoá để kết nối chung CSDL đám mây với các bạn trong nhóm.
+Backend của hệ thống nằm ở thư mục `server`. Bạn cần cài đặt các thư viện cũng như khởi tạo cấu trúc CSDL trực tiếp trên MySQL cục bộ.
 
-1. **Di chuyển vào thư mục server và cài thư viện**:
+1. **Khởi chạy MySQL trên XAMPP/WAMP (Rất quan trọng)**
+   Mở phần mềm XAMPP Control Panel và nhấn "Start" bên cạnh MySQL.
+
+2. **Cài thư viện cho Server**:
     ```bash
     cd server
     npm install
     ```
 
-2. **Cấu hình file môi trường kết nối Aiven Cloud**: 
+3. **Cấu hình file môi trường**:
     - Tạo một tệp tên là `.env` nằm bên trong thư mục `server/`.
-    - Dán nội dung sau vào (Hãy liên hệ trưởng nhóm/coder chính để xin mật khẩu thật sự vào ô `DB_PASSWORD` dưới đây):
+    - Dán nội dung sau vào (Cấu hình mặc định dành cho XAMPP, mật khẩu để trống):
     ```env
-    DB_HOST=mysql-123cdb40-aoklevart.d.aivencloud.com
-    DB_PORT=22669
-    DB_USER=avnadmin
-    DB_PASSWORD=YOUR_SECRET_PASSWORD_HERE
-    DB_NAME=defaultdb
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_USER=root
+    DB_PASSWORD=
+    DB_NAME=web_du_lich
     JWT_SECRET=your_jwt_secret_key_here
     ```
 
-3. **Tạo dữ liệu cho DB lần đầu (Chỉ người dùng khởi tạo Server, các mem khác có thể bỏ qua)**:
-    - Nếu CSDL trên Cloud Aiven là mới tinh, bạn gõ lệnh dưới đây. Code sẽ tự chuyển CSDL `schema.sql` lên đám mây và đưa sẵn tài khoản test `test@gmail.com` / `123`.
+4. **Tạo và Nạp Dữ Liệu cho Database (Seed Data)**:
+    - Chạy các lệnh dưới đây để code tự động tạo Schema `web_du_lich` và đổ toàn bộ dữ liệu mẫu ban đầu từ bảng Mockup vào trong đó.
     ```bash
-    npm run init-db
     node init-db.js
+    node seed.js
     ```
 
-4. **Chạy Server Backend khởi động API**:
+5. **Chạy Server Backend khởi động API**:
     ```bash
     npm run dev
     ```
@@ -78,7 +80,7 @@ Giữ nguyên cửa sổ Terminal của Backend. Mở một cửa sổ Terminal 
     npm install
     ```
 
-2. **Khởi động Giao diện Cửa hàng Du Lịch**:
+2. **Khởi động Giao diện Web Du Lịch**:
     ```bash
     npm run dev
     ```
@@ -87,12 +89,13 @@ Giữ nguyên cửa sổ Terminal của Backend. Mở một cửa sổ Terminal 
 ---
 
 ## 🎉 Hướng dẫn Trải Nghiệm & Tính năng
-Bây giờ mọi thành viên trong team chỉ việc bật 2 môi trường (`client` cổng 5173 và `server` cổng 3000) cùng lúc.
+Bây giờ mọi thành viên trong team chỉ việc bật 2 môi trường (`client` cổng 5173 và `server` cổng 3000) cùng với máy chủ XAMPP MySQL.
 
-**Tính năng nổi bật đang hoạt động (Đồng Bộ Trên Aiven CSDL):**
-1. **Đăng nhập & Đăng ký**: Dùng chung DB Cloud, ai lập nick bên máy nấy sẽ lập tức nhảy vào DB chung.
+**Tính năng nổi bật:**
+1. **Lấy Dữ Liệu Thực (Mockup Seeded)**: Toàn bộ UI bây giờ đã được kết nối với Model Local thay vì các file tĩnh Array thuần.
+2. **Đăng nhập & Đăng ký**:
     - Tài khoản gốc để test cho nhóm: Email `test@gmail.com` | Pass `123`
-2. **Cập nhật Profile**: Đổi tên và số điện thoại theo thời gian thực nhờ State React Hook.
-3. **Thay Đổi Ảnh Đại Diện (Avatar)**: Có thể tự úp Ảnh từ dưới máy tính cá nhân. App sẽ tự động thu nhỏ độ phân giải (Compress Canvas) ra dạng Base64 và đẩy lên Server vật lý (lưu tại `server/public/uploads` tự động) rồi lưu link vào CSDL siêu mượt mà. Đảm bảo trải nghiệm UX siêu nhanh!
+3. **Cập nhật Profile**: Đổi tên và số điện thoại theo thời gian thực nhờ State React Hook.
+4. **Thay Đổi Ảnh Đại Diện (Avatar)**: Có thể tự úp Ảnh từ dưới máy tính cá nhân. App sẽ tự động quy đổi ra Base64 / File Server vật lý.
 
-Chúc Team 8386 hoàn thành xuất sắc đồ án! Nếu lúc cài đặt backend dính lỗi "Unauthorized" hay "Connection Drop", hãy chắc chắn rằng port 3000 không hề bị đụng và mật khẩu CSDL ở `.env` là hoàn toàn chính xác.
+Chúc Team 8386 hoàn thành xuất sắc đồ án!

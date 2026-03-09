@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
-import { properties } from '../mockup_data/data';
-
 export default function Search() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -10,8 +8,25 @@ export default function Search() {
     const [priceRange, setPriceRange] = useState(10000000);
     const [propertyType, setPropertyType] = useState('all');
     const [selectedAmenities, setSelectedAmenities] = useState([]);
+    const [properties, setProperties] = useState([]);
     const [filteredProperties, setFilteredProperties] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+
+    // Fetch properties from backend
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                const res = await fetch('http://localhost:3000/api/properties');
+                if (res.ok) {
+                    const data = await res.json();
+                    setProperties(data);
+                }
+            } catch (error) {
+                console.error('Error fetching properties:', error);
+            }
+        };
+        fetchProperties();
+    }, []);
 
     // Helper: remove Vietnamese diacritics for accent-insensitive search
     const removeDiacritics = (str) => {
@@ -29,10 +44,10 @@ export default function Search() {
         setSearchQuery(query);
     }, [location.search]);
 
-    // Apply filters whenever ANY filter state changes (including searchQuery)
+    // Apply filters whenever ANY filter state changes (including searchQuery and properties)
     useEffect(() => {
         applyFilters(searchQuery, priceRange, propertyType, selectedAmenities);
-    }, [searchQuery, priceRange, propertyType, selectedAmenities]);
+    }, [searchQuery, priceRange, propertyType, selectedAmenities, properties]);
 
     const handleSearchClick = () => {
         navigate(`/search?q=${encodeURIComponent(searchQuery)}`);

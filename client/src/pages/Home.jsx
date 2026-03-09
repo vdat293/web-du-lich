@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { properties } from '../mockup_data/data';
 import Header from '../components/Header';
 
 export default function Home() {
@@ -8,7 +7,24 @@ export default function Home() {
   const containerRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const featuredProperties = properties.slice(0, 10);
+  const [properties, setProperties] = useState([]);
+  const [featuredProperties, setFeaturedProperties] = useState([]);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/properties');
+        if (response.ok) {
+          const data = await response.json();
+          setProperties(data);
+          setFeaturedProperties(data.slice(0, 10));
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách chỗ ở:', error);
+      }
+    };
+    fetchProperties();
+  }, []);
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { properties } from '../mockup_data/data';
 import Header from '../components/Header';
 
 export default function Details() {
@@ -11,15 +10,23 @@ export default function Details() {
     const [roomType, setRoomType] = useState('single');
 
     useEffect(() => {
-        // Fetch property by id
-        // Since properties is an array, let's find the matching one
-        const p = properties.find(p => p.id.toString() === id);
-        if (p) {
-            setProperty(p);
-        } else {
-            // Default to first property if not found (just for demo purposes)
-            setProperty(properties[0]);
-        }
+        const fetchProperties = async () => {
+            try {
+                const res = await fetch('http://localhost:3000/api/properties');
+                if (res.ok) {
+                    const data = await res.json();
+                    const p = data.find(p => p.id.toString() === id);
+                    if (p) {
+                        setProperty(p);
+                    } else {
+                        setProperty(data[0]);
+                    }
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải thông tin chỗ ở:', error);
+            }
+        };
+        fetchProperties();
     }, [id]);
 
     if (!property) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -236,7 +243,22 @@ export default function Details() {
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Vị trí chỗ ở</h2>
-                                        <div id="map-image" className="w-full h-96 rounded-xl bg-cover bg-center bg-neutral-200" style={{ backgroundImage: `url(${property.mapImage || ""})` }}>
+                                        <div id="map-embed" className="w-full h-96 rounded-xl overflow-hidden bg-neutral-200">
+                                            {property.mapEmbed ? (
+                                                <iframe
+                                                    src={property.mapEmbed}
+                                                    width="100%"
+                                                    height="100%"
+                                                    style={{ border: 0 }}
+                                                    allowFullScreen=""
+                                                    loading="lazy"
+                                                    referrerPolicy="no-referrer-when-downgrade"
+                                                ></iframe>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-neutral-500">
+                                                    Không có bản đồ
+                                                </div>
+                                            )}
                                         </div>
                                         <p className="mt-4 font-bold text-neutral-700 dark:text-white" id="map-location-text">Vị trí
                                         </p>

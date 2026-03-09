@@ -4,14 +4,23 @@ require('dotenv').config();
 
 async function initDB() {
     try {
-        console.log("Đang kết nối tới Aiven Database...");
+        console.log("Đang kết nối tới Local Database...");
+        const initialConnection = await mysql.createConnection({
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD
+        });
+
+        await initialConnection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME}\``);
+        await initialConnection.end();
+
         const connection = await mysql.createConnection({
             host: process.env.DB_HOST,
             port: process.env.DB_PORT,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            ssl: { rejectUnauthorized: false }
+            database: process.env.DB_NAME
         });
 
         console.log("Đã kết nối thành công! Bắt đầu tạo bảng...");

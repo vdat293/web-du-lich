@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { properties } from '../mockup_data/data';
 
 export default function Payment() {
     const location = useLocation();
@@ -23,13 +22,24 @@ export default function Payment() {
     const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
-        if (propertyId) {
-            const p = properties.find(p => p.id === propertyId);
-            if (p) {
-                setProperty(p);
+        const fetchProperties = async () => {
+            if (propertyId) {
+                try {
+                    const res = await fetch('http://localhost:3000/api/properties');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const p = data.find(p => p.id === propertyId);
+                        if (p) {
+                            setProperty(p);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Lỗi khi tải thông tin chỗ ở:', error);
+                }
             }
-        }
-        setLoading(false);
+            setLoading(false);
+        };
+        fetchProperties();
     }, [propertyId]);
 
     const discountCodes = {
