@@ -4,6 +4,7 @@ import Details from './pages/Details';
 import Profile from './pages/Profile';
 import Payment from './pages/Payment';
 import Search from './pages/Search';
+import BookingHistory from './pages/BookingHistory';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/bookings" element={<BookingHistory />} />
       </Routes>
     </Router>
   )

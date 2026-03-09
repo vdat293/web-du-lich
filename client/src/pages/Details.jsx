@@ -8,6 +8,28 @@ export default function Details() {
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [roomType, setRoomType] = useState('single');
+    const [dateError, setDateError] = useState('');
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const handleCheckInChange = (e) => {
+        const val = e.target.value;
+        setCheckIn(val);
+        setDateError('');
+        if (checkOut && val >= checkOut) {
+            setCheckOut('');
+        }
+    };
+
+    const handleCheckOutChange = (e) => {
+        const val = e.target.value;
+        if (checkIn && val <= checkIn) {
+            setDateError('Ngày trả phòng phải sau ngày nhận phòng.');
+            return;
+        }
+        setDateError('');
+        setCheckOut(val);
+    };
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -281,7 +303,7 @@ export default function Details() {
                                                         htmlFor="check-in">Nhận phòng</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                        id="check-in" type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                                                        id="check-in" type="date" value={checkIn} min={today} onChange={handleCheckInChange} />
                                                 </div>
                                                 <div className="p-3 bg-background-light dark:bg-background-dark">
                                                     <label
@@ -289,7 +311,7 @@ export default function Details() {
                                                         htmlFor="check-out">Trả phòng</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                        id="check-out" type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                                                        id="check-out" type="date" value={checkOut} min={checkIn || today} onChange={handleCheckOutChange} />
                                                 </div>
                                             </div>
                                             <div className="p-3 border border-neutral-500 dark:border-neutral-200 rounded-lg">
@@ -304,12 +326,24 @@ export default function Details() {
                                                     <option value="quad">Phòng 4 người</option>
                                                 </select>
                                             </div>
-                                            <Link to={`/payment?id=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&roomType=${roomType}`} className="w-full">
+                                            {dateError && (
+                                                <p className="text-xs text-red-500">{dateError}</p>
+                                            )}
+                                            {(!checkIn || !checkOut) ? (
                                                 <button
-                                                    className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
-                                                    <span>Đặt ngay</span>
+                                                    disabled
+                                                    className="flex w-full items-center justify-center rounded-lg h-12 px-6 bg-neutral-300 text-white text-base font-bold cursor-not-allowed"
+                                                >
+                                                    <span>Chọn ngày để đặt</span>
                                                 </button>
-                                            </Link>
+                                            ) : (
+                                                <Link to={`/payment?id=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&roomType=${roomType}`} className="w-full">
+                                                    <button
+                                                        className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
+                                                        <span>Đặt ngay</span>
+                                                    </button>
+                                                </Link>
+                                            )}
                                             <p className="text-center text-sm text-neutral-500 dark:text-neutral-200">
                                                 Bạn chưa bị
                                                 trừ tiền</p>

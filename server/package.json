@@ -9,7 +9,7 @@
     "build": "next build",
     "db:export": "node export-db.js",
     "db:import": "node import-db.js",
-    "db:init": "node init-db.js && node seed.js"
+    "db:init": "node init-db.js"
   },
   "keywords": [],
   "author": "",

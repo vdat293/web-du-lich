@@ -18,8 +18,11 @@ export default function Payment() {
     const [appliedDiscount, setAppliedDiscount] = useState(null);
     const [discountMessage, setDiscountMessage] = useState({ text: '', type: '' });
 
+    const [specialRequests, setSpecialRequests] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [bookingId, setBookingId] = useState(null);
+    const [paymentError, setPaymentError] = useState('');
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -129,13 +132,62 @@ export default function Payment() {
         }
     };
 
-    const handleConfirmPayment = () => {
+    const handleConfirmPayment = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setPaymentError('Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt phòng.');
+            return;
+        }
+
         setIsProcessing(true);
-        // Simulate API call
-        setTimeout(() => {
+        setPaymentError('');
+
+        // Lấy room_type_id thực từ property.rooms
+        const rooms = property.rooms || [];
+        let roomTypeId = null;
+        if (rooms.length > 0) {
+            const idx = roomTypeParam === 'double' ? 1 : roomTypeParam === 'quad' ? 2 : 0;
+            roomTypeId = rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
+        }
+
+        const formatDateForDB = (date) => {
+            const y = date.getFullYear();
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const d = date.getDate().toString().padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        try {
+            const res = await fetch('http://localhost:3000/api/user/bookings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    property_id: propertyId,
+                    room_type_id: roomTypeId,
+                    check_in: formatDateForDB(checkInDate),
+                    check_out: formatDateForDB(checkOutDate),
+                    number_of_rooms: 1,
+                    total_price: total,
+                    special_requests: specialRequests || null,
+                }),
+            });
+
+            const data = await res.json();
             setIsProcessing(false);
-            setIsSuccess(true);
-        }, 2000 + Math.random() * 2000);
+
+            if (res.ok) {
+                setBookingId(data.booking_id);
+                setIsSuccess(true);
+            } else {
+                setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
+            }
+        } catch (err) {
+            setIsProcessing(false);
+            setPaymentError('Lỗi kết nối máy chủ.');
+        }
     };
 
     return (
@@ -225,7 +277,9 @@ export default function Payment() {
                                 <textarea
                                     className="mt-2 w-full rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent p-3 focus:ring-primary focus:border-primary text-neutral-700 dark:text-white"
                                     placeholder="Xin chào, chúng tôi rất mong được ở lại đây..."
-                                    rows="4"></textarea>
+                                    rows="4"
+                                    value={specialRequests}
+                                    onChange={(e) => setSpecialRequests(e.target.value)}></textarea>
                             </div>
                         </div>
 
@@ -244,6 +298,11 @@ export default function Payment() {
                             <p className="text-sm text-neutral-500 dark:text-neutral-200">
                                 Bằng việc chọn nút bên dưới, tôi đồng ý với <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Quy tắc nhà</a>, <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Chính sách hủy</a> và <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Điều khoản dịch vụ</a>.
                             </p>
+                            {paymentError && (
+                                <p className="mt-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+                                    {paymentError}
+                                </p>
+                            )}
                             <button onClick={handleConfirmPayment}
                                 className="mt-6 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90 sm:w-auto">
                                 <span>Xác nhận và thanh toán</span>
@@ -343,7 +402,7 @@ export default function Payment() {
                         </div>
                         <div className="text-center">
                             <h3 className="text-2xl font-bold text-neutral-700 dark:text-white mb-2">Thanh toán thành công!</h3>
-                            <p className="text-neutral-500 dark:text-neutral-300">Cảm ơn bạn đã đặt phòng. Mã đặt phòng của bạn là <span className="font-bold text-primary">#BOOK12345</span></p>
+                            <p className="text-neutral-500 dark:text-neutral-300">Cảm ơn bạn đã đặt phòng. Mã đặt phòng của bạn là <span className="font-bold text-primary">#{bookingId}</span></p>
                         </div>
                         <button onClick={() => navigate('/')}
                             className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors">

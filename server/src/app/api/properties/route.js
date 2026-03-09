@@ -46,7 +46,8 @@ export async function GET(req) {
                     gallery: galleryImages.length ? galleryImages : []
                 },
                 amenities: amenitiesResult,
-                detailedAmenities: [], 
+                detailedAmenities: [],
+                rooms: rooms,
                 mapImage: p.map_image,
                 mapEmbed: p.map_embed
             };

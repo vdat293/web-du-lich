@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function Profile() {
@@ -147,6 +147,15 @@ export default function Profile() {
                         <span className="inline-block mt-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
                             {user.role}
                         </span>
+                        <div className="mt-4">
+                            <Link
+                                to="/bookings"
+                                className="inline-flex items-center gap-2 px-5 py-2 bg-white border border-neutral-200 text-charcoal rounded-xl text-sm font-medium hover:border-primary hover:text-primary transition-colors shadow-sm"
+                            >
+                                <span className="material-symbols-outlined !text-base">calendar_month</span>
+                                Lịch sử đặt phòng
+                            </Link>
+                        </div>
                     </div>
 
                     <div className="p-6 sm:p-10">

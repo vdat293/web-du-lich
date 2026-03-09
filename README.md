@@ -1,134 +1,221 @@
-# Aoklevart - Luxury Stays
+# Aoklevart — Luxury Stays
 
-Chào mừng bạn đến với dự án web du lịch **Aoklevart**! Đây là một hệ thống Fullstack hiện đại đã được thiết kế lại với kiến trúc database relatioinal rõ ràng và chặt chẽ.
+Hệ thống đặt phòng khách sạn & du lịch Fullstack hiện đại.
 
-🔹 **Frontend**: Xây dựng bằng ReactJS / Vite với TailwindCSS.
-🔹 **Backend (API)**: Xây dựng bằng Next.js API Routes, có tính năng xác thực và lưu trữ.
-🔹 **Database (CSDL)**: MySQL (Sử dụng XAMPP/WAMP Local).
-
-Dưới đây là hướng dẫn cài đặt từ A-Z để bạn cloning dự án và chạy lên máy tính cá nhân.
-
----
-
-## 🛠 Yêu cầu hệ thống
-
-Hãy chắc chắn máy tính của bạn đã cài đặt các phần mềm cốt lõi sau:
-- Môi trường Node.js (từ 18.x trở lên)
-- Git
-- XAMPP / WAMP / MySQL Server (để chạy Database nội bộ trên máy)
+| Layer | Công nghệ |
+|-------|-----------|
+| **Frontend** | React 19 · Vite · TailwindCSS |
+| **Backend API** | Next.js 16 API Routes · JWT Auth |
+| **Database** | MySQL (XAMPP / WAMP Local) |
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt Chi Tiết Dành Cho Thành Viên Nhóm
+## Mục lục
 
-### Bước 1: Clone dự án về máy
-Mở Terminal / Command Prompt hoặc VSCode Terminal và chạy lệnh:
+- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
+- [Cài đặt nhanh](#cài-đặt-nhanh)
+- [Đồng bộ dữ liệu](#đồng-bộ-dữ-liệu-giữa-các-thành-viên)
+- [Cấu trúc dự án](#cấu-trúc-dự-án)
+- [API Endpoints](#api-endpoints)
+- [Tài khoản test](#tài-khoản-test)
+- [Tính năng](#tính-năng)
+
+---
+
+## Yêu cầu hệ thống
+
+| Phần mềm | Phiên bản | Ghi chú |
+|----------|-----------|---------|
+| **Node.js** | 18.x trở lên | [Download](https://nodejs.org/) |
+| **Git** | Bất kỳ | [Download](https://git-scm.com/) |
+| **XAMPP / WAMP** | Bất kỳ | Cần module **MySQL** đang chạy |
+
+---
+
+## Cài đặt nhanh
+
+### Bước 1 — Clone dự án
+
 ```bash
 git clone git@github.com:vdat293/web-du-lich.git
 cd web-du-lich
 ```
 
----
+### Bước 2 — Thiết lập Backend + Database
 
-### Bước 2: Thiết lập Database MySQL (Local) và Backend Server
+> Bật MySQL trong XAMPP/WAMP trước khi tiếp tục!
 
-Backend của hệ thống nằm ở thư mục `server`. Bạn cần cài đặt các thư viện cũng như khởi tạo cấu trúc CSDL trực tiếp trên MySQL cục bộ.
-
-1. **Khởi chạy MySQL trên XAMPP/WAMP (Rất quan trọng)**
-   Mở phần mềm XAMPP Control Panel và nhấn "Start" bên cạnh MySQL.
-
-2. **Cài thư viện cho Server**:
-    ```bash
-    cd server
-    npm install
-    ```
-
-3. **Cấu hình file môi trường**:
-    - Tạo một tệp tên là `.env` nằm bên trong thư mục `server/`.
-    - Dán nội dung sau vào (Cấu hình mặc định dành cho XAMPP, mật khẩu để trống):
-    ```env
-    DB_HOST=127.0.0.1
-    DB_PORT=3306
-    DB_USER=root
-    DB_PASSWORD=
-    DB_NAME=web_du_lich
-    JWT_SECRET=your_jwt_secret_key_here
-    ```
-
-4. **Tạo và Nạp Dữ Liệu cho Database (Seed Data)**:
-    - Chạy các lệnh dưới đây để code tự động tạo Schema `web_du_lich` và đổ toàn bộ dữ liệu mẫu ban đầu từ bảng Mockup vào trong đó.
-    ```bash
-    node init-db.js
-    node seed.js
-    ```
-
-5. **Chạy Server Backend khởi động API**:
-    ```bash
-    npm run dev
-    ```
-    👉 *API Backend sẽ chạy và luôn lắng nghe ở địa chỉ **`http://localhost:3000`***
-
----
-
-### Bước 3: Cấu hình và Chạy Frontend (React/Vite)
-
-Giữ nguyên cửa sổ Terminal của Backend. Mở một cửa sổ Terminal mới thứ hai, và trỏ nó vào thư mục `client`.
-
-1. **Đi vào Frontend và Cài thư viện**:
-    ```bash
-    cd client
-    npm install
-    ```
-
-2. **Khởi động Giao diện Web Du Lịch**:
-    ```bash
-    npm run dev
-    ```
-    👉 *Trang web của Khách sẽ lên sóng tại **`http://localhost:5173`***.
-
----
-
-## 🔄 Đồng Bộ Dữ Liệu Cho Các Thành Viên
-
-Khi một thành viên thêm/sửa dữ liệu trong database và muốn chia sẻ cho cả nhóm:
-
-### 🅰️ Người có data mới (EXPORT)
 ```bash
 cd server
-npm run db:export
+npm install
 ```
-Script sẽ xuất toàn bộ database ra file `server/database-dump.sql`. Sau đó push lên Git:
+
+Tạo file `server/.env`:
+
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=web_du_lich
+JWT_SECRET=your_jwt_secret_key_here
+```
+
+Khởi tạo database **(chỉ lần đầu)**:
+
 ```bash
+# Khuyến nghị — import data mới nhất từ Git
+npm run db:import
+
+# Hoặc tạo mới từ schema
+npm run db:init
+```
+
+Chạy server:
+
+```bash
+npm run dev
+```
+
+Backend chạy tại **`http://localhost:3000`**
+
+### Bước 3 — Chạy Frontend
+
+Mở terminal mới (giữ nguyên terminal backend):
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+Frontend chạy tại **`http://localhost:5173`**
+
+---
+
+## Đồng bộ dữ liệu giữa các thành viên
+
+Mỗi người dùng MySQL local riêng → dùng export/import qua Git để đồng bộ.
+
+### Người có data mới → Export
+
+```bash
+cd server
+npm run db:export        # Xuất DB → database-dump.sql
 git add server/database-dump.sql
 git commit -m "Cập nhật data mới nhất"
 git push
 ```
 
-### 🅱️ Các thành viên khác (IMPORT)
+### Thành viên khác → Import
+
 ```bash
 git pull
 cd server
-npm run db:import
+npm run db:import        # Nhập data vào MySQL local
 ```
-Script sẽ hỏi xác nhận, sau đó tự động nạp toàn bộ dữ liệu mới nhất vào MySQL local của bạn.
 
-### ⚡ Lệnh tắt
-| Lệnh              | Mô tả                                                        |
-|--------------------|---------------------------------------------------------------|
-| `npm run db:export`| Xuất database → file `database-dump.sql`                     |
-| `npm run db:import`| Nhập file `database-dump.sql` → database local               |
-| `npm run db:init`  | Khởi tạo database lần đầu (schema + seed data)              |
+### Bảng lệnh
+
+| Lệnh | Mô tả |
+|------|-------|
+| `npm run db:export` | Xuất toàn bộ DB → `database-dump.sql` |
+| `npm run db:import` | Nhập `database-dump.sql` → DB local |
+| `npm run db:init` | Khởi tạo DB lần đầu (schema) |
+| `npm run dev` | Chạy server backend |
 
 ---
 
-## 🎉 Hướng dẫn Trải Nghiệm & Tính năng
-Bây giờ mọi thành viên trong team chỉ việc bật 2 môi trường (`client` cổng 5173 và `server` cổng 3000) cùng với máy chủ XAMPP MySQL.
+## Cấu trúc dự án
 
-**Tính năng nổi bật:**
-1. **Lấy Dữ Liệu Thực (Mockup Seeded)**: Toàn bộ UI bây giờ đã được kết nối với Model Local thay vì các file tĩnh Array thuần.
-2. **Đăng nhập & Đăng ký**:
-    - Tài khoản gốc để test cho nhóm: Email `test@gmail.com` | Pass `123`
-3. **Cập nhật Profile**: Đổi tên và số điện thoại theo thời gian thực nhờ State React Hook.
-4. **Thay Đổi Ảnh Đại Diện (Avatar)**: Có thể tự úp Ảnh từ dưới máy tính cá nhân. App sẽ tự động quy đổi ra Base64 / File Server vật lý.
+```
+web-du-lich/
+├── client/                     # Frontend (React + Vite)
+│   └── src/
+│       ├── pages/
+│       │   ├── Home.jsx        # Trang chủ
+│       │   ├── Search.jsx      # Tìm kiếm
+│       │   ├── Details.jsx     # Chi tiết khách sạn
+│       │   ├── Payment.jsx     # Thanh toán
+│       │   ├── Profile.jsx     # Thông tin cá nhân
+│       │   └── BookingHistory.jsx  # Lịch sử đặt phòng
+│       └── components/
+│           └── Header.jsx      # Header / Nav / Auth modal
+│
+├── server/                     # Backend (Next.js API Routes)
+│   ├── src/app/api/
+│   │   ├── auth/               # Đăng nhập, Đăng ký
+│   │   ├── properties/         # Danh sách & chi tiết khách sạn
+│   │   ├── user/
+│   │   │   ├── profile/        # Xem & cập nhật profile
+│   │   │   └── bookings/       # Lịch sử đặt phòng (user)
+│   │   └── host/
+│   │       └── bookings/       # Lịch sử phòng được đặt (host)
+│   ├── src/lib/
+│   │   └── db.js               # Kết nối MySQL Pool
+│   ├── schema.sql              # Cấu trúc bảng
+│   ├── database-dump.sql       # Data đồng bộ
+│   ├── export-db.js            # Script xuất DB
+│   ├── import-db.js            # Script nhập DB
+│   ├── init-db.js              # Tạo schema
+│   └── .env                    # Cấu hình DB (không commit)
+│
+└── README.md
+```
 
-Chúc Team 8386 hoàn thành xuất sắc đồ án!
+---
+
+## API Endpoints
+
+### Auth
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `POST` | `/api/auth/login` | Đăng nhập → trả JWT token |
+| `POST` | `/api/auth/register` | Đăng ký tài khoản mới |
+
+### Properties
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `GET` | `/api/properties` | Danh sách khách sạn (kèm rooms, amenities, images) |
+
+### User (yêu cầu JWT)
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `PUT` | `/api/user/profile` | Cập nhật tên, SĐT, avatar |
+| `GET` | `/api/user/bookings` | Lịch sử đặt phòng của user |
+| `POST` | `/api/user/bookings` | Tạo booking mới sau thanh toán |
+
+### Host (yêu cầu JWT)
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| `GET` | `/api/host/bookings` | Danh sách phòng được đặt trên property của host |
+
+---
+
+## Tài khoản test
+
+| Email | Mật khẩu | Vai trò |
+|-------|----------|---------|
+| `test@gmail.com` | `123` | Customer |
+
+---
+
+## Tính năng
+
+- **Trang chủ** — Khách sạn nổi bật, điểm đến phổ biến
+- **Tìm kiếm** — Lọc theo địa điểm, loại hình, giá
+- **Chi tiết** — Ảnh gallery, tiện nghi, loại phòng, bản đồ
+- **Đặt phòng** — Chọn ngày (có validation), loại phòng, mã giảm giá, thanh toán
+- **Lịch sử đặt phòng** — User xem lịch sử đã đặt, Host xem danh sách khách đặt phòng
+- **Profile** — Đổi tên, SĐT, upload avatar
+- **Auth** — Đăng ký / Đăng nhập JWT, dropdown menu, mobile menu
+
+---
+
+<p align="center">
+  <b>Team 8386</b> — Lập trình Web · BDU · 2026
+</p>

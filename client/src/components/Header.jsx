@@ -191,7 +191,7 @@ export default function Header() {
                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-neutral-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                                         <div className="p-2 flex flex-col">
                                             <Link to="/profile" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Thông tin</Link>
-                                            <a href="#" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Lịch sử</a>
+                                            <Link to="/bookings" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Lịch sử đặt phòng</Link>
                                             <hr className="my-1 border-neutral-100" />
                                             <button onClick={handleLogout} className="px-4 py-2 hover:bg-red-50 text-left rounded-lg text-sm text-red-500 font-medium transition-colors">
                                                 Đăng xuất
@@ -249,9 +249,9 @@ export default function Header() {
                                             <Link to="/profile" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
                                                 Thông tin
                                             </Link>
-                                            <a href="#" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
-                                                Lịch sử
-                                            </a>
+                                            <Link to="/bookings" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
+                                                Lịch sử đặt phòng
+                                            </Link>
                                             <hr className="border-neutral-100" />
                                             <button onClick={handleLogout} className="w-full py-3 text-center border border-red-200 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors">
                                                 Đăng xuất
