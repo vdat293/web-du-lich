@@ -88,6 +88,39 @@ Giữ nguyên cửa sổ Terminal của Backend. Mở một cửa sổ Terminal 
 
 ---
 
+## 🔄 Đồng Bộ Dữ Liệu Cho Các Thành Viên
+
+Khi một thành viên thêm/sửa dữ liệu trong database và muốn chia sẻ cho cả nhóm:
+
+### 🅰️ Người có data mới (EXPORT)
+```bash
+cd server
+npm run db:export
+```
+Script sẽ xuất toàn bộ database ra file `server/database-dump.sql`. Sau đó push lên Git:
+```bash
+git add server/database-dump.sql
+git commit -m "Cập nhật data mới nhất"
+git push
+```
+
+### 🅱️ Các thành viên khác (IMPORT)
+```bash
+git pull
+cd server
+npm run db:import
+```
+Script sẽ hỏi xác nhận, sau đó tự động nạp toàn bộ dữ liệu mới nhất vào MySQL local của bạn.
+
+### ⚡ Lệnh tắt
+| Lệnh              | Mô tả                                                        |
+|--------------------|---------------------------------------------------------------|
+| `npm run db:export`| Xuất database → file `database-dump.sql`                     |
+| `npm run db:import`| Nhập file `database-dump.sql` → database local               |
+| `npm run db:init`  | Khởi tạo database lần đầu (schema + seed data)              |
+
+---
+
 ## 🎉 Hướng dẫn Trải Nghiệm & Tính năng
 Bây giờ mọi thành viên trong team chỉ việc bật 2 môi trường (`client` cổng 5173 và `server` cổng 3000) cùng với máy chủ XAMPP MySQL.
 
