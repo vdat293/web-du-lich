@@ -23,12 +23,14 @@ export async function GET(req) {
             const mainImage = images.find(img => img.is_main) || images[0];
             const galleryImages = images.filter(img => !mainImage || img.id !== mainImage.id).map(img => img.image_url);
 
+            const rawPrice = p.price_display != null ? Number(p.price_display) : null;
+
             return {
                 id: p.id,
                 name: p.name,
                 type: p.type,
                 location: p.location,
-                price: p.price_display ? p.price_display.toLocaleString('vi-VN') + '₫' : 'Liên hệ',
+                price: rawPrice ? rawPrice.toLocaleString('vi-VN') + 'đ' : 'Liên hệ',
                 rating: 4.8,
                 reviews: Math.floor(Math.random() * 500) + 50,
                 host: {

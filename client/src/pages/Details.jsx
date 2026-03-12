@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '../components/Header';
 
@@ -9,8 +9,20 @@ export default function Details() {
     const [checkOut, setCheckOut] = useState('');
     const [roomType, setRoomType] = useState('single');
     const [dateError, setDateError] = useState('');
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [isShareBarOpen, setIsShareBarOpen] = useState(false);
+    const mapSectionRef = useRef(null);
 
     const today = new Date().toISOString().split('T')[0];
+
+    const resolveImageUrl = (url) => {
+        if (!url) return '';
+        return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+    };
 
     const handleCheckInChange = (e) => {
         const val = e.target.value;
@@ -51,10 +63,45 @@ export default function Details() {
         fetchProperties();
     }, [id]);
 
+    useEffect(() => {
+        if (!property) return;
+        const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+        setIsFavorite(stored.some((item) => item.id === property.id));
+    }, [property]);
+
+    const toggleFavorite = () => {
+        if (!property) return;
+        const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+        const exists = stored.some((item) => item.id === property.id);
+        let updated = [];
+
+        if (exists) {
+            updated = stored.filter((item) => item.id !== property.id);
+            setIsFavorite(false);
+        } else {
+            updated = [
+                ...stored,
+                {
+                    id: property.id,
+                    name: property.name,
+                    location: property.location,
+                    price: property.price,
+                    rating: property.rating,
+                    reviews: property.reviews,
+                    image: resolveImageUrl(property.images?.main),
+                },
+            ];
+            setIsFavorite(true);
+        }
+
+        localStorage.setItem('favoriteProperties', JSON.stringify(updated));
+        window.dispatchEvent(new Event('favoritesUpdated'));
+    };
+
     if (!property) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
 
     // Price calculations
-    const priceString = property.price.replace(/\./g, '').replace('₫', '');
+    const priceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
     const pricePerNightBase = parseInt(priceString) || 0;
 
     let checkInDate = checkIn ? new Date(checkIn) : new Date();
@@ -74,6 +121,95 @@ export default function Details() {
     const totalBase = pricePerNight * nights;
     const serviceFee = Math.round(totalBase * 0.1);
     const total = totalBase + serviceFee;
+
+    const MAX_DESCRIPTION_CHARS = 380;
+    const fullDescription = property.description || '';
+    const isLongDescription = fullDescription.length > MAX_DESCRIPTION_CHARS;
+    const displayedDescription =
+        isDescriptionExpanded || !isLongDescription
+            ? fullDescription
+            : fullDescription.slice(0, MAX_DESCRIPTION_CHARS).trimEnd() + '...';
+
+    const amenities = Array.isArray(property.amenities) ? property.amenities : [];
+    const mainAmenities = amenities.slice(0, 6);
+
+    const galleryImages = [
+        property.images?.main,
+        ...(Array.isArray(property.images?.gallery) ? property.images.gallery : []),
+    ]
+        .filter(Boolean)
+        .map((url) => resolveImageUrl(url));
+
+    const getLocationMapUrl = () => {
+        const loc = (property.location || '').toLowerCase();
+
+        if (loc.includes('hồ chí minh')) {
+            return 'https://maps.app.goo.gl/vUGZmiPWP9bFBbkN9';
+        }
+        if (loc.includes('mũi né') || loc.includes('phan thiết')) {
+            return 'https://maps.app.goo.gl/dXhizQ4F6gsAuJQE7';
+        }
+        if (loc.includes('hội an')) {
+            return 'https://maps.app.goo.gl/aDMv3aLYB4GWWHtQ6';
+        }
+        if (loc.includes('huế')) {
+            return 'https://maps.app.goo.gl/cPtxXptxKnqrJYc3A';
+        }
+        if (loc.includes('đà lạt')) {
+            return 'https://maps.app.goo.gl/eKDYWe8jabvZTUZM8';
+        }
+        if (loc.includes('đà nẵng')) {
+            return 'https://maps.app.goo.gl/tPQ74nhScxj9245h8';
+        }
+        if (loc.includes('sapa')) {
+            return 'https://maps.app.goo.gl/LeLjPF3k4YzVv3x16';
+        }
+
+        if (property.mapEmbed) return property.mapEmbed;
+
+        return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.location || '')}`;
+    };
+
+    const handleOpenGallery = (startIndex = 0) => {
+        if (!galleryImages.length) return;
+        setActiveGalleryIndex(Math.min(Math.max(startIndex, 0), galleryImages.length - 1));
+        setIsGalleryOpen(true);
+    };
+
+    const handleCloseGallery = () => {
+        setIsGalleryOpen(false);
+    };
+
+    const handlePrevGallery = () => {
+        if (!galleryImages.length) return;
+        setActiveGalleryIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+    };
+
+    const handleNextGallery = () => {
+        if (!galleryImages.length) return;
+        setActiveGalleryIndex((prev) => (prev + 1) % galleryImages.length);
+    };
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(shareUrl);
+                alert('Đã sao chép liên kết chỗ ở.');
+            } else {
+                const tempInput = document.createElement('input');
+                tempInput.value = shareUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                tempInput.remove();
+                alert('Đã sao chép liên kết chỗ ở.');
+            }
+        } catch (error) {
+            console.error('Không thể sao chép liên kết:', error);
+            alert('Không thể sao chép liên kết.');
+        }
+    };
 
     return (
         <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
@@ -119,20 +255,41 @@ export default function Details() {
                                                 id="property-rating">{property.rating}</span>
                                             <span id="property-reviews">({property.reviews} đánh giá)</span>
                                             <span className="font-bold">·</span>
-                                            <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary"
-                                                href="#" id="property-location-link">{property.location}</a>
+                                            <button
+                                                type="button"
+                                                className="font-bold underline text-neutral-700 dark:text-white hover:text-primary"
+                                                id="property-location-link"
+                                                onClick={() => {
+                                                    const url = getLocationMapUrl();
+                                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                                }}
+                                            >
+                                                {property.location}
+                                            </button>
                                         </div>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
+                                            type="button"
+                                            onClick={handleShare}
                                             className="flex items-center gap-2 px-3 py-2 text-neutral-700 dark:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">
                                             <span className="material-symbols-outlined !text-xl">ios_share</span>
                                             <span className="text-sm font-medium">Chia sẻ</span>
                                         </button>
                                         <button
-                                            className="flex items-center gap-2 px-3 py-2 text-neutral-700 dark:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                                            <span className="material-symbols-outlined !text-xl">favorite</span>
-                                            <span className="text-sm font-medium">Lưu</span>
+                                            type="button"
+                                            onClick={toggleFavorite}
+                                            className="flex items-center gap-2 px-3 py-2 text-neutral-700 dark:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                                        >
+                                            <span
+                                                className="material-symbols-outlined !text-xl"
+                                                style={{ fontVariationSettings: `'FILL' ${isFavorite ? 1 : 0}` }}
+                                            >
+                                                favorite
+                                            </span>
+                                            <span className="text-sm font-medium">
+                                                {isFavorite ? 'Đã lưu' : 'Lưu'}
+                                            </span>
                                         </button>
                                     </div>
                                 </div>
@@ -140,29 +297,64 @@ export default function Details() {
                             <div className="relative">
                                 <div className="grid grid-cols-4 grid-rows-2 gap-2 h-[550px]">
                                     <div className="col-span-4 sm:col-span-2 row-span-2 rounded-xl overflow-hidden">
-                                        <div id="img-main" className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200" style={{ backgroundImage: `url(/${property.images.main})` }}>
-                                        </div>
+                                        <div
+                                            id="img-main"
+                                            className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200"
+                                            style={{ backgroundImage: `url(${resolveImageUrl(property.images.main)})` }}
+                                        ></div>
                                     </div>
                                     <div className="col-span-2 sm:col-span-1 row-span-1 rounded-xl overflow-hidden hidden sm:block">
-                                        <div id="img-gallery-0" className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200" style={{ backgroundImage: `url(/${property.images.gallery[0] || property.images.main})` }}>
-                                        </div>
+                                        <div
+                                            id="img-gallery-0"
+                                            className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200"
+                                            style={{
+                                                backgroundImage: `url(${resolveImageUrl(
+                                                    property.images.gallery?.[0] || property.images.main
+                                                )})`,
+                                            }}
+                                        ></div>
                                     </div>
                                     <div className="col-span-2 sm:col-span-1 row-span-1 rounded-xl overflow-hidden hidden sm:block">
-                                        <div id="img-gallery-1" className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200" style={{ backgroundImage: `url(/${property.images.gallery[1] || property.images.main})` }}>
-                                        </div>
+                                        <div
+                                            id="img-gallery-1"
+                                            className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200"
+                                            style={{
+                                                backgroundImage: `url(${resolveImageUrl(
+                                                    property.images.gallery?.[1] || property.images.main
+                                                )})`,
+                                            }}
+                                        ></div>
                                     </div>
                                     <div className="col-span-2 sm:col-span-1 row-span-1 rounded-xl overflow-hidden hidden sm:block">
-                                        <div id="img-gallery-2" className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200" style={{ backgroundImage: `url(/${property.images.gallery[2] || property.images.main})` }}>
-                                        </div>
+                                        <div
+                                            id="img-gallery-2"
+                                            className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200"
+                                            style={{
+                                                backgroundImage: `url(${resolveImageUrl(
+                                                    property.images.gallery?.[2] || property.images.main
+                                                )})`,
+                                            }}
+                                        ></div>
                                     </div>
                                     <div className="col-span-2 sm:col-span-1 row-span-1 rounded-xl overflow-hidden hidden sm:block">
-                                        <div id="img-gallery-3" className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200" style={{ backgroundImage: `url(/${property.images.gallery[3] || property.images.main})` }}>
-                                        </div>
+                                        <div
+                                            id="img-gallery-3"
+                                            className="w-full h-full bg-center bg-no-repeat bg-cover bg-neutral-200"
+                                            style={{
+                                                backgroundImage: `url(${resolveImageUrl(
+                                                    property.images.gallery?.[3] || property.images.main
+                                                )})`,
+                                            }}
+                                        ></div>
                                     </div>
                                 </div>
                                 <div className="absolute bottom-4 right-4">
-                                    <button id="view-all-photos-btn"
-                                        className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white text-charcoal gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-300 shadow-sm hover:shadow-md">
+                                    <button
+                                        id="view-all-photos-btn"
+                                        type="button"
+                                        onClick={() => handleOpenGallery(0)}
+                                        className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white text-charcoal gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-300 shadow-sm hover:shadow-md"
+                                    >
                                         <span className="material-symbols-outlined !text-xl">collections</span>
                                         <span>Xem tất cả ảnh</span>
                                     </button>
@@ -191,24 +383,57 @@ export default function Details() {
                                         </div>
                                     </div>
                                     <div className="pb-8 border-b border-neutral-200 dark:border-neutral-700">
-                                        <p className="text-neutral-500 dark:text-neutral-200 leading-relaxed whitespace-pre-line"
-                                            id="property-description">
-                                            {property.description}
+                                        <p
+                                            className="text-neutral-500 dark:text-neutral-200 leading-relaxed whitespace-pre-line"
+                                            id="property-description"
+                                        >
+                                            {displayedDescription}
                                         </p>
-                                        <a id="description-toggle-btn"
-                                            className="mt-4 inline-flex items-center gap-1 font-bold text-neutral-700 dark:text-white hover:text-primary hidden cursor-pointer">
-                                            <span>Hiển thị thêm</span>
-                                            <span className="material-symbols-outlined !text-xl">chevron_right</span>
-                                        </a>
+                                        {isLongDescription && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsDescriptionExpanded(prev => !prev)}
+                                                className="mt-4 inline-flex items-center gap-1 font-bold text-neutral-700 dark:text-white hover:text-primary cursor-pointer"
+                                                id="description-toggle-btn"
+                                            >
+                                                <span>{isDescriptionExpanded ? 'Thu gọn' : 'Xem thêm'}</span>
+                                                <span
+                                                    className={`material-symbols-outlined !text-xl transition-transform duration-200 ${isDescriptionExpanded ? 'rotate-90' : ''
+                                                        }`}
+                                                >
+                                                    chevron_right
+                                                </span>
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="pb-8 border-b border-neutral-200 dark:border-neutral-700">
                                         <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Tiện ích chính</h2>
                                         <div className="grid grid-cols-2 gap-4" id="amenities-list">
+                                            {mainAmenities.length > 0 ? (
+                                                mainAmenities.map((amenity, index) => (
+                                                    <div key={index} className="flex items-center gap-3 text-neutral-700 dark:text-white">
+                                                        <span className="material-symbols-outlined text-base">
+                                                            {amenity.icon || 'check_circle'}
+                                                        </span>
+                                                        <span className="text-sm">{amenity.name}</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-neutral-500 dark:text-neutral-300 text-sm">
+                                                    Chưa có thông tin tiện ích.
+                                                </p>
+                                            )}
                                         </div>
-                                        <button id="show-amenities-btn"
-                                            className="mt-6 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-transparent text-neutral-700 dark:text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-700 dark:border-white hover:bg-neutral-100 dark:hover:bg-neutral-700">
-                                            <span>Hiển thị tất cả tiện nghi</span>
-                                        </button>
+                                        {amenities.length > 0 && (
+                                            <button
+                                                id="show-amenities-btn"
+                                                type="button"
+                                                onClick={() => setIsAmenitiesModalOpen(true)}
+                                                className="mt-6 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-transparent text-neutral-700 dark:text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-700 dark:border-white hover:bg-neutral-100 dark:hover:bg-neutral-700"
+                                            >
+                                                <span>Hiển thị tất cả tiện nghi</span>
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="pb-8 border-b border-neutral-200 dark:border-neutral-700">
                                         <div className="flex items-center gap-2 mb-6">
@@ -263,7 +488,7 @@ export default function Details() {
                                             </div>
                                         </div>
                                     </div>
-                                    <div>
+                                    <div ref={mapSectionRef}>
                                         <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Vị trí chỗ ở</h2>
                                         <div id="map-embed" className="w-full h-96 rounded-xl overflow-hidden bg-neutral-200">
                                             {property.mapEmbed ? (
@@ -479,54 +704,127 @@ export default function Details() {
                 </footer>
             </div>
 
-            <div id="gallery-modal" className="fixed inset-0 z-50 hidden bg-black/90 overflow-y-auto">
+            <div
+                id="gallery-modal"
+                className={`fixed inset-0 z-50 bg-black/90 overflow-y-auto ${isGalleryOpen ? '' : 'hidden'}`}
+            >
                 <div className="min-h-screen flex flex-col items-center justify-center p-4">
                     <div className="fixed top-4 right-4 z-50">
-                        <button id="close-gallery-btn"
-                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors">
+                        <button
+                            id="close-gallery-btn"
+                            type="button"
+                            onClick={handleCloseGallery}
+                            className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                        >
                             <span className="material-symbols-outlined !text-2xl">close</span>
                         </button>
                     </div>
 
                     <div className="relative w-full max-w-7xl h-[calc(100vh-2rem)] flex flex-col gap-2">
-                        <div id="gallery-main-image-container"
-                            className="flex-1 flex items-center justify-center bg-black rounded-lg overflow-hidden">
-                        </div>
-
-                        <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-                            <button id="gallery-prev"
-                                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors pointer-events-auto">
-                                <span className="material-symbols-outlined !text-2xl">chevron_left</span>
-                            </button>
-                            <button id="gallery-next"
-                                className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors pointer-events-auto">
-                                <span className="material-symbols-outlined !text-2xl">chevron_right</span>
-                            </button>
-                        </div>
                         <div
-                            className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1 rounded-full pointer-events-none">
-                            <span id="gallery-counter">1 / 1</span>
+                            id="gallery-main-image-container"
+                            className="flex-1 flex items-center justify-center bg-black rounded-lg overflow-hidden"
+                        >
+                            {galleryImages.length > 0 && (
+                                <img
+                                    src={galleryImages[activeGalleryIndex]}
+                                    alt={`Ảnh ${activeGalleryIndex + 1}`}
+                                    className="max-h-full max-w-full object-contain"
+                                />
+                            )}
                         </div>
 
-                        <div id="gallery-thumbnails" className="flex-shrink-0 h-16 flex gap-2 overflow-x-auto py-1 justify-center">
+                        {galleryImages.length > 1 && (
+                            <>
+                                <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+                                    <button
+                                        id="gallery-prev"
+                                        type="button"
+                                        onClick={handlePrevGallery}
+                                        className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors pointer-events-auto"
+                                    >
+                                        <span className="material-symbols-outlined !text-2xl">chevron_left</span>
+                                    </button>
+                                    <button
+                                        id="gallery-next"
+                                        type="button"
+                                        onClick={handleNextGallery}
+                                        className="p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors pointer-events-auto"
+                                    >
+                                        <span className="material-symbols-outlined !text-2xl">chevron_right</span>
+                                    </button>
+                                </div>
+                                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-black/50 text-white text-sm px-3 py-1 rounded-full pointer-events-none">
+                                    <span id="gallery-counter">
+                                        {activeGalleryIndex + 1} / {galleryImages.length}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+
+                        <div
+                            id="gallery-thumbnails"
+                            className="flex-shrink-0 h-16 flex gap-2 overflow-x-auto py-1 justify-center"
+                        >
+                            {galleryImages.map((img, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setActiveGalleryIndex(index)}
+                                    className={`h-16 w-24 rounded-md overflow-hidden border ${index === activeGalleryIndex
+                                            ? 'border-white'
+                                            : 'border-transparent opacity-70 hover:opacity-100'
+                                        }`}
+                                >
+                                    <img src={img} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                                </button>
+                            ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="amenities-modal" className="fixed inset-0 z-50 hidden bg-black/50 overflow-y-auto">
+            <div
+                id="amenities-modal"
+                className={`fixed inset-0 z-50 bg-black/50 overflow-y-auto ${isAmenitiesModalOpen ? '' : 'hidden'}`}
+            >
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div
                         className="bg-white dark:bg-background-dark w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
                             <h2 className="text-xl font-bold text-neutral-700 dark:text-white">Tiện nghi</h2>
-                            <button id="close-amenities-btn"
-                                className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                            <button
+                                id="close-amenities-btn"
+                                type="button"
+                                onClick={() => setIsAmenitiesModalOpen(false)}
+                                className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                            >
                                 <span className="material-symbols-outlined text-neutral-700 dark:text-white">close</span>
                             </button>
                         </div>
                         <div className="p-6 overflow-y-auto">
-                            <div id="amenities-modal-content" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <div
+                                id="amenities-modal-content"
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                            >
+                                {amenities.length > 0 ? (
+                                    amenities.map((amenity, index) => (
+                                        <div key={index} className="flex items-start gap-3">
+                                            <span className="material-symbols-outlined text-base mt-1">
+                                                {amenity.icon || 'check_circle'}
+                                            </span>
+                                            <div>
+                                                <p className="text-sm font-semibold text-neutral-700 dark:text-white">
+                                                    {amenity.name}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-neutral-500 dark:text-neutral-300 text-sm">
+                                        Chưa có thông tin tiện nghi.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>

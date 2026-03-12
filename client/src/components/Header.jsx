@@ -169,10 +169,18 @@ export default function Header() {
 
                         {/* Action Buttons */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <a href="#" className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-charcoal hover:text-primary transition-all duration-300">
-                                <span className="material-symbols-outlined text-lg">home_work</span>
-                                <span>Đăng cho thuê</span>
-                            </a>
+                            <div className="relative group cursor-pointer">
+                                <div className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-charcoal hover:text-primary transition-all duration-300">
+                                    <span className="material-symbols-outlined text-lg">home_work</span>
+                                    <span>Đăng cho thuê</span>
+                                </div>
+                                <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-neutral-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                                    <div className="p-2 flex flex-col">
+                                        <Link to="/host/house" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Đăng cho thuê nhà</Link>
+                                        <Link to="/host/homestay" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Đăng cho thuê homestay</Link>
+                                    </div>
+                                </div>
+                            </div>
                             {!currentUser ? (
                                 <>
                                     <button onClick={openLogin} className="px-5 py-2.5 text-sm font-medium text-charcoal hover:text-primary transition-colors duration-300">
@@ -191,6 +199,7 @@ export default function Header() {
                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-neutral-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                                         <div className="p-2 flex flex-col">
                                             <Link to="/profile" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Thông tin</Link>
+                                            <Link to="/profile#favorites" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Ưu thích</Link>
                                             <Link to="/bookings" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Lịch sử đặt phòng</Link>
                                             <hr className="my-1 border-neutral-100" />
                                             <button onClick={handleLogout} className="px-4 py-2 hover:bg-red-50 text-left rounded-lg text-sm text-red-500 font-medium transition-colors">
@@ -248,6 +257,9 @@ export default function Header() {
                                         <div className="flex flex-col gap-3">
                                             <Link to="/profile" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
                                                 Thông tin
+                                            </Link>
+                                            <Link to="/profile#favorites" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
+                                                Ưu thích
                                             </Link>
                                             <Link to="/bookings" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
                                                 Lịch sử đặt phòng

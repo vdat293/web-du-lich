@@ -1,3 +1,123 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.image-zoom {
+  transition: transform 0.08s ease;
+}
+
+.group:hover .image-zoom {
+  transform: scale(1.05);
+}
+
+.hover-lift {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -24px rgba(15, 23, 42, 0.4);
+}
+
+@keyframes cardSoftHighlight {
+  0% {
+    outline-color: rgba(255, 191, 71, 0.45);
+  }
+  100% {
+    outline-color: rgba(255, 191, 71, 0);
+  }
+}
+
+.card-soft-highlight {
+  outline: 2px solid rgba(255, 191, 71, 0);
+  outline-offset: 2px;
+  animation: cardSoftHighlight 0.08s ease-out;
+}
+
+@keyframes slowImagePass {
+  0% {
+    transform: scale(1.01);
+  }
+  100% {
+    transform: scale(1.04);
+  }
+}
+
+.image-slow-pass {
+  animation: slowImagePass 0.55s ease-out;
+}
+
+@keyframes heroEntryDrop {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    transform: translateY(32px) rotate(70deg);
+  }
+}
+
+@keyframes heroEntryRise {
+  0% {
+    transform: translateY(32px) rotate(70deg);
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.hero-entry-drop {
+  transform-origin: left top;
+  display: inline-block;
+}
+
+.hero-entry-drop-active {
+  animation: heroEntryDrop 1.2s ease-out forwards;
+}
+
+.hero-entry-drop-rise {
+  animation: heroEntryRise 0.6s ease-out forwards;
+}
+
+.property-card {
+  transition: transform 0.45s ease, box-shadow 0.45s ease;
+  scroll-snap-align: start;
+}
+
+.property-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 45px -30px rgba(15, 23, 42, 0.45);
+}
+
+.carousel-scroll {
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 0.5rem;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-x;
+}
+
+.image-zoom {
+  transition: transform 0.6s ease;
+}
+
+.property-card:hover .image-zoom {
+  transform: scale(1.04);
+}
+
+.hover-lift {
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+}
+
+.image-zoom {
+  transition: transform 0.6s ease;
+}
+
+.group:hover .image-zoom {
+  transform: scale(1.05);
+}
+

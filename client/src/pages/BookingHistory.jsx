@@ -16,7 +16,7 @@ function formatDate(dateStr) {
 }
 
 function formatPrice(price) {
-    return Number(price).toLocaleString('vi-VN') + '₫';
+    return Number(price).toLocaleString('vi-VN') + 'đ';
 }
 
 function StatusBadge({ status }) {

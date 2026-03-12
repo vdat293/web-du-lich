@@ -4,7 +4,7 @@ window.properties = [
         name: "Khách sạn Sân bay Havana",
         type: "hotel",
         location: "TP. Hồ Chí Minh, Việt Nam",
-        price: "2.500.000₫",
+        price: "2.500.000đ",
         rating: 4.9,
         reviews: 120,
         host: {
@@ -95,7 +95,7 @@ window.properties = [
         name: "Khách sạn Muong Thanh Holiday Mui Ne",
         type: "hotel",
         location: "Mũi Né, TP. Phan Thiết, Bình Thuận",
-        price: "1.100.000₫",
+        price: "1.100.000đ",
         rating: 4.0,
         reviews: 2081,
         host: {
@@ -162,7 +162,7 @@ window.properties = [
         name: "The Anam Mui Ne",
         type: "hotel",
         location: "Phường Mũi Né, TP. Phan Thiết, Bình Thuận",
-        price: "4.500.000₫",
+        price: "4.500.000đ",
         rating: 4.9,
         reviews: 1457,
         host: {
@@ -259,7 +259,7 @@ window.properties = [
         name: "Amana Hotel Phan Thiet",
         type: "hotel",
         location: "Phường Phú Thủy, TP. Phan Thiết, Bình Thuận",
-        price: "650.000₫",
+        price: "650.000đ",
         rating: 4.9,
         reviews: 1080,
         host: {
@@ -320,7 +320,7 @@ window.properties = [
         name: "Le' VIVA Resort Mui Ne",
         type: "hotel",
         location: "TP. Phan Thiết, Bình Thuận",
-        price: "1.150.000₫",
+        price: "1.150.000đ",
         rating: 4.6,
         reviews: 2322,
         host: {
@@ -417,7 +417,7 @@ window.properties = [
         name: "Biệt thự MyGarden Phan Thiết Beachfront",
         type: "villa",
         location: "Xã Tiến Thành, TP. Phan Thiết, Bình Thuận",
-        price: "7.650.000₫",
+        price: "7.650.000đ",
         rating: 4.9,
         reviews: 74,
         host: {
@@ -492,7 +492,7 @@ window.properties = [
         name: "Ylang Garden Villa",
         type: "villa",
         location: "TP. Hội An, Quảng Nam",
-        price: "8.850.000₫",
+        price: "8.850.000đ",
         rating: 4.6,
         reviews: 64,
         host: {
@@ -567,7 +567,7 @@ window.properties = [
         name: "Hotel Royal Hoi An - Gallery",
         type: "hotel",
         location: "TP. Hội An, Quảng Nam",
-        price: "2.000.000₫",
+        price: "2.000.000đ",
         rating: 4.7,
         reviews: 3340,
         host: {
@@ -670,7 +670,7 @@ window.properties = [
         name: "Reu Boutique Hotel",
         type: "hotel",
         location: "TP. Hội An, Quảng Nam",
-        price: "1.500.000₫",
+        price: "1.500.000đ",
         rating: 4.8,
         reviews: 455,
         host: {
@@ -853,7 +853,7 @@ window.properties = [
         name: "Kobi Onsen Resort Hue, Affiliated by Melia",
         type: "hotel",
         location: "Huế",
-        price: "1.300.000₫",
+        price: "1.300.000đ",
         rating: 4.9,
         reviews: 0,
         host: {
@@ -1153,7 +1153,7 @@ window.properties = [
         name: "Moonlight Hotel Hue",
         type: "hotel",
         location: "Huế",
-        price: "600.000₫",
+        price: "600.000đ",
         rating: 4.9,
         reviews: 120,
         host: {
@@ -1364,7 +1364,7 @@ window.properties = [
         name: "Khách sạn MerPerle Dalat",
         type: "hotel",
         location: "Đà Lạt, Lâm Đồng",
-        price: "1.800.000₫",
+        price: "1.800.000đ",
         rating: 4.9,
         reviews: 250,
         host: {
@@ -1472,7 +1472,7 @@ window.properties = [
         name: "Leaf Beachfront Hotel Da Nang",
         type: "hotel",
         location: "Đà Nẵng",
-        price: "950.000₫",
+        price: "950.000đ",
         rating: 4.7,
         reviews: 1090,
         host: {
@@ -1575,7 +1575,7 @@ window.properties = [
         name: "G8 Luxury Hotel And Spa Da Nang",
         type: "hotel",
         location: "Đà Nẵng",
-        price: "700.000₫",
+        price: "700.000đ",
         rating: 4.9,
         reviews: 500,
         host: {
@@ -1673,7 +1673,7 @@ window.properties = [
         name: "Sapa Jade Hill Resort And Spa",
         type: "resort",
         location: "Sapa, Lào Cai",
-        price: "1.700.000₫",
+        price: "1.700.000đ",
         rating: 5.0,
         reviews: 0,
         host: {
@@ -1765,7 +1765,7 @@ window.properties = [
         name: "DeLaSol Sapa Hotel",
         type: "hotel",
         location: "Sapa, Lào Cai",
-        price: "900.000₫",
+        price: "900.000đ",
         rating: 4.9,
         reviews: 1000,
         host: {
@@ -1832,7 +1832,7 @@ window.properties = [
         name: "Comodo Nha Trang Hotel",
         type: "hotel",
         location: "Nha Trang, Khánh Hòa",
-        price: "1.050.000₫",
+        price: "1.050.000đ",
         rating: 4.7,
         reviews: 358,
         host: {
@@ -1925,7 +1925,7 @@ window.properties = [
         name: "Muong Thanh Luxury Nha Trang Hotel",
         type: "hotel",
         location: "Nha Trang, Khánh Hòa",
-        price: "1.250.000₫",
+        price: "1.250.000đ",
         rating: 4.6,
         reviews: 250,
         host: {

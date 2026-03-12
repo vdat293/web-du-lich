@@ -11,6 +11,7 @@ export default function Search() {
     const [properties, setProperties] = useState([]);
     const [filteredProperties, setFilteredProperties] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
+    const [favoriteIds, setFavoriteIds] = useState([]);
 
     // Fetch properties from backend
     useEffect(() => {
@@ -120,6 +121,50 @@ export default function Search() {
 
     const formatPrice = (price) => {
         return price.toLocaleString('vi-VN') + 'đ';
+    };
+
+    useEffect(() => {
+        const loadFavorites = () => {
+            const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+            setFavoriteIds(stored.map((item) => item.id));
+        };
+
+        loadFavorites();
+        window.addEventListener('favoritesUpdated', loadFavorites);
+        return () => window.removeEventListener('favoritesUpdated', loadFavorites);
+    }, []);
+
+    const resolveImageUrl = (url) => {
+        if (!url) return '';
+        return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+    };
+
+    const toggleFavorite = (property) => {
+        const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+        const exists = stored.some((item) => item.id === property.id);
+        let updated = [];
+
+        if (exists) {
+            updated = stored.filter((item) => item.id !== property.id);
+            setFavoriteIds((prev) => prev.filter((id) => id !== property.id));
+        } else {
+            updated = [
+                ...stored,
+                {
+                    id: property.id,
+                    name: property.name,
+                    location: property.location,
+                    price: property.price,
+                    rating: property.rating,
+                    reviews: property.reviews,
+                    image: resolveImageUrl(property.images?.main),
+                },
+            ];
+            setFavoriteIds((prev) => [...prev, property.id]);
+        }
+
+        localStorage.setItem('favoriteProperties', JSON.stringify(updated));
+        window.dispatchEvent(new Event('favoritesUpdated'));
     };
 
     return (
@@ -270,10 +315,12 @@ export default function Search() {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProperties.map(property => (
-                                        <Link key={property.id} to={`/details/${property.id}`} className="block group">
+                                        <div key={property.id} className="block group">
                                             <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col overflow-hidden border border-neutral-200 dark:border-neutral-700 transform hover:-translate-y-1">
                                                 <div className="relative h-48 overflow-hidden">
-                                                    <img src={`/${property.images.main}`} alt={property.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                    <Link to={`/details/${property.id}`}>
+                                                        <img src={resolveImageUrl(property.images.main)} alt={property.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                    </Link>
                                                     <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/50 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">
                                                         <span className="material-symbols-outlined text-accent-gold !text-sm">star</span>
                                                         <span className="text-sm font-bold text-neutral-700 dark:text-white">{property.rating}</span>
@@ -283,8 +330,30 @@ export default function Search() {
                                                             HOT
                                                         </div>
                                                     )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            toggleFavorite(property);
+                                                        }}
+                                                        className={`absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-lg shadow-sm transition-colors ${favoriteIds.includes(property.id)
+                                                            ? 'bg-white text-red-500'
+                                                            : 'bg-white/90 text-neutral-700 hover:bg-white'
+                                                        }`}
+                                                    >
+                                                        <span
+                                                            className="material-symbols-outlined !text-base"
+                                                            style={{ fontVariationSettings: `'FILL' ${favoriteIds.includes(property.id) ? 1 : 0}` }}
+                                                        >
+                                                            favorite
+                                                        </span>
+                                                        <span className="text-xs font-semibold">
+                                                            {favoriteIds.includes(property.id) ? 'Đã lưu' : 'Lưu'}
+                                                        </span>
+                                                    </button>
                                                 </div>
-                                                <div className="p-5 flex flex-col flex-grow">
+                                                <Link to={`/details/${property.id}`} className="p-5 flex flex-col flex-grow">
                                                     <div className="flex justify-between items-start mb-2">
                                                         <h3 className="font-bold text-lg text-neutral-700 dark:text-white line-clamp-1 group-hover:text-primary transition-colors">{property.name}</h3>
                                                     </div>
@@ -298,9 +367,9 @@ export default function Search() {
                                                             <span className="text-xs text-neutral-500 dark:text-neutral-400">/ đêm</span>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </Link>
                                             </div>
-                                        </Link>
+                                        </div>
                                     ))}
                                 </div>
                             )}

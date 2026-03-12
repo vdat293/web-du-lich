@@ -9,6 +9,10 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [properties, setProperties] = useState([]);
   const [featuredProperties, setFeaturedProperties] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [activeCardIndex, setActiveCardIndex] = useState(null);
+  const [heroDropped, setHeroDropped] = useState(false);
+  const dragStateRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -26,6 +30,55 @@ export default function Home() {
     fetchProperties();
   }, []);
 
+  useEffect(() => {
+    const loadFavorites = () => {
+      const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+      setFavoriteIds(stored.map((item) => item.id));
+    };
+
+    loadFavorites();
+    window.addEventListener('favoritesUpdated', loadFavorites);
+    return () => window.removeEventListener('favoritesUpdated', loadFavorites);
+  }, []);
+
+  const resolveImageUrl = (url) => {
+    if (!url) return '';
+    return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+  };
+
+  const getPropertyImage = (property) => {
+    const resolved = resolveImageUrl(property?.images?.main);
+    return resolved || '/assets/thumnails.jpg';
+  };
+
+  const toggleFavorite = (property) => {
+    const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+    const exists = stored.some((item) => item.id === property.id);
+    let updated = [];
+
+    if (exists) {
+      updated = stored.filter((item) => item.id !== property.id);
+      setFavoriteIds((prev) => prev.filter((id) => id !== property.id));
+    } else {
+      updated = [
+        ...stored,
+        {
+          id: property.id,
+          name: property.name,
+          location: property.location,
+          price: property.price,
+          rating: property.rating,
+          reviews: property.reviews,
+          image: resolveImageUrl(property.images?.main),
+        },
+      ];
+      setFavoriteIds((prev) => [...prev, property.id]);
+    }
+
+    localStorage.setItem('favoriteProperties', JSON.stringify(updated));
+    window.dispatchEvent(new Event('favoritesUpdated'));
+  };
+
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -34,20 +87,63 @@ export default function Home() {
     }
   };
 
-  const scrollToIndex = (index) => {
+  const scrollToIndex = (index, duration = 160) => {
     if (!containerRef.current) return;
     const cards = containerRef.current.querySelectorAll('.property-card');
-    if (cards[index]) {
-      cards[index].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-    }
+    if (cards.length === 0) return;
+
+    const container = containerRef.current;
+    const cardWidth = cards[0].offsetWidth + 24;
+    const maxScrollLeft = container.scrollWidth - container.clientWidth;
+    const target = Math.max(0, Math.min(cardWidth * index, maxScrollLeft));
+    const start = container.scrollLeft;
+    const distance = target - start;
+
+    if (distance === 0) return;
+
+    let startTime = null;
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOutCubic(progress);
+      container.scrollLeft = start + distance * eased;
+      if (progress < 1) {
+        window.requestAnimationFrame(animate);
+      }
+    };
+
+    window.requestAnimationFrame(animate);
   };
 
   const scrollPrev = () => {
-    if (activeIndex > 0) scrollToIndex(activeIndex - 1);
+    const maxIndex = Math.max(0, featuredProperties.length - 1);
+    if (activeIndex > 0) {
+      const nextIndex = Math.max(0, activeIndex - 1);
+      triggerCardHighlight(nextIndex);
+      scrollToIndex(nextIndex, 140);
+    } else if (maxIndex > 0) {
+      scrollToIndex(0, 140);
+    }
   };
 
   const scrollNext = () => {
-    if (activeIndex < featuredProperties.length - 1) scrollToIndex(activeIndex + 1);
+    const maxIndex = Math.max(0, featuredProperties.length - 1);
+    if (activeIndex < maxIndex) {
+      const nextIndex = Math.min(maxIndex, activeIndex + 1);
+      triggerCardHighlight(nextIndex);
+      scrollToIndex(nextIndex, 140);
+    } else if (maxIndex > 0) {
+      scrollToIndex(maxIndex, 140);
+    }
+  };
+
+  const triggerCardHighlight = (index) => {
+    if (index === null || index === undefined) return;
+    setActiveCardIndex(index);
+    window.setTimeout(() => setActiveCardIndex(null), 250);
   };
 
   const handleScroll = () => {
@@ -56,12 +152,54 @@ export default function Home() {
     if (cards.length === 0) return;
     const cardWidth = cards[0].offsetWidth + 24;
     const scrollPosition = containerRef.current.scrollLeft;
-    setActiveIndex(Math.min(Math.round(scrollPosition / cardWidth), featuredProperties.length - 1));
+    const maxIndex = Math.max(0, featuredProperties.length - 1);
+    setActiveIndex(Math.min(Math.round(scrollPosition / cardWidth), maxIndex));
+  };
+
+  const handlePointerDown = (event) => {
+    if (!containerRef.current || event.pointerType !== 'touch') return;
+    event.preventDefault();
+    const container = containerRef.current;
+    container.setPointerCapture(event.pointerId);
+    dragStateRef.current = {
+      isDragging: true,
+      startX: event.pageX,
+      scrollLeft: container.scrollLeft,
+    };
+  };
+
+  const handlePointerMove = (event) => {
+    if (!dragStateRef.current.isDragging || !containerRef.current) return;
+    if (event.pointerType !== 'touch') return;
+    const container = containerRef.current;
+    const delta = event.pageX - dragStateRef.current.startX;
+    container.scrollLeft = dragStateRef.current.scrollLeft - delta;
+  };
+
+  const handlePointerUp = (event) => {
+    if (!dragStateRef.current.isDragging || !containerRef.current) return;
+    if (event && event.pointerType !== 'touch') return;
+    dragStateRef.current.isDragging = false;
+    const container = containerRef.current;
+    const cards = container.querySelectorAll('.property-card');
+    if (cards.length === 0) return;
+
+    const cardWidth = cards[0].offsetWidth + 24;
+    const maxIndex = Math.max(0, featuredProperties.length - 1);
+    const nextIndex = Math.min(Math.round(container.scrollLeft / cardWidth), maxIndex);
+    scrollToIndex(nextIndex, 200);
   };
 
   useEffect(() => {
     // Any specific React initialization if needed
     // Note: Modal logic is still in <script> in index.html, but ideally should be managed by React state.
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setHeroDropped(true);
+    }, 120);
+    return () => window.clearTimeout(timer);
   }, []);
 
   return (
@@ -89,7 +227,20 @@ export default function Home() {
               <h1 className="animate-fade-in-up font-display text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.1] mb-6"
                 style={{ animationDelay: '0.2s' }}>
                 Không gian nghỉ dưỡng<br />
-                <span className="italic text-accent-light">đẳng cấp</span> dành cho bạn
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setHeroDropped(false)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setHeroDropped(false);
+                    }
+                  }}
+                  className={`hero-entry-drop italic text-accent-light inline-block select-none align-baseline cursor-pointer ${heroDropped ? 'hero-entry-drop-active' : 'hero-entry-drop-rise'}`}
+                >
+                  đẳng cấp
+                </span>{' '}dành cho bạn
               </h1>
               <p className="animate-fade-in-up text-lg md:text-xl text-white/80 font-light max-w-2xl mx-auto mb-12"
                 style={{ animationDelay: '0.3s' }}>
@@ -154,17 +305,39 @@ export default function Home() {
               <div className="relative group/carousel">
                 {/* Previous Button */}
                 <button id="carousel-prev" onClick={scrollPrev} disabled={activeIndex === 0}
-                  className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant flex items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                  className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
 
                 {/* Properties Container */}
-                <div id="carousel-container" ref={containerRef} onScroll={handleScroll} className="carousel-scroll flex overflow-x-auto scroll-smooth pb-4">
+                <div
+                  id="carousel-container"
+                  ref={containerRef}
+                  onScroll={handleScroll}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerUp}
+                  onPointerLeave={handlePointerUp}
+                  className="carousel-scroll flex overflow-x-auto pb-4 cursor-grab active:cursor-grabbing"
+                >
                   <div id="featured-properties" className="flex gap-6">
-                    {featuredProperties.map((property) => (
-                      <Link key={property.id} to={`/details/${property.id}`} className="property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer">
+                    {featuredProperties.map((property, idx) => (
+                      <div
+                        key={property.id}
+                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-transform duration-500 select-none ${activeCardIndex === idx ? 'card-soft-highlight' : ''}`}
+                      >
                         <div className="relative aspect-[4/3] overflow-hidden">
-                          <img src={property.images.main} alt={property.name} className="image-zoom w-full h-full object-cover" />
+                          <Link to={`/details/${property.id}`}>
+                            <img
+                              src={getPropertyImage(property)}
+                              alt={property.name}
+                              onError={(event) => {
+                                event.currentTarget.src = '/assets/thumnails.jpg';
+                              }}
+                              className={`image-zoom w-full h-full object-cover ${activeCardIndex === idx ? 'image-slow-pass' : ''} ${idx === activeIndex ? 'image-center-pop' : ''}`}
+                            />
+                          </Link>
                           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
                           {property.isHot && (
@@ -179,11 +352,24 @@ export default function Home() {
                               <span className="text-xs font-semibold text-charcoal">Superhost</span>
                             </div>
                           )}
-                          <button className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors duration-300">
-                            <span className="material-symbols-outlined text-charcoal text-lg">favorite</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(property);
+                            }}
+                            className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white transition-colors duration-300"
+                          >
+                            <span
+                              className="material-symbols-outlined text-charcoal text-lg"
+                              style={{ fontVariationSettings: `'FILL' ${favoriteIds.includes(property.id) ? 1 : 0}` }}
+                            >
+                              favorite
+                            </span>
                           </button>
                         </div>
-                        <div className="p-5">
+                        <Link to={`/details/${property.id}`} className="p-5 block">
                           <div className="flex items-start justify-between mb-2">
                             <h3 className="font-display text-lg font-semibold text-charcoal leading-tight">{property.name}</h3>
                             <div className="flex items-center gap-1 text-charcoal">
@@ -208,21 +394,21 @@ export default function Home() {
                               {property.price}<span className="text-warm-gray text-xs font-normal">/đêm</span>
                             </p>
                           </div>
-                        </div>
-                      </Link>
+                        </Link>
+                      </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Next Button */}
                 <button id="carousel-next" onClick={scrollNext} disabled={activeIndex === featuredProperties.length - 1}
-                  className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant flex items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-0 group-hover/carousel:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                  className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
               </div>
 
               {/* Carousel Indicators */}
-              <div className="flex items-center justify-center gap-2 mt-8">
+              <div className="hidden md:flex items-center justify-center gap-2 mt-8">
                 <div id="carousel-indicators" className="flex gap-2">
                   {featuredProperties.map((_, idx) => (
                     <button key={idx} onClick={() => scrollToIndex(idx)} className={`carousel-indicator h-2 rounded-full transition-all duration-300 ${idx === activeIndex ? 'bg-primary w-8' : 'bg-warm-gray/30 w-2'}`}></button>

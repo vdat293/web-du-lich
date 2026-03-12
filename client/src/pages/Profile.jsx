@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function Profile() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [user, setUser] = useState(null);
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     const [avatarBase64, setAvatarBase64] = useState('');
+    const [favoriteProperties, setFavoriteProperties] = useState([]);
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+
+    const activeSection = location.hash === '#favorites' ? 'favorites' : 'info';
 
     useEffect(() => {
         // Lấy thông tin user từ local storage
@@ -27,6 +31,30 @@ export default function Profile() {
             navigate('/');
         }
     }, [navigate]);
+
+    useEffect(() => {
+        const loadFavorites = () => {
+            const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+            setFavoriteProperties(stored);
+        };
+
+        loadFavorites();
+        window.addEventListener('favoritesUpdated', loadFavorites);
+        return () => window.removeEventListener('favoritesUpdated', loadFavorites);
+    }, []);
+
+    useEffect(() => {
+        const storedFavorites = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+        setFavoriteProperties(storedFavorites);
+
+        const handleStorageUpdate = () => {
+            const updated = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
+            setFavoriteProperties(updated);
+        };
+
+        window.addEventListener('favoritesUpdated', handleStorageUpdate);
+        return () => window.removeEventListener('favoritesUpdated', handleStorageUpdate);
+    }, []);
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -159,72 +187,137 @@ export default function Profile() {
                     </div>
 
                     <div className="p-6 sm:p-10">
-                        <h3 className="text-xl font-semibold text-charcoal mb-6">Thông tin cá nhân</h3>
+                        {activeSection === 'info' ? (
+                            <>
+                                <h3 className="text-xl font-semibold text-charcoal mb-6">Thông tin cá nhân</h3>
 
-                        {message && (
-                            <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-xl text-sm border border-green-200">
-                                {message}
-                            </div>
-                        )}
+                                {message && (
+                                    <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-xl text-sm border border-green-200">
+                                        {message}
+                                    </div>
+                                )}
 
-                        {error && (
-                            <div className="mb-6 p-4 bg-red-50 text-red-500 rounded-xl text-sm border border-red-200">
-                                {error}
-                            </div>
-                        )}
+                                {error && (
+                                    <div className="mb-6 p-4 bg-red-50 text-red-500 rounded-xl text-sm border border-red-200">
+                                        {error}
+                                    </div>
+                                )}
 
-                        <form onSubmit={handleUpdate} className="space-y-6">
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
-                                        Họ và tên
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                        placeholder="Nhập họ và tên..."
-                                        required
-                                    />
+                                <form onSubmit={handleUpdate} className="space-y-6">
+                                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal mb-2">
+                                                Họ và tên
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                                placeholder="Nhập họ và tên..."
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-charcoal mb-2">
+                                                Số điện thoại
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                value={phone}
+                                                onChange={(e) => setPhone(e.target.value)}
+                                                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
+                                                placeholder="Nhập số điện thoại..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-charcoal mb-2">
+                                            Địa chỉ Email (Không thể thay đổi)
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={user.email}
+                                            disabled
+                                            className="w-full px-4 py-3 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-500 cursor-not-allowed text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className={`px-8 py-3 bg-primary text-white rounded-xl font-medium transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        >
+                                            {loading ? 'Đang cập nhật...' : 'Lưu thay đổi'}
+                                        </button>
+                                    </div>
+                                </form>
+                            </>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-xl font-semibold text-charcoal">Phòng yêu thích</h3>
+                                    <span className="text-sm text-neutral-400">
+                                        {favoriteProperties.length} mục
+                                    </span>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-2">
-                                        Số điện thoại
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm"
-                                        placeholder="Nhập số điện thoại..."
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-charcoal mb-2">
-                                    Địa chỉ Email (Không thể thay đổi)
-                                </label>
-                                <input
-                                    type="email"
-                                    value={user.email}
-                                    disabled
-                                    className="w-full px-4 py-3 rounded-xl border border-neutral-200 bg-neutral-50 text-neutral-500 cursor-not-allowed text-sm"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end pt-4 border-t border-neutral-100">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className={`px-8 py-3 bg-primary text-white rounded-xl font-medium transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                >
-                                    {loading ? 'Đang cập nhật...' : 'Lưu thay đổi'}
-                                </button>
-                            </div>
-                        </form>
+                                {favoriteProperties.length === 0 ? (
+                                    <div className="border border-dashed border-neutral-200 rounded-2xl p-8 text-center text-neutral-400">
+                                        <span className="material-symbols-outlined !text-5xl mb-3">favorite</span>
+                                        <p className="text-sm">Bạn chưa lưu phòng nào.</p>
+                                        <Link
+                                            to="/"
+                                            className="inline-flex mt-4 items-center gap-2 px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+                                        >
+                                            Khám phá chỗ ở
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {favoriteProperties.map((fav) => (
+                                            <Link
+                                                key={fav.id}
+                                                to={`/details/${fav.id}`}
+                                                className="group bg-white border border-neutral-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                                            >
+                                                <div className="relative h-40 bg-neutral-100">
+                                                    {fav.image ? (
+                                                        <img
+                                                            src={fav.image}
+                                                            alt={fav.name}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-neutral-300">
+                                                            <span className="material-symbols-outlined !text-5xl">home</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="p-4">
+                                                    <h4 className="font-semibold text-charcoal group-hover:text-primary transition-colors">
+                                                        {fav.name}
+                                                    </h4>
+                                                    <p className="text-sm text-neutral-500 mt-1">{fav.location}</p>
+                                                    <div className="flex items-center justify-between mt-3">
+                                                        <p className="text-primary font-semibold text-sm">{fav.price}</p>
+                                                        <div className="flex items-center gap-1 text-sm text-neutral-500">
+                                                            <span className="material-symbols-outlined text-accent text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                                                                star
+                                                            </span>
+                                                            <span>{fav.rating}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
             </main>

@@ -125,9 +125,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Price Filter
-        // Parse price string "2.500.000₫" to number
+        // Parse price string "2.500.000đ" (hoặc "₫") to number
         filtered = filtered.filter(prop => {
-            const priceNum = parseInt(prop.price.replace(/\./g, '').replace('₫', ''));
+            const priceNum = parseInt(prop.price.replace(/\./g, '').replace(/[₫đ]/g, ''));
             // If maxPrice is 10m, treat as no limit (or 10m+)
             if (currentFilters.maxPrice === 10000000) return true;
             return priceNum <= currentFilters.maxPrice;

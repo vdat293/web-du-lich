@@ -74,7 +74,7 @@ export default function Payment() {
     }
 
     // Price calculations
-    const priceString = property.price.replace(/\./g, '').replace('₫', '');
+    const priceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
     const pricePerNightBase = parseInt(priceString);
 
     let checkInDate = checkInParam ? new Date(checkInParam) : new Date();
