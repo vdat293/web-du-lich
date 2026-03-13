@@ -46,7 +46,7 @@ export default function Details() {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/properties');
+                const res = await fetch('/api/properties');
                 if (res.ok) {
                     const data = await res.json();
                     const p = data.find(p => p.id.toString() === id);

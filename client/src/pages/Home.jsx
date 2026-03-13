@@ -18,7 +18,7 @@ export default function Home() {
   useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/properties');
+        const response = await fetch('/api/properties');
         if (response.ok) {
           const data = await response.json();
           setProperties(data);

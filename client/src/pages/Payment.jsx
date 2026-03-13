@@ -28,7 +28,7 @@ export default function Payment() {
         const fetchProperties = async () => {
             if (propertyId) {
                 try {
-                    const res = await fetch('http://localhost:3000/api/properties');
+                    const res = await fetch('/api/properties');
                     if (res.ok) {
                         const data = await res.json();
                         const p = data.find(p => p.id === propertyId);
@@ -158,7 +158,7 @@ export default function Payment() {
         };
 
         try {
-            const res = await fetch('http://localhost:3000/api/user/bookings', {
+            const res = await fetch('/api/user/bookings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

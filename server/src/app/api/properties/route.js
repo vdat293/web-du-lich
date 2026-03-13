@@ -30,11 +30,7 @@ export async function GET(req) {
                 name: p.name,
                 type: p.type,
                 location: p.location,
-<<<<<<< HEAD
-                price: rawPrice ? rawPrice.toLocaleString('vi-VN') + 'đ' : 'Liên hệ',
-=======
-                price: (p.price_display !== null && p.price_display !== undefined) ? Number(p.price_display).toLocaleString('vi-VN') + '₫' : 'Liên hệ',
->>>>>>> c819175127394d079b1b75f5837e92706db53856
+                price: rawPrice ? rawPrice.toLocaleString('vi-VN') + '₫' : 'Liên hệ',
                 rating: 4.8,
                 reviews: Math.floor(Math.random() * 500) + 50,
                 host: {

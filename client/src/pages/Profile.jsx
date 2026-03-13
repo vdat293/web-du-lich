@@ -70,7 +70,7 @@ export default function Profile() {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/api/user/profile', {
+            const response = await fetch('/api/user/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

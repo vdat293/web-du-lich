@@ -17,7 +17,7 @@ export default function Search() {
     useEffect(() => {
         const fetchProperties = async () => {
             try {
-                const res = await fetch('http://localhost:3000/api/properties');
+                const res = await fetch('/api/properties');
                 if (res.ok) {
                     const data = await res.json();
                     setProperties(data);

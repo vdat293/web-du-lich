@@ -214,13 +214,13 @@ export default function BookingHistory() {
             setError('');
             try {
                 if (activeTab === 'user') {
-                    const res = await fetch('http://localhost:3000/api/user/bookings', {
+                    const res = await fetch('/api/user/bookings', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (!res.ok) throw new Error('Không thể tải lịch sử đặt phòng');
                     setBookings(await res.json());
                 } else {
-                    const res = await fetch('http://localhost:3000/api/host/bookings', {
+                    const res = await fetch('/api/host/bookings', {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     if (!res.ok) throw new Error('Không thể tải lịch sử phòng được đặt');
