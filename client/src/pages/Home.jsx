@@ -300,7 +300,7 @@ export default function Home() {
                     {featuredProperties.map((property, idx) => (
                       <div
                         key={property.id}
-                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-all duration-300 select-none ${idx === activeIndex ? 'card-active' : ''}`}
+                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-all duration-300 select-none flex flex-col ${idx === activeIndex ? 'card-active' : ''}`}
                       >
                         <div className="relative aspect-[4/3] overflow-hidden">
                           <Link to={`/details/${property.id}`}>
@@ -344,16 +344,16 @@ export default function Home() {
                             </span>
                           </button>
                         </div>
-                        <Link to={`/details/${property.id}`} className="p-5 block">
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-display text-lg font-semibold text-charcoal leading-tight">{property.name}</h3>
-                            <div className="flex items-center gap-1 text-charcoal">
+                        <Link to={`/details/${property.id}`} className="p-5 flex flex-col flex-grow">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h3 className="font-display text-lg font-semibold text-charcoal leading-tight line-clamp-2 min-h-[2.5rem]">{property.name}</h3>
+                            <div className="flex items-center gap-1 text-charcoal flex-shrink-0">
                               <span className="material-symbols-outlined text-accent text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                               <span className="text-sm font-semibold">{property.rating}</span>
                             </div>
                           </div>
-                          <p className="text-warm-gray text-sm mb-4">{property.location}</p>
-                          <div className="flex items-center justify-between pt-4 border-t border-light-border">
+                          <p className="text-warm-gray text-sm mb-4 truncate">{property.location}</p>
+                          <div className="flex items-center justify-between pt-4 border-t border-light-border mt-auto">
                             <div className="flex items-center gap-4 text-warm-gray text-xs">
                               <span className="flex items-center gap-1">
                                 <span className="material-symbols-outlined text-base">bed</span> {property.bedrooms}
@@ -365,7 +365,7 @@ export default function Home() {
                                 <span className="material-symbols-outlined text-base">group</span> {property.maxGuests}
                               </span>
                             </div>
-                            <p className="text-primary font-semibold">
+                            <p className="text-primary font-semibold whitespace-nowrap">
                               {property.price}<span className="text-warm-gray text-xs font-normal">/đêm</span>
                             </p>
                           </div>
