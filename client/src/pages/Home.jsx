@@ -210,13 +210,6 @@ export default function Home() {
                 <span
                   role="button"
                   tabIndex={0}
-                  onClick={() => setHeroDropped(false)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      setHeroDropped(false);
-                    }
-                  }}
                   className={`hero-entry-drop italic text-accent-light inline-block select-none align-baseline cursor-pointer ${heroDropped ? 'hero-entry-drop-active' : 'hero-entry-drop-rise'}`}
                 >
                   đẳng cấp

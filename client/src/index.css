@@ -108,6 +108,7 @@
 .hero-entry-drop {
   transform-origin: left top;
   display: inline-block;
+  transform: rotate(-6deg);
 }
 
 .hero-entry-drop-active {
