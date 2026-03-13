@@ -2,14 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Image zoom effect */
 .image-zoom {
-  transition: transform 0.08s ease;
+  transition: transform 0.6s ease;
 }
 
 .group:hover .image-zoom {
   transform: scale(1.05);
 }
 
+/* Hover lift effect */
 .hover-lift {
   transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
@@ -19,34 +21,72 @@
   box-shadow: 0 20px 35px -24px rgba(15, 23, 42, 0.4);
 }
 
-@keyframes cardSoftHighlight {
-  0% {
-    outline-color: rgba(255, 191, 71, 0.45);
-  }
-  100% {
-    outline-color: rgba(255, 191, 71, 0);
-  }
+/* Card active highlight - đơn giản, không có hiệu ứng đặc biệt */
+.card-active {
+  z-index: 10;
 }
 
-.card-soft-highlight {
-  outline: 2px solid rgba(255, 191, 71, 0);
-  outline-offset: 2px;
-  animation: cardSoftHighlight 0.08s ease-out;
+.property-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  scroll-snap-align: start;
 }
 
-@keyframes slowImagePass {
-  0% {
-    transform: scale(1.01);
-  }
-  100% {
-    transform: scale(1.04);
-  }
+.property-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 22px 45px -30px rgba(15, 23, 42, 0.45);
 }
 
-.image-slow-pass {
-  animation: slowImagePass 0.55s ease-out;
+.property-card:hover .image-zoom {
+  transform: scale(1.04);
 }
 
+/* Carousel scroll */
+.carousel-scroll {
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.carousel-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+#featured-properties {
+  padding-left: 0.5rem;
+}
+
+.carousel-indicator {
+  transition: all 0.3s ease;
+}
+
+/* Destination card */
+.destination-card {
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.destination-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -20px rgba(15, 23, 42, 0.4);
+}
+
+/* Buttons */
+.btn-premium {
+  transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -12px rgba(15, 23, 42, 0.4);
+}
+
+/* Hero animations */
 @keyframes heroEntryDrop {
   0% {
     transform: translateY(0) rotate(0deg);
@@ -78,49 +118,7 @@
   animation: heroEntryRise 0.6s ease-out forwards;
 }
 
-.property-card {
-  transition: transform 0.45s ease, box-shadow 0.45s ease;
-  scroll-snap-align: start;
-}
-
-.property-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 22px 45px -30px rgba(15, 23, 42, 0.45);
-}
-
-.carousel-scroll {
-  scroll-snap-type: x mandatory;
-  scroll-padding-left: 0.5rem;
-  -webkit-user-select: none;
-  user-select: none;
-  touch-action: pan-x;
-}
-
-.image-zoom {
-  transition: transform 0.6s ease;
-}
-
-.property-card:hover .image-zoom {
-  transform: scale(1.04);
-}
-
-.hover-lift {
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
-}
-
-.image-zoom {
-  transition: transform 0.6s ease;
-}
-
-.group:hover .image-zoom {
-  transform: scale(1.05);
-}
-
+/* Promo overlay */
 .promo-overlay {
   position: fixed;
   inset: 0;
@@ -243,3 +241,44 @@
   }
 }
 
+/* Bounce animation for scroll indicator */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+/* Fade in up animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Grain texture */
+.grain-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1;
+}

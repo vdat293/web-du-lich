@@ -10,10 +10,8 @@ export default function Home() {
   const [properties, setProperties] = useState([]);
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [activeCardIndex, setActiveCardIndex] = useState(null);
   const [heroDropped, setHeroDropped] = useState(false);
   const [showPromo, setShowPromo] = useState(true);
-  const dragStateRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -88,63 +86,51 @@ export default function Home() {
     }
   };
 
-  const scrollToIndex = (index, duration = 160) => {
+  // Scroll to card at index
+  const scrollToIndex = (index) => {
     if (!containerRef.current) return;
-    const cards = containerRef.current.querySelectorAll('.property-card');
-    if (cards.length === 0) return;
 
     const container = containerRef.current;
+    const cards = container.querySelectorAll('.property-card');
+    if (cards.length === 0 || !cards[index]) return;
+
     const cardWidth = cards[0].offsetWidth + 24;
-    const maxScrollLeft = container.scrollWidth - container.clientWidth;
-    const target = Math.max(0, Math.min(cardWidth * index, maxScrollLeft));
-    const start = container.scrollLeft;
-    const distance = target - start;
+    const gap = 24;
+    const target = index * (cardWidth + gap);
 
-    if (distance === 0) return;
+    container.scrollTo({
+      left: target,
+      behavior: 'smooth'
+    });
 
-    let startTime = null;
-    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
-
-    const animate = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = easeOutCubic(progress);
-      container.scrollLeft = start + distance * eased;
-      if (progress < 1) {
-        window.requestAnimationFrame(animate);
-      }
-    };
-
-    window.requestAnimationFrame(animate);
+    // Giới hạn activeIndex từ 0-6
+    const newIndex = Math.min(index, 6);
+    setActiveIndex(newIndex);
   };
 
   const scrollPrev = () => {
-    const maxIndex = Math.max(0, featuredProperties.length - 1);
-    if (activeIndex > 0) {
-      const nextIndex = Math.max(0, activeIndex - 1);
-      triggerCardHighlight(nextIndex);
-      scrollToIndex(nextIndex, 140);
-    } else if (maxIndex > 0) {
-      scrollToIndex(0, 140);
+    // Nếu đang ở vị trí 0, nhảy đến vị trí 6 (điểm bắt đầu vòng lặp)
+    if (activeIndex === 0) {
+      setActiveIndex(6);
+      scrollToIndex(6);
+    } else {
+      const newIndex = activeIndex - 1;
+      setActiveIndex(newIndex);
+      scrollToIndex(newIndex);
     }
   };
 
   const scrollNext = () => {
-    const maxIndex = Math.max(0, featuredProperties.length - 1);
-    if (activeIndex < maxIndex) {
-      const nextIndex = Math.min(maxIndex, activeIndex + 1);
-      triggerCardHighlight(nextIndex);
-      scrollToIndex(nextIndex, 140);
-    } else if (maxIndex > 0) {
-      scrollToIndex(maxIndex, 140);
+    const maxIndex = featuredProperties.length - 1;
+    // Nếu từ vị trí này + 4 sẽ vượt quá số cards, quay về 0
+    if (activeIndex >= 6) {
+      setActiveIndex(0);
+      scrollToIndex(0);
+    } else {
+      const newIndex = activeIndex + 1;
+      setActiveIndex(newIndex);
+      scrollToIndex(newIndex);
     }
-  };
-
-  const triggerCardHighlight = (index) => {
-    if (index === null || index === undefined) return;
-    setActiveCardIndex(index);
-    window.setTimeout(() => setActiveCardIndex(null), 250);
   };
 
   const handleScroll = () => {
@@ -155,40 +141,6 @@ export default function Home() {
     const scrollPosition = containerRef.current.scrollLeft;
     const maxIndex = Math.max(0, featuredProperties.length - 1);
     setActiveIndex(Math.min(Math.round(scrollPosition / cardWidth), maxIndex));
-  };
-
-  const handlePointerDown = (event) => {
-    if (!containerRef.current || event.pointerType !== 'touch') return;
-    event.preventDefault();
-    const container = containerRef.current;
-    container.setPointerCapture(event.pointerId);
-    dragStateRef.current = {
-      isDragging: true,
-      startX: event.pageX,
-      scrollLeft: container.scrollLeft,
-    };
-  };
-
-  const handlePointerMove = (event) => {
-    if (!dragStateRef.current.isDragging || !containerRef.current) return;
-    if (event.pointerType !== 'touch') return;
-    const container = containerRef.current;
-    const delta = event.pageX - dragStateRef.current.startX;
-    container.scrollLeft = dragStateRef.current.scrollLeft - delta;
-  };
-
-  const handlePointerUp = (event) => {
-    if (!dragStateRef.current.isDragging || !containerRef.current) return;
-    if (event && event.pointerType !== 'touch') return;
-    dragStateRef.current.isDragging = false;
-    const container = containerRef.current;
-    const cards = container.querySelectorAll('.property-card');
-    if (cards.length === 0) return;
-
-    const cardWidth = cards[0].offsetWidth + 24;
-    const maxIndex = Math.max(0, featuredProperties.length - 1);
-    const nextIndex = Math.min(Math.round(container.scrollLeft / cardWidth), maxIndex);
-    scrollToIndex(nextIndex, 200);
   };
 
   useEffect(() => {
@@ -317,8 +269,8 @@ export default function Home() {
           </section>
 
           {/* Featured Properties Section */}
-          <section id="featured-properties-section" className="py-20 lg:py-28">
-            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <section id="featured-properties-section" className="py-20 lg:py-28 overflow-visible">
+            <div className="max-w-[90rem] mx-auto px-2 md:px-6 lg:px-8">
               {/* Section Header */}
               <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
                 <div>
@@ -330,10 +282,10 @@ export default function Home() {
               </div>
 
               {/* Carousel */}
-              <div className="relative group/carousel">
+              <div className="relative group/carousel px-4 md:px-8 overflow-visible">
                 {/* Previous Button */}
-                <button id="carousel-prev" onClick={scrollPrev} disabled={activeIndex === 0}
-                  className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                <button id="carousel-prev" onClick={scrollPrev}
+                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300">
                   <span className="material-symbols-outlined">chevron_left</span>
                 </button>
 
@@ -342,18 +294,13 @@ export default function Home() {
                   id="carousel-container"
                   ref={containerRef}
                   onScroll={handleScroll}
-                  onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                  onPointerCancel={handlePointerUp}
-                  onPointerLeave={handlePointerUp}
-                  className="carousel-scroll flex overflow-x-auto pb-4 cursor-grab active:cursor-grabbing"
+                  className="carousel-scroll flex overflow-x-auto pb-4"
                 >
                   <div id="featured-properties" className="flex gap-6">
                     {featuredProperties.map((property, idx) => (
                       <div
                         key={property.id}
-                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-transform duration-500 select-none ${activeCardIndex === idx ? 'card-soft-highlight' : ''}`}
+                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-all duration-300 select-none ${idx === activeIndex ? 'card-active' : ''}`}
                       >
                         <div className="relative aspect-[4/3] overflow-hidden">
                           <Link to={`/details/${property.id}`}>
@@ -363,7 +310,7 @@ export default function Home() {
                               onError={(event) => {
                                 event.currentTarget.src = '/assets/thumnails.jpg';
                               }}
-                              className={`image-zoom w-full h-full object-cover ${activeCardIndex === idx ? 'image-slow-pass' : ''} ${idx === activeIndex ? 'image-center-pop' : ''}`}
+                              className="image-zoom w-full h-full object-cover"
                             />
                           </Link>
                           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -429,8 +376,8 @@ export default function Home() {
                 </div>
 
                 {/* Next Button */}
-                <button id="carousel-next" onClick={scrollNext} disabled={activeIndex === featuredProperties.length - 1}
-                  className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300 opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                <button id="carousel-next" onClick={scrollNext}
+                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300">
                   <span className="material-symbols-outlined">chevron_right</span>
                 </button>
               </div>
@@ -438,7 +385,7 @@ export default function Home() {
               {/* Carousel Indicators */}
               <div className="hidden md:flex items-center justify-center gap-2 mt-8">
                 <div id="carousel-indicators" className="flex gap-2">
-                  {featuredProperties.map((_, idx) => (
+                  {[...Array(7)].map((_, idx) => (
                     <button key={idx} onClick={() => scrollToIndex(idx)} className={`carousel-indicator h-2 rounded-full transition-all duration-300 ${idx === activeIndex ? 'bg-primary w-8' : 'bg-warm-gray/30 w-2'}`}></button>
                   ))}
                 </div>
