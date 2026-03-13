@@ -34,22 +34,22 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `avatar`, `role`, `phone
 -- Bảng: properties
 -- ---------------------------------------------------
 DROP TABLE IF EXISTS `properties`;
-CREATE TABLE "properties" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "host_id" int NOT NULL,
-  "name" varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  "type" varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  "location" varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  "price_display" decimal(15,2) DEFAULT NULL,
-  "description" text COLLATE utf8mb4_general_ci,
-  "map_image" varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  "map_embed" text COLLATE utf8mb4_general_ci,
-  "is_hot" tinyint(1) DEFAULT '0',
-  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  KEY "host_id" ("host_id"),
-  CONSTRAINT "properties_ibfk_1" FOREIGN KEY ("host_id") REFERENCES "users" ("id") ON DELETE CASCADE
-);
+CREATE TABLE `properties` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `host_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `type` varchar(50) DEFAULT NULL,
+  `location` varchar(255) NOT NULL,
+  `price_display` decimal(15,2) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `map_image` varchar(255) DEFAULT NULL,
+  `map_embed` text DEFAULT NULL,
+  `is_hot` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `host_id` (`host_id`),
+  CONSTRAINT `properties_ibfk_1` FOREIGN KEY (`host_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data cho bảng properties (22 dòng)
 INSERT INTO `properties` (`id`, `host_id`, `name`, `type`, `location`, `price_display`, `description`, `map_image`, `map_embed`, `is_hot`, `created_at`) VALUES
@@ -1723,72 +1723,72 @@ INSERT INTO `property_amenities` (`property_id`, `amenity_id`) VALUES
 -- Bảng: room_types
 -- ---------------------------------------------------
 DROP TABLE IF EXISTS `room_types`;
-CREATE TABLE "room_types" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "property_id" int NOT NULL,
-  "name" varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  "price" decimal(15,2) NOT NULL,
-  "total_allotment" int NOT NULL,
-  "max_adults" int DEFAULT '2',
-  "max_children" int DEFAULT '1',
-  "room_size" int DEFAULT NULL,
-  "bed_type" varchar(100) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  KEY "property_id" ("property_id"),
-  CONSTRAINT "room_types_ibfk_1" FOREIGN KEY ("property_id") REFERENCES "properties" ("id") ON DELETE CASCADE
-);
+CREATE TABLE `room_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `property_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `price` decimal(15,2) NOT NULL,
+  `total_allotment` int(11) NOT NULL,
+  `max_adults` int(11) DEFAULT 2,
+  `max_children` int(11) DEFAULT 1,
+  `room_size` int(11) DEFAULT NULL,
+  `bed_type` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `property_id` (`property_id`),
+  CONSTRAINT `room_types_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Data cho bảng room_types (22 dòng)
 INSERT INTO `room_types` (`id`, `property_id`, `name`, `price`, `total_allotment`, `max_adults`, `max_children`, `room_size`, `bed_type`, `created_at`) VALUES
-(1, 1, 'Phòng Tiêu chuẩn', '2500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(2, 31, 'Phòng Tiêu chuẩn', '1100000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(3, 32, 'Phòng Tiêu chuẩn', '4500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(4, 33, 'Phòng Tiêu chuẩn', '650000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(5, 34, 'Phòng Tiêu chuẩn', '1150000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(6, 35, 'Phòng Tiêu chuẩn', '7650000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(7, 41, 'Phòng Tiêu chuẩn', '8850000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(8, 42, 'Phòng Tiêu chuẩn', '2000000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(9, 43, 'Phòng Tiêu chuẩn', '1500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(10, 51, 'Phòng Tiêu chuẩn', '0.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(11, 52, 'Phòng Tiêu chuẩn', '1300000.00', 5, 2, 1, 25, '1 Giường đôi', '2026-03-09 01:49:31'),
-(12, 53, 'Phòng Tiêu chuẩn', '1000000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(13, 54, 'Phòng Tiêu chuẩn', '500000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(14, 55, 'Phòng Tiêu chuẩn', '600000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 01:49:31'),
-(15, 101, 'Phòng Tiêu chuẩn', '0.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(16, 102, 'Phòng Tiêu chuẩn', '1800000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(17, 103, 'Phòng Tiêu chuẩn', '950000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(18, 104, 'Phòng Tiêu chuẩn', '700000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(19, 106, 'Phòng Tiêu chuẩn', '1700000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(20, 105, 'Phòng Tiêu chuẩn', '900000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(21, 107, 'Phòng Tiêu chuẩn', '1050000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31'),
-(22, 108, 'Phòng Tiêu chuẩn', '1250000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 01:49:31');
+(1, 1, 'Phòng Tiêu chuẩn', '2500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(2, 31, 'Phòng Tiêu chuẩn', '1100000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(3, 32, 'Phòng Tiêu chuẩn', '4500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(4, 33, 'Phòng Tiêu chuẩn', '650000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(5, 34, 'Phòng Tiêu chuẩn', '1150000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(6, 35, 'Phòng Tiêu chuẩn', '7650000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(7, 41, 'Phòng Tiêu chuẩn', '8850000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(8, 42, 'Phòng Tiêu chuẩn', '2000000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(9, 43, 'Phòng Tiêu chuẩn', '1500000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(10, 51, 'Phòng Tiêu chuẩn', '0.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(11, 52, 'Phòng Tiêu chuẩn', '1300000.00', 5, 2, 1, 25, '1 Giường đôi', '2026-03-09 08:49:31'),
+(12, 53, 'Phòng Tiêu chuẩn', '1000000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(13, 54, 'Phòng Tiêu chuẩn', '500000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(14, 55, 'Phòng Tiêu chuẩn', '600000.00', 5, 6, 1, 25, '3 Gường', '2026-03-09 08:49:31'),
+(15, 101, 'Phòng Tiêu chuẩn', '0.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(16, 102, 'Phòng Tiêu chuẩn', '1800000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(17, 103, 'Phòng Tiêu chuẩn', '950000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(18, 104, 'Phòng Tiêu chuẩn', '700000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(19, 106, 'Phòng Tiêu chuẩn', '1700000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(20, 105, 'Phòng Tiêu chuẩn', '900000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(21, 107, 'Phòng Tiêu chuẩn', '1050000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31'),
+(22, 108, 'Phòng Tiêu chuẩn', '1250000.00', 5, 4, 1, 25, '2 Gường', '2026-03-09 08:49:31');
 
 -- ---------------------------------------------------
 -- Bảng: bookings
 -- ---------------------------------------------------
 DROP TABLE IF EXISTS `bookings`;
-CREATE TABLE "bookings" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "customer_id" int NOT NULL,
-  "property_id" int NOT NULL,
-  "room_type_id" int NOT NULL,
-  "check_in" date NOT NULL,
-  "check_out" date NOT NULL,
-  "number_of_rooms" int DEFAULT '1',
-  "total_price" decimal(15,2) NOT NULL,
-  "status" varchar(50) COLLATE utf8mb4_general_ci DEFAULT 'pending',
-  "special_requests" text COLLATE utf8mb4_general_ci,
-  "created_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updated_at" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  KEY "customer_id" ("customer_id"),
-  KEY "property_id" ("property_id"),
-  KEY "room_type_id" ("room_type_id"),
-  CONSTRAINT "bookings_ibfk_1" FOREIGN KEY ("customer_id") REFERENCES "users" ("id") ON DELETE CASCADE,
-  CONSTRAINT "bookings_ibfk_2" FOREIGN KEY ("property_id") REFERENCES "properties" ("id") ON DELETE CASCADE,
-  CONSTRAINT "bookings_ibfk_3" FOREIGN KEY ("room_type_id") REFERENCES "room_types" ("id") ON DELETE CASCADE
-);
+CREATE TABLE `bookings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` int(11) NOT NULL,
+  `property_id` int(11) NOT NULL,
+  `room_type_id` int(11) NOT NULL,
+  `check_in` date NOT NULL,
+  `check_out` date NOT NULL,
+  `number_of_rooms` int(11) DEFAULT 1,
+  `total_price` decimal(15,2) NOT NULL,
+  `status` varchar(50) DEFAULT 'pending',
+  `special_requests` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `customer_id` (`customer_id`),
+  KEY `property_id` (`property_id`),
+  KEY `room_type_id` (`room_type_id`),
+  CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `bookings_ibfk_3` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- (Bảng bookings không có dữ liệu)
 

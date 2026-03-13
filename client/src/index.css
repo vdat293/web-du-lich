@@ -121,3 +121,125 @@
   transform: scale(1.05);
 }
 
+.promo-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 12, 24, 0.6);
+  backdrop-filter: blur(6px);
+  z-index: 60;
+}
+
+.promo-card {
+  position: relative;
+  max-width: 480px;
+  width: min(92vw, 480px);
+  background: linear-gradient(140deg, #ffffff 0%, #fff8f1 100%);
+  border-radius: 24px;
+  padding: 32px 32px 28px;
+  box-shadow: 0 30px 60px -35px rgba(15, 23, 42, 0.65);
+  text-align: center;
+  color: #1f2937;
+}
+
+.promo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 191, 71, 0.2);
+  color: #f97316;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.promo-title {
+  margin-top: 16px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.promo-subtitle {
+  margin-top: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.promo-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.promo-primary {
+  width: 100%;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #0f766e;
+  color: #ffffff;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.promo-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px -12px rgba(15, 118, 110, 0.7);
+}
+
+.promo-secondary {
+  width: 100%;
+  border: 1px solid rgba(15, 118, 110, 0.25);
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: transparent;
+  color: #0f766e;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.promo-secondary:hover {
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.promo-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(15, 23, 42, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  cursor: pointer;
+}
+
+.promo-close:hover {
+  background: rgba(15, 23, 42, 0.14);
+}
+
+@media (min-width: 640px) {
+  .promo-actions {
+    flex-direction: row;
+  }
+
+  .promo-primary,
+  .promo-secondary {
+    width: auto;
+    flex: 1;
+  }
+}
+

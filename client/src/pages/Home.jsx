@@ -12,6 +12,7 @@ export default function Home() {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [activeCardIndex, setActiveCardIndex] = useState(null);
   const [heroDropped, setHeroDropped] = useState(false);
+  const [showPromo, setShowPromo] = useState(true);
   const dragStateRef = useRef({ isDragging: false, startX: 0, scrollLeft: 0 });
 
   useEffect(() => {
@@ -205,6 +206,33 @@ export default function Home() {
   return (
     <>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        {showPromo && (
+          <div className="promo-overlay" role="dialog" aria-modal="true">
+            <div className="promo-card">
+              <button
+                type="button"
+                className="promo-close"
+                aria-label="Đóng thông báo"
+                onClick={() => setShowPromo(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+              <div className="promo-tag">Ưu đãi giới hạn</div>
+              <h2 className="promo-title">Ưu đãi 30% cho kì nghỉ hè sảng khoái</h2>
+              <p className="promo-subtitle">
+                Nhập mã <strong>WELCOME30</strong> khi thanh toán để nhận ưu đãi cho mọi điểm đến trong hôm nay.
+              </p>
+              <div className="promo-actions">
+                <button type="button" className="promo-primary" onClick={() => setShowPromo(false)}>
+                  Nhận ưu đãi
+                </button>
+                <button type="button" className="promo-secondary" onClick={() => setShowPromo(false)}>
+                  Để sau
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Header />
 

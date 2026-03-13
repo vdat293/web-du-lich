@@ -212,7 +212,7 @@ web-du-lich/
 - **Đặt phòng** — Chọn ngày (có validation), loại phòng, mã giảm giá, thanh toán
 - **Lịch sử đặt phòng** — User xem lịch sử đã đặt, Host xem danh sách khách đặt phòng
 - **Profile** — Đổi tên, SĐT, upload avatar
-- **Auth** — Đăng ký / Đăng nhập JWT, dropdown menu, mobile menu
+- **Auth** — Đăng ký / Đăng nhập JWT, dropdown menu, mobile menu 
 
 ---
 

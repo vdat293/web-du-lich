@@ -25,7 +25,7 @@ CREATE TABLE properties (
   name VARCHAR(255) NOT NULL,
   type VARCHAR(50),
   location VARCHAR(255) NOT NULL,
-  price_display DECIMAL(15,2),
+  price_display DECIMAL(15,0),
   description TEXT,
   map_image VARCHAR(255),
   map_embed TEXT,
@@ -61,7 +61,7 @@ CREATE TABLE room_types (
   id INT AUTO_INCREMENT PRIMARY KEY,
   property_id INT NOT NULL,
   name VARCHAR(255) NOT NULL,
-  price DECIMAL(15,2) NOT NULL,
+  price DECIMAL(15,0) NOT NULL,
   total_allotment INT NOT NULL,
   max_adults INT DEFAULT 2,
   max_children INT DEFAULT 1,
@@ -79,7 +79,7 @@ CREATE TABLE bookings (
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
   number_of_rooms INT DEFAULT 1,
-  total_price DECIMAL(15,2) NOT NULL,
+  total_price DECIMAL(15,0) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
   special_requests TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -100,4 +100,104 @@ CREATE TABLE reviews (
   FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
   FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+);
+
+-- =====================================================
+-- BẢNG MỚI: THANH TOÁN VÀ TƯƠNG TÁC USER
+-- =====================================================
+
+-- Bảng thanh toán
+CREATE TABLE payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT NOT NULL,
+  amount DECIMAL(15,0) NOT NULL,
+  payment_method VARCHAR(50) NOT NULL,
+  payment_status VARCHAR(50) DEFAULT 'pending',
+  transaction_id VARCHAR(255),
+  payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  notes TEXT,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+);
+
+-- Bảng yêu thích (wishlist)
+CREATE TABLE wishlists (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  property_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_wishlist (user_id, property_id)
+);
+
+-- Bảng tin nhắn
+CREATE TABLE conversations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT,
+  guest_id INT NOT NULL,
+  host_id INT NOT NULL,
+  property_id INT,
+  last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL,
+  FOREIGN KEY (guest_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE SET NULL
+);
+
+CREATE TABLE messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  conversation_id INT NOT NULL,
+  sender_id INT NOT NULL,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Bảng khuyến mãi
+CREATE TABLE coupons (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(50) NOT NULL UNIQUE,
+  discount_type VARCHAR(20) NOT NULL,
+  discount_value DECIMAL(10,2) NOT NULL,
+  min_order_amount DECIMAL(15,0),
+  max_uses INT,
+  used_count INT DEFAULT 0,
+  valid_from DATE,
+  valid_until DATE,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE booking_coupons (
+  booking_id INT NOT NULL,
+  coupon_id INT NOT NULL,
+  discount_amount DECIMAL(15,0) NOT NULL,
+  PRIMARY KEY (booking_id, coupon_id),
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE
+);
+
+-- Bảng lịch sử trạng thái booking
+CREATE TABLE booking_status_history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT NOT NULL,
+  status VARCHAR(50) NOT NULL,
+  note TEXT,
+  updated_by INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Bảng quy định property
+CREATE TABLE property_rules (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  property_id INT NOT NULL,
+  rule_type VARCHAR(100) NOT NULL,
+  rule_content TEXT NOT NULL,
+  is_allowed BOOLEAN DEFAULT TRUE,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
 );
