@@ -20,6 +20,7 @@ require('dotenv').config();
 
 // Thứ tự export phải đúng theo dependency (bảng cha trước, bảng con sau)
 const TABLE_ORDER = [
+    // === Bảng gốc (Core) ===
     'users',
     'properties',
     'property_images',
@@ -27,7 +28,20 @@ const TABLE_ORDER = [
     'property_amenities',
     'room_types',
     'bookings',
-    'reviews'
+    'reviews',
+    // === Thanh toán & Khuyến mãi ===
+    'payments',
+    'coupons',
+    'booking_coupons',
+    // === Tương tác User ===
+    'wishlists',
+    'conversations',
+    'messages',
+    // === Quản lý & Lịch sử ===
+    'booking_status_history',
+    'property_rules',
+    // === Guest Checkout ===
+    'guest_bookings'
 ];
 
 async function exportDB() {
@@ -53,55 +67,66 @@ async function exportDB() {
     // Tắt kiểm tra foreign key khi import
     dumpSQL += 'SET FOREIGN_KEY_CHECKS = 0;\n\n';
 
+    let exportedCount = 0;
+    let skippedTables = [];
+
     for (const tableName of TABLE_ORDER) {
-        console.log(`📦 Đang export bảng: ${tableName}...`);
+        try {
+            console.log(`📦 Đang export bảng: ${tableName}...`);
 
-        // Lấy cấu trúc CREATE TABLE
-        const [createResult] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
-        const createStatement = createResult[0]['Create Table'];
+            // Lấy cấu trúc CREATE TABLE
+            const [createResult] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
+            const createStatement = createResult[0]['Create Table'];
 
-        dumpSQL += `-- ---------------------------------------------------\n`;
-        dumpSQL += `-- Bảng: ${tableName}\n`;
-        dumpSQL += `-- ---------------------------------------------------\n`;
-        dumpSQL += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
-        dumpSQL += `${createStatement};\n\n`;
+            dumpSQL += `-- ---------------------------------------------------\n`;
+            dumpSQL += `-- Bảng: ${tableName}\n`;
+            dumpSQL += `-- ---------------------------------------------------\n`;
+            dumpSQL += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
+            dumpSQL += `${createStatement};\n\n`;
 
-        // Lấy toàn bộ dữ liệu
-        const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
+            // Lấy toàn bộ dữ liệu
+            const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
 
-        if (rows.length > 0) {
-            // Lấy tên cột
-            const columns = Object.keys(rows[0]);
-            const columnList = columns.map(c => `\`${c}\``).join(', ');
+            if (rows.length > 0) {
+                // Lấy tên cột
+                const columns = Object.keys(rows[0]);
+                const columnList = columns.map(c => `\`${c}\``).join(', ');
 
-            dumpSQL += `-- Data cho bảng ${tableName} (${rows.length} dòng)\n`;
+                dumpSQL += `-- Data cho bảng ${tableName} (${rows.length} dòng)\n`;
 
-            // Tạo INSERT theo batch (mỗi batch tối đa 50 dòng cho dễ đọc)
-            const BATCH_SIZE = 50;
-            for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-                const batch = rows.slice(i, i + BATCH_SIZE);
-                const values = batch.map(row => {
-                    const vals = columns.map(col => {
-                        const val = row[col];
-                        if (val === null || val === undefined) return 'NULL';
-                        if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
-                        if (typeof val === 'boolean') return val ? '1' : '0';
-                        if (typeof val === 'number') return val.toString();
-                        // Escape chuỗi
-                        const escaped = String(val)
-                            .replace(/\\/g, '\\\\')
-                            .replace(/'/g, "\\'")
-                            .replace(/\n/g, '\\n')
-                            .replace(/\r/g, '\\r');
-                        return `'${escaped}'`;
+                // Tạo INSERT theo batch (mỗi batch tối đa 50 dòng cho dễ đọc)
+                const BATCH_SIZE = 50;
+                for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                    const batch = rows.slice(i, i + BATCH_SIZE);
+                    const values = batch.map(row => {
+                        const vals = columns.map(col => {
+                            const val = row[col];
+                            if (val === null || val === undefined) return 'NULL';
+                            if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
+                            if (typeof val === 'boolean') return val ? '1' : '0';
+                            if (typeof val === 'number') return val.toString();
+                            // Escape chuỗi
+                            const escaped = String(val)
+                                .replace(/\\/g, '\\\\')
+                                .replace(/'/g, "\\'")
+                                .replace(/\n/g, '\\n')
+                                .replace(/\r/g, '\\r');
+                            return `'${escaped}'`;
+                        });
+                        return `(${vals.join(', ')})`;
                     });
-                    return `(${vals.join(', ')})`;
-                });
-                dumpSQL += `INSERT INTO \`${tableName}\` (${columnList}) VALUES\n${values.join(',\n')};\n`;
+                    dumpSQL += `INSERT INTO \`${tableName}\` (${columnList}) VALUES\n${values.join(',\n')};\n`;
+                }
+                dumpSQL += '\n';
+            } else {
+                dumpSQL += `-- (Bảng ${tableName} không có dữ liệu)\n\n`;
             }
-            dumpSQL += '\n';
-        } else {
-            dumpSQL += `-- (Bảng ${tableName} không có dữ liệu)\n\n`;
+
+            exportedCount++;
+        } catch (err) {
+            // Bảng chưa tồn tại trong DB → bỏ qua
+            console.log(`   ⚠️  Bỏ qua bảng ${tableName} (chưa tồn tại trong DB)`);
+            skippedTables.push(tableName);
         }
     }
 
@@ -118,6 +143,10 @@ async function exportDB() {
     console.log('\n=========================================');
     console.log('🎉 EXPORT THÀNH CÔNG!');
     console.log(`📁 File: server/${outputFile} (${fileSizeKB} KB)`);
+    console.log(`📊 Đã export: ${exportedCount}/${TABLE_ORDER.length} bảng`);
+    if (skippedTables.length > 0) {
+        console.log(`⚠️  Bỏ qua ${skippedTables.length} bảng chưa tồn tại: ${skippedTables.join(', ')}`);
+    }
     console.log('=========================================');
     console.log('');
     console.log('👉 Bước tiếp theo:');

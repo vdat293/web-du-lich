@@ -1,6 +1,6 @@
 -- ===================================================
 -- DATABASE DUMP - Web Du Lịch (Aoklevart)
--- Exported at: 06:11:14 16/3/2026
+-- Exported at: 06:30:45 16/3/2026
 -- Database: web_du_lich
 -- ===================================================
 
@@ -2110,6 +2110,123 @@ INSERT INTO `reviews` (`id`, `customer_id`, `property_id`, `booking_id`, `rating
 (130, 10, 108, 130, 5, 'Trải nghiệm nghỉ dưỡng tuyệt vời!', '2026-04-06 03:00:00'),
 (131, 11, 108, 131, 4, 'Nhân viên chuyên nghiệp, phục vụ chu đáo.', '2026-04-11 03:00:00'),
 (132, 12, 34, 163, 5, 'tuyệt vời', '2026-03-15 11:06:27');
+
+-- ---------------------------------------------------
+-- Bảng: payments
+-- ---------------------------------------------------
+DROP TABLE IF EXISTS `payments`;
+CREATE TABLE `payments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `booking_id` int(11) NOT NULL,
+  `amount` decimal(15,0) NOT NULL,
+  `payment_method` varchar(50) NOT NULL,
+  `payment_status` varchar(50) DEFAULT 'pending',
+  `transaction_id` varchar(255) DEFAULT NULL,
+  `payment_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `notes` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `booking_id` (`booking_id`),
+  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Data cho bảng payments (15 dòng)
+INSERT INTO `payments` (`id`, `booking_id`, `amount`, `payment_method`, `payment_status`, `transaction_id`, `payment_date`, `notes`) VALUES
+(1, 158, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:11:02', NULL),
+(2, 159, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:11:06', NULL),
+(3, 160, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:11:10', NULL),
+(4, 161, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:11:10', NULL),
+(5, 162, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:11:11', NULL),
+(6, 163, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:14:21', NULL),
+(7, 164, '1265000', 'momo', 'pending', NULL, '2026-03-15 09:16:54', NULL),
+(8, 165, '1210000', 'momo', 'pending', NULL, '2026-03-15 09:54:51', NULL),
+(9, 166, '2750000', 'momo', 'pending', NULL, '2026-03-15 10:55:56', NULL),
+(10, 167, '715000', 'momo', 'pending', NULL, '2026-03-15 11:02:31', NULL),
+(11, 168, '1265000', 'momo', 'pending', NULL, '2026-03-15 11:06:41', NULL),
+(12, 169, '929500', 'momo', 'pending', NULL, '2026-03-15 11:10:07', NULL),
+(13, 170, '8415000', 'momo', 'pending', NULL, '2026-03-15 11:10:36', NULL),
+(14, 171, '1644500', 'momo', 'pending', NULL, '2026-03-15 11:16:13', NULL),
+(15, 172, '2200000', 'momo', 'pending', NULL, '2026-03-15 11:21:28', NULL);
+
+-- ---------------------------------------------------
+-- Bảng: booking_status_history
+-- ---------------------------------------------------
+DROP TABLE IF EXISTS `booking_status_history`;
+CREATE TABLE `booking_status_history` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `booking_id` int(11) NOT NULL,
+  `status` varchar(50) NOT NULL,
+  `note` text DEFAULT NULL,
+  `updated_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `booking_id` (`booking_id`),
+  KEY `updated_by` (`updated_by`),
+  CONSTRAINT `booking_status_history_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `booking_status_history_ibfk_2` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Data cho bảng booking_status_history (28 dòng)
+INSERT INTO `booking_status_history` (`id`, `booking_id`, `status`, `note`, `updated_by`, `created_at`) VALUES
+(1, 164, 'pending', 'Chờ xác nhận', 12, '2026-03-15 09:16:54'),
+(2, 165, 'pending', 'Chờ xác nhận', 12, '2026-03-15 09:54:51'),
+(3, 165, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:31:27'),
+(4, 164, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:32:17'),
+(5, 163, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:33:37'),
+(6, 162, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:36:24'),
+(7, 163, 'confirmed', 'Trạng thái thay đổi từ confirmed sang confirmed', 12, '2026-03-15 10:37:16'),
+(8, 160, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:37:17'),
+(9, 161, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 10:37:18'),
+(10, 159, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:37:20'),
+(11, 158, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:37:22'),
+(12, 157, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:37:24'),
+(13, 156, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:37:27'),
+(14, 155, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:39:13'),
+(15, 166, 'pending', 'Chờ xác nhận', 12, '2026-03-15 10:55:56'),
+(16, 166, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 10:56:06'),
+(17, 167, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:02:31'),
+(18, 167, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 11:02:42'),
+(19, 168, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:06:41'),
+(20, 168, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 11:09:43'),
+(21, 169, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:10:07'),
+(22, 169, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 11:10:20'),
+(23, 170, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:10:36'),
+(24, 171, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:16:13'),
+(25, 172, 'pending', 'Chờ xác nhận', 12, '2026-03-15 11:21:28'),
+(26, 172, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 11:21:34'),
+(27, 171, 'confirmed', 'Trạng thái thay đổi từ pending sang confirmed', 12, '2026-03-15 11:21:36'),
+(28, 170, 'cancelled', 'Booking bị hủy bởi admin', 12, '2026-03-15 11:21:38');
+
+-- ---------------------------------------------------
+-- Bảng: guest_bookings
+-- ---------------------------------------------------
+DROP TABLE IF EXISTS `guest_bookings`;
+CREATE TABLE `guest_bookings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `phone` varchar(20) NOT NULL,
+  `guest_name` varchar(255) NOT NULL,
+  `property_id` int(11) NOT NULL,
+  `room_type_id` int(11) NOT NULL,
+  `check_in` date NOT NULL,
+  `check_out` date NOT NULL,
+  `number_of_rooms` int(11) DEFAULT 1,
+  `total_price` decimal(15,0) NOT NULL,
+  `special_requests` text DEFAULT NULL,
+  `confirm_token` varchar(255) NOT NULL,
+  `is_confirmed` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `confirm_token` (`confirm_token`),
+  KEY `property_id` (`property_id`),
+  KEY `room_type_id` (`room_type_id`),
+  CONSTRAINT `guest_bookings_ibfk_1` FOREIGN KEY (`property_id`) REFERENCES `properties` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `guest_bookings_ibfk_2` FOREIGN KEY (`room_type_id`) REFERENCES `room_types` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Data cho bảng guest_bookings (2 dòng)
+INSERT INTO `guest_bookings` (`id`, `email`, `phone`, `guest_name`, `property_id`, `room_type_id`, `check_in`, `check_out`, `number_of_rooms`, `total_price`, `special_requests`, `confirm_token`, `is_confirmed`, `created_at`) VALUES
+(1, 'vdat123@gmail.com', '0908453459', 'abc', 42, 8, '2026-03-14 17:00:00', '2026-03-15 17:00:00', 1, '2200000', NULL, '976737e7-087b-4a6d-a165-67860bed5498', 0, '2026-03-15 07:00:56'),
+(4, 'abc@gmail.com', '0908453459', 'aaa', 31, 2, '2026-03-14 17:00:00', '2026-03-15 17:00:00', 1, '1210000', NULL, 'd16a9c00-6e31-4732-90f0-8a9dada24896', 0, '2026-03-15 08:24:18');
 
 SET FOREIGN_KEY_CHECKS = 1;
 
