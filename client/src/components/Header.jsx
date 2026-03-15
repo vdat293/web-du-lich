@@ -8,6 +8,7 @@ export default function Header() {
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [loginPromptMessage, setLoginPromptMessage] = useState('');
 
     // Form states
     const [loginEmail, setLoginEmail] = useState('');
@@ -37,8 +38,19 @@ export default function Header() {
         // Listen for dynamic updates (like from the Profile page)
         window.addEventListener('userUpdated', checkUser);
 
+        // Listen for openLoginModal event from other components
+        const handleOpenLoginModal = (e) => {
+            const message = e.detail?.message || '';
+            setLoginPromptMessage(message);
+            setIsLoginOpen(true);
+            setIsRegisterOpen(false);
+            setIsMobileMenuOpen(false);
+        };
+        window.addEventListener('openLoginModal', handleOpenLoginModal);
+
         return () => {
             window.removeEventListener('userUpdated', checkUser);
+            window.removeEventListener('openLoginModal', handleOpenLoginModal);
         };
     }, []);
 
@@ -63,6 +75,7 @@ export default function Header() {
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
                 localStorage.setItem('token', data.token); // Store JWT token
                 setIsLoginOpen(false);
+                window.dispatchEvent(new Event('userUpdated'));
                 setLoginEmail('');
                 setLoginPassword('');
             } else {
@@ -120,12 +133,14 @@ export default function Header() {
         setCurrentUser(null);
         localStorage.removeItem('currentUser');
         localStorage.removeItem('token');
+        window.dispatchEvent(new Event('userUpdated'));
         if (location.pathname === '/profile') {
             navigate('/');
         }
     };
 
     const openLogin = () => {
+        setLoginPromptMessage('');
         setIsLoginOpen(true);
         setIsRegisterOpen(false);
         setIsMobileMenuOpen(false);
@@ -165,6 +180,11 @@ export default function Header() {
                             <a href="/#about-section" className="nav-link text-sm font-medium text-charcoal hover:text-primary transition-colors duration-300">
                                 Về chúng tôi
                             </a>
+                            {currentUser && currentUser.role === 'admin' && (
+                                <Link to="/quan-ly" className="nav-link text-sm font-medium text-primary hover:text-primary-light transition-colors duration-300">
+                                    Quản lý
+                                </Link>
+                            )}
                         </nav>
 
                         {/* Action Buttons */}
@@ -232,6 +252,9 @@ export default function Header() {
                                 <a href="/#featured-properties-section" className="text-lg font-medium text-charcoal hover:text-primary">Chỗ ở</a>
                                 <a href="/#destinations-section" className="text-lg font-medium text-charcoal hover:text-primary">Điểm đến</a>
                                 <a href="/#about-section" className="text-lg font-medium text-charcoal hover:text-primary">Về chúng tôi</a>
+                                {currentUser && currentUser.role === 'admin' && (
+                                    <Link to="/quan-ly" className="text-lg font-medium text-primary hover:text-primary-light">Quản lý</Link>
+                                )}
                             </nav>
                             <hr className="border-neutral-100" />
                             <div className="flex flex-col gap-4">
@@ -287,6 +310,12 @@ export default function Header() {
                         </button>
 
                         <div className="p-8">
+                            {loginPromptMessage && (
+                                <div className="flex items-center gap-3 p-4 mb-6 bg-primary/5 border border-primary/20 rounded-xl">
+                                    <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                                    <p className="text-sm font-medium text-charcoal">{loginPromptMessage}</p>
+                                </div>
+                            )}
                             <div className="text-center mb-8">
                                 <h2 className="font-display text-2xl font-bold text-charcoal mb-2">Chào mừng trở lại</h2>
                                 <p className="text-warm-gray text-sm">Đăng nhập để tiếp tục trải nghiệm</p>

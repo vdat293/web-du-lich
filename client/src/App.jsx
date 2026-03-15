@@ -5,6 +5,7 @@ import Profile from './pages/Profile';
 import Payment from './pages/Payment';
 import Search from './pages/Search';
 import BookingHistory from './pages/BookingHistory';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -16,9 +17,11 @@ function App() {
         <Route path="/payment" element={<Payment />} />
         <Route path="/search" element={<Search />} />
         <Route path="/bookings" element={<BookingHistory />} />
+        <Route path="/quan-ly" element={<Admin />} />
       </Routes>
     </Router>
   )
 }
 
 export default App;
+

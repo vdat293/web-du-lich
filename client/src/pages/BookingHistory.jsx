@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import Header from '../components/Header';
 
 const STATUS_MAP = {
@@ -204,6 +205,9 @@ export default function BookingHistory() {
         }
     }, [navigate]);
 
+    // Socket.IO connection ref
+    const socketRef = useRef(null);
+
     useEffect(() => {
         if (!user) return;
         const token = localStorage.getItem('token');
@@ -234,6 +238,35 @@ export default function BookingHistory() {
         };
 
         fetchData();
+
+        // Initialize Socket.IO connection
+        const socket = io('/', {
+            auth: { token },
+        });
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            console.log('Socket connected:', socket.id);
+            // Join user room for personalized updates
+            socket.emit('joinUserRoom', user.id);
+        });
+
+        // Listen for booking status changes
+        socket.on('bookingStatusChanged', (data) => {
+            console.log('Booking status changed:', data);
+            // Re-fetch data to get updated status
+            fetchData();
+        });
+
+        socket.on('disconnect', () => {
+            console.log('Socket disconnected');
+        });
+
+        return () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        };
     }, [user, activeTab]);
 
     if (!user) return null;

@@ -1,17 +1,38 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function Home() {
   const navigate = useNavigate();
+  const trackRef = useRef(null);
   const containerRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const CLONE_COUNT = 5; // Clone 5 items ở mỗi đầu - đủ lấp viewport
+  const CARD_WIDTH = 320;
+  const CARD_GAP = 24;
+  const SLIDE_WIDTH = CARD_WIDTH + CARD_GAP;
+  const TRANSITION_DURATION = 350; // ms
+
   const [searchQuery, setSearchQuery] = useState('');
   const [properties, setProperties] = useState([]);
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [heroDropped, setHeroDropped] = useState(false);
   const [showPromo, setShowPromo] = useState(true);
+
+  const totalRealItems = featuredProperties.length;
+
+  // Tạo mảng: clone CLONE_COUNT items ở mỗi đầu cho seamless infinite loop
+  const carouselItems = React.useMemo(() => {
+    if (totalRealItems === 0) return [];
+    const beforeClones = featuredProperties.slice(-CLONE_COUNT); // 5 items cuối
+    const afterClones = featuredProperties.slice(0, CLONE_COUNT); // 5 items đầu
+    return [...beforeClones, ...featuredProperties, ...afterClones];
+  }, [featuredProperties, totalRealItems]);
+
+  // Index bắt đầu tại CLONE_COUNT (skip qua before-clones)
+  const indexRef = useRef(CLONE_COUNT);
+  const [renderIndex, setRenderIndex] = useState(CLONE_COUNT);
+  const isJumping = useRef(false);
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -51,6 +72,15 @@ export default function Home() {
   };
 
   const toggleFavorite = (property) => {
+    // Check if user is logged in
+    const currentUser = localStorage.getItem('currentUser');
+    if (!currentUser) {
+      window.dispatchEvent(new CustomEvent('openLoginModal', {
+        detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
+      }));
+      return;
+    }
+
     const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
     const exists = stored.some((item) => item.id === property.id);
     let updated = [];
@@ -86,67 +116,139 @@ export default function Home() {
     }
   };
 
-  // Scroll to card at index
-  const scrollToIndex = (index) => {
-    if (!containerRef.current) return;
+  // Di chuyển carousel - không chặn click
+  const moveTo = useCallback((newIndex, animate = true) => {
+    if (totalRealItems === 0) return;
+    indexRef.current = newIndex;
+    if (trackRef.current) {
+      trackRef.current.style.transition = animate
+        ? `transform ${TRANSITION_DURATION}ms ease`
+        : 'none';
+      trackRef.current.style.transform = `translateX(-${newIndex * SLIDE_WIDTH}px)`;
+    }
+    setRenderIndex(newIndex);
+  }, [totalRealItems, SLIDE_WIDTH, TRANSITION_DURATION]);
 
-    const container = containerRef.current;
-    const cards = container.querySelectorAll('.property-card');
-    if (cards.length === 0 || !cards[index]) return;
-
-    const cardWidth = cards[0].offsetWidth + 24;
-    const gap = 24;
-    const target = index * (cardWidth + gap);
-
-    container.scrollTo({
-      left: target,
-      behavior: 'smooth'
+  // Instant jump (no animation) - dùng khi wrap around
+  const jumpTo = useCallback((newIndex) => {
+    if (!trackRef.current) return;
+    isJumping.current = true;
+    indexRef.current = newIndex;
+    trackRef.current.style.transition = 'none';
+    trackRef.current.style.transform = `translateX(-${newIndex * SLIDE_WIDTH}px)`;
+    // Force reflow
+    void trackRef.current.offsetHeight;
+    setRenderIndex(newIndex);
+    // Bật lại transition ở frame tiếp
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (trackRef.current) {
+          trackRef.current.style.transition = `transform ${TRANSITION_DURATION}ms ease`;
+        }
+        isJumping.current = false;
+      });
     });
+  }, [SLIDE_WIDTH, TRANSITION_DURATION]);
 
-    // Giới hạn activeIndex từ 0-6
-    const newIndex = Math.min(index, 6);
-    setActiveIndex(newIndex);
-  };
+  // Auto-play management - dừng khi hover, chạy khi rời chuột
+  const autoPlayRef = useRef(null);
+  const isHoveredRef = useRef(false);
 
-  const scrollPrev = () => {
-    // Nếu đang ở vị trí 0, nhảy đến vị trí 6 (điểm bắt đầu vòng lặp)
-    if (activeIndex === 0) {
-      setActiveIndex(6);
-      scrollToIndex(6);
-    } else {
-      const newIndex = activeIndex - 1;
-      setActiveIndex(newIndex);
-      scrollToIndex(newIndex);
+  const stopAutoPlay = useCallback(() => {
+    if (autoPlayRef.current) {
+      clearInterval(autoPlayRef.current);
+      autoPlayRef.current = null;
     }
-  };
-
-  const scrollNext = () => {
-    const maxIndex = featuredProperties.length - 1;
-    // Nếu từ vị trí này + 4 sẽ vượt quá số cards, quay về 0
-    if (activeIndex >= 6) {
-      setActiveIndex(0);
-      scrollToIndex(0);
-    } else {
-      const newIndex = activeIndex + 1;
-      setActiveIndex(newIndex);
-      scrollToIndex(newIndex);
-    }
-  };
-
-  const handleScroll = () => {
-    if (!containerRef.current) return;
-    const cards = containerRef.current.querySelectorAll('.property-card');
-    if (cards.length === 0) return;
-    const cardWidth = cards[0].offsetWidth + 24;
-    const scrollPosition = containerRef.current.scrollLeft;
-    const maxIndex = Math.max(0, featuredProperties.length - 1);
-    setActiveIndex(Math.min(Math.round(scrollPosition / cardWidth), maxIndex));
-  };
-
-  useEffect(() => {
-    // Any specific React initialization if needed
-    // Note: Modal logic is still in <script> in index.html, but ideally should be managed by React state.
   }, []);
+
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay();
+    autoPlayRef.current = setInterval(() => {
+      // Chỉ auto-play khi KHÔNG hover
+      if (totalRealItems === 0 || isHoveredRef.current) return;
+      moveTo(indexRef.current + 1);
+    }, 4000);
+  }, [totalRealItems, moveTo, stopAutoPlay]);
+
+  // Hover handlers - thật sự dừng/bật lại interval
+  const handleCarouselMouseEnter = useCallback(() => {
+    isHoveredRef.current = true;
+    stopAutoPlay(); // Dừng hẳn interval khi hover
+  }, [stopAutoPlay]);
+
+  const handleCarouselMouseLeave = useCallback(() => {
+    isHoveredRef.current = false;
+    startAutoPlay(); // Bật lại interval khi rời chuột
+  }, [startAutoPlay]);
+
+  // Next slide
+  const scrollNext = useCallback(() => {
+    if (totalRealItems === 0) return;
+    moveTo(indexRef.current + 1);
+  }, [totalRealItems, moveTo]);
+
+  // Previous slide
+  const scrollPrev = useCallback(() => {
+    if (totalRealItems === 0) return;
+    moveTo(indexRef.current - 1);
+  }, [totalRealItems, moveTo]);
+
+  // Handle transition end - kiểm tra và wrap nếu cần
+  const handleTransitionEnd = useCallback(() => {
+    if (!trackRef.current || isJumping.current) return;
+    const cur = indexRef.current;
+    if (cur >= CLONE_COUNT + totalRealItems) {
+      jumpTo(cur - totalRealItems);
+    } else if (cur < CLONE_COUNT) {
+      jumpTo(cur + totalRealItems);
+    }
+  }, [totalRealItems, jumpTo]);
+
+  // Scroll to specific indicator index
+  const scrollToIndex = useCallback((targetIndex) => {
+    if (totalRealItems === 0) return;
+    moveTo(CLONE_COUNT + targetIndex);
+  }, [totalRealItems, moveTo]);
+
+  // Tính activeIndex hiển thị (0 đến totalRealItems - 1)
+  const getDisplayIndex = useCallback(() => {
+    const real = ((renderIndex - CLONE_COUNT) % totalRealItems + totalRealItems) % totalRealItems;
+    return real;
+  }, [renderIndex, totalRealItems]);
+
+  // Set initial position
+  useEffect(() => {
+    if (totalRealItems > 0 && trackRef.current) {
+      trackRef.current.style.transition = 'none';
+      trackRef.current.style.transform = `translateX(-${CLONE_COUNT * SLIDE_WIDTH}px)`;
+      indexRef.current = CLONE_COUNT;
+      setRenderIndex(CLONE_COUNT);
+    }
+  }, [totalRealItems, SLIDE_WIDTH]);
+
+  // Start auto-play khi data sẵn sàng
+  useEffect(() => {
+    if (totalRealItems === 0) return;
+    startAutoPlay();
+    return () => stopAutoPlay();
+  }, [totalRealItems, startAutoPlay, stopAutoPlay]);
+
+  // Dừng auto-play khi chuyển tab, bật lại khi quay về
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab ẩn → dừng auto-play hoàn toàn
+        stopAutoPlay();
+      } else {
+        // Tab hiện lại → bật auto-play nếu không đang hover
+        if (!isHoveredRef.current && totalRealItems > 0) {
+          startAutoPlay();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [totalRealItems, startAutoPlay, stopAutoPlay]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -274,26 +376,37 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Carousel */}
-              <div className="relative group/carousel px-4 md:px-8 overflow-visible">
+              {/* Carousel - hover dừng auto-play */}
+              <div
+                className="relative group/carousel px-12 md:px-16 overflow-visible"
+                onMouseEnter={handleCarouselMouseEnter}
+                onMouseLeave={handleCarouselMouseLeave}
+              >
                 {/* Previous Button */}
-                <button id="carousel-prev" onClick={scrollPrev}
-                  className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300">
-                  <span className="material-symbols-outlined">chevron_left</span>
+                <button
+                  onClick={scrollPrev}
+                  className="hidden md:flex absolute left-2 top-[45%] -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 backdrop-blur-sm shadow-lg items-center justify-center text-charcoal hover:bg-primary hover:text-white hover:scale-110 transition-all duration-300"
+                >
+                  <span className="material-symbols-outlined text-xl">chevron_left</span>
                 </button>
 
-                {/* Properties Container */}
-                <div
-                  id="carousel-container"
-                  ref={containerRef}
-                  onScroll={handleScroll}
-                  className="carousel-scroll flex overflow-x-auto pb-4"
-                >
-                  <div id="featured-properties" className="flex gap-6">
-                    {featuredProperties.map((property, idx) => (
+                {/* Track Container */}
+                <div ref={containerRef} className="overflow-hidden rounded-xl">
+                  <div
+                    ref={trackRef}
+                    onTransitionEnd={handleTransitionEnd}
+                    className="flex"
+                    style={{
+                      gap: `${CARD_GAP}px`,
+                      transform: `translateX(-${CLONE_COUNT * SLIDE_WIDTH}px)`,
+                      transition: 'none'
+                    }}
+                  >
+                    {carouselItems.map((property, idx) => (
                       <div
-                        key={property.id}
-                        className={`property-card group flex-shrink-0 w-[320px] bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-all duration-300 select-none flex flex-col ${idx === activeIndex ? 'card-active' : ''}`}
+                        key={`carousel-${idx}`}
+                        className="carousel-card property-card group flex-shrink-0 bg-white rounded-2xl overflow-hidden shadow-elegant hover-lift cursor-pointer transition-all duration-300 select-none flex flex-col"
+                        style={{ width: `${CARD_WIDTH}px` }}
                       >
                         <div className="relative aspect-[4/3] overflow-hidden">
                           <Link to={`/details/${property.id}`}>
@@ -369,18 +482,28 @@ export default function Home() {
                 </div>
 
                 {/* Next Button */}
-                <button id="carousel-next" onClick={scrollNext}
-                  className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-white shadow-elegant items-center justify-center text-charcoal hover:bg-primary hover:text-white transition-all duration-300">
-                  <span className="material-symbols-outlined">chevron_right</span>
+                <button
+                  onClick={scrollNext}
+                  className="hidden md:flex absolute right-2 top-[45%] -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/95 backdrop-blur-sm shadow-lg items-center justify-center text-charcoal hover:bg-primary hover:text-white hover:scale-110 transition-all duration-300"
+                >
+                  <span className="material-symbols-outlined text-xl">chevron_right</span>
                 </button>
-              </div>
 
-              {/* Carousel Indicators */}
-              <div className="hidden md:flex items-center justify-center gap-2 mt-8">
-                <div id="carousel-indicators" className="flex gap-2">
-                  {[...Array(7)].map((_, idx) => (
-                    <button key={idx} onClick={() => scrollToIndex(idx)} className={`carousel-indicator h-2 rounded-full transition-all duration-300 ${idx === activeIndex ? 'bg-primary w-8' : 'bg-warm-gray/30 w-2'}`}></button>
-                  ))}
+                {/* Carousel Indicators */}
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <div className="flex gap-1.5">
+                    {[...Array(totalRealItems)].map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => scrollToIndex(idx)}
+                        className={`carousel-indicator h-2.5 rounded-full transition-all duration-200 cursor-pointer ${
+                          idx === getDisplayIndex()
+                            ? 'bg-primary w-8 shadow-sm'
+                            : 'bg-warm-gray/25 w-2.5 hover:bg-warm-gray/40'
+                        }`}
+                      ></button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

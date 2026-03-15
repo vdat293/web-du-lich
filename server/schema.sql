@@ -1,4 +1,5 @@
 -- Bảng hợp nhất users chứa tất cả thông tin
+DROP TABLE IF EXISTS guest_bookings;
 DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS bookings;
 DROP TABLE IF EXISTS room_types;
@@ -200,4 +201,24 @@ CREATE TABLE property_rules (
   rule_content TEXT NOT NULL,
   is_allowed BOOLEAN DEFAULT TRUE,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+);
+
+-- Bảng booking tạm cho khách chưa có tài khoản
+CREATE TABLE guest_bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  guest_name VARCHAR(255) NOT NULL,
+  property_id INT NOT NULL,
+  room_type_id INT NOT NULL,
+  check_in DATE NOT NULL,
+  check_out DATE NOT NULL,
+  number_of_rooms INT DEFAULT 1,
+  total_price DECIMAL(15,0) NOT NULL,
+  special_requests TEXT,
+  confirm_token VARCHAR(255) NOT NULL UNIQUE,
+  is_confirmed BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE
 );

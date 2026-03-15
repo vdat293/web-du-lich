@@ -16,6 +16,20 @@ export default function Details() {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isShareBarOpen, setIsShareBarOpen] = useState(false);
     const mapSectionRef = useRef(null);
+    const [currentUser, setCurrentUser] = useState(() => {
+        const stored = localStorage.getItem('currentUser');
+        return stored ? JSON.parse(stored) : null;
+    });
+
+    // Reviews state
+    const [reviews, setReviews] = useState([]);
+    const [avgRating, setAvgRating] = useState(0);
+    const [totalReviews, setTotalReviews] = useState(0);
+    const [userBookings, setUserBookings] = useState([]);
+    const [reviewForm, setReviewForm] = useState({ booking_id: '', rating: 5, comment: '' });
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [reviewError, setReviewError] = useState('');
+    const [reviewSuccess, setReviewSuccess] = useState('');
 
     const today = new Date().toISOString().split('T')[0];
 
@@ -63,6 +77,111 @@ export default function Details() {
         fetchProperties();
     }, [id]);
 
+    // Fetch reviews for this property
+    const fetchReviews = async () => {
+        try {
+            const res = await fetch(`/api/reviews?property_id=${id}`);
+            if (res.ok) {
+                const data = await res.json();
+                setReviews(data.reviews);
+                setAvgRating(data.averageRating);
+                setTotalReviews(data.totalReviews);
+            }
+        } catch (error) {
+            console.error('Lỗi khi tải đánh giá:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (id) fetchReviews();
+    }, [id]);
+
+    // Listen for login/logout to update review section reactively
+    useEffect(() => {
+        const handleUserUpdated = () => {
+            const stored = localStorage.getItem('currentUser');
+            setCurrentUser(stored ? JSON.parse(stored) : null);
+        };
+        window.addEventListener('userUpdated', handleUserUpdated);
+        return () => window.removeEventListener('userUpdated', handleUserUpdated);
+    }, []);
+
+    // Fetch user's bookings for this property (to allow review submission)
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token || !id) return;
+        const fetchUserBookings = async () => {
+            try {
+                const res = await fetch('/api/user/bookings', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    // Lọc bookings confirmed cho property này và chưa được review
+                    const reviewedBookingIds = reviews.map(r => r.booking_id);
+                    const available = data.filter(b =>
+                        b.property_id.toString() === id &&
+                        b.status === 'confirmed' &&
+                        !reviewedBookingIds.includes(b.id)
+                    );
+                    setUserBookings(available);
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải bookings:', error);
+            }
+        };
+        fetchUserBookings();
+    }, [id, reviews]);
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        setReviewError('');
+        setReviewSuccess('');
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.dispatchEvent(new CustomEvent('openLoginModal', {
+                detail: { message: 'Đăng nhập để đánh giá chỗ ở' }
+            }));
+            return;
+        }
+
+        if (!reviewForm.booking_id) {
+            setReviewError('Vui lòng chọn booking để đánh giá');
+            return;
+        }
+
+        setReviewSubmitting(true);
+        try {
+            const res = await fetch('/api/reviews', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    property_id: parseInt(id),
+                    booking_id: parseInt(reviewForm.booking_id),
+                    rating: reviewForm.rating,
+                    comment: reviewForm.comment
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setReviewSuccess('Đánh giá thành công!');
+                setReviewForm({ booking_id: '', rating: 5, comment: '' });
+                fetchReviews(); // Reload reviews
+            } else {
+                setReviewError(data.message || 'Có lỗi xảy ra');
+            }
+        } catch (error) {
+            setReviewError('Không thể gửi đánh giá. Vui lòng thử lại.');
+        } finally {
+            setReviewSubmitting(false);
+        }
+    };
+
     useEffect(() => {
         if (!property) return;
         const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
@@ -71,6 +190,16 @@ export default function Details() {
 
     const toggleFavorite = () => {
         if (!property) return;
+
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            window.dispatchEvent(new CustomEvent('openLoginModal', {
+                detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
+            }));
+            return;
+        }
+
         const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
         const exists = stored.some((item) => item.id === property.id);
         let updated = [];
@@ -437,56 +566,159 @@ export default function Details() {
                                     </div>
                                     <div className="pb-8 border-b border-neutral-200 dark:border-neutral-700">
                                         <div className="flex items-center gap-2 mb-6">
-                                            <span className="material-symbols-outlined text-accent-gold !text-2xl"
-                                            >star</span>
-                                            <h2 className="text-xl font-bold text-neutral-700 dark:text-white" id="reviews-summary">{property.rating} ({property.reviews} đánh giá)</h2>
+                                            <span className="material-symbols-outlined text-accent-gold !text-2xl">star</span>
+                                            <h2 className="text-xl font-bold text-neutral-700 dark:text-white" id="reviews-summary">
+                                                {avgRating > 0 ? `${avgRating} · ${totalReviews} đánh giá` : 'Chưa có đánh giá'}
+                                            </h2>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                                            <div className="flex justify-between items-center gap-4">
-                                                <span className="text-neutral-500 dark:text-neutral-200">Sạch sẽ</span>
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1">
-                                                        <div className="bg-neutral-700 dark:bg-white h-1 rounded-full"
-                                                        ></div>
+
+                                        {/* Danh sách reviews */}
+                                        {reviews.length > 0 ? (
+                                            <div className="flex flex-col gap-6 mb-8">
+                                                {reviews.map((review) => (
+                                                    <div key={review.id} className="flex gap-4">
+                                                        <img
+                                                            src={review.user_avatar || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}
+                                                            alt={review.user_name}
+                                                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                        />
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="font-bold text-neutral-700 dark:text-white text-sm">{review.user_name}</span>
+                                                                <span className="text-xs text-neutral-400">
+                                                                    {new Date(review.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-0.5 mb-2">
+                                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                                    <span
+                                                                        key={star}
+                                                                        className="material-symbols-outlined !text-sm"
+                                                                        style={{
+                                                                            color: star <= review.rating ? '#f59e0b' : '#d1d5db',
+                                                                            fontVariationSettings: `'FILL' ${star <= review.rating ? 1 : 0}`
+                                                                        }}
+                                                                    >star</span>
+                                                                ))}
+                                                            </div>
+                                                            {review.comment && (
+                                                                <p className="text-neutral-600 dark:text-neutral-300 text-sm leading-relaxed">{review.comment}</p>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <span
-                                                        className="font-medium text-sm text-neutral-700 dark:text-white">5.0</span>
-                                                </div>
+                                                ))}
                                             </div>
-                                            <div className="flex justify-between items-center gap-4">
-                                                <span className="text-neutral-500 dark:text-neutral-200">Độ chính xác</span>
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1">
-                                                        <div className="bg-neutral-700 dark:bg-white h-1 rounded-full"
-                                                        ></div>
+                                        ) : (
+                                            <p className="text-neutral-500 dark:text-neutral-300 text-sm mb-8">Chưa có đánh giá nào cho chỗ ở này.</p>
+                                        )}
+
+                                        {/* Form viết đánh giá */}
+                                        {(() => {
+                                            if (!currentUser) {
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            window.dispatchEvent(new CustomEvent('openLoginModal', {
+                                                                detail: { message: 'Đăng nhập để đánh giá chỗ ở' }
+                                                            }));
+                                                        }}
+                                                        className="flex items-center gap-2 px-5 py-3 rounded-lg border border-neutral-700 dark:border-white text-neutral-700 dark:text-white font-bold text-sm hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                                                    >
+                                                        <span className="material-symbols-outlined !text-lg">login</span>
+                                                        Đăng nhập để đánh giá
+                                                    </button>
+                                                );
+                                            }
+
+                                            if (userBookings.length === 0) {
+                                                return (
+                                                    <p className="text-neutral-400 dark:text-neutral-500 text-sm italic">
+                                                        Bạn cần có booking đã xác nhận tại chỗ ở này để đánh giá.
+                                                    </p>
+                                                );
+                                            }
+
+                                            return (
+                                                <form onSubmit={handleSubmitReview} className="bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-5 flex flex-col gap-4">
+                                                    <h3 className="font-bold text-neutral-700 dark:text-white">Viết đánh giá của bạn</h3>
+
+                                                    {/* Chọn booking */}
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-neutral-300 mb-1">Chọn booking</label>
+                                                        <select
+                                                            value={reviewForm.booking_id}
+                                                            onChange={(e) => setReviewForm(prev => ({ ...prev, booking_id: e.target.value }))}
+                                                            className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-white text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                        >
+                                                            <option value="">-- Chọn booking --</option>
+                                                            {userBookings.map((b) => (
+                                                                <option key={b.id} value={b.id}>
+                                                                    #{b.id} · {new Date(b.check_in).toLocaleDateString('vi-VN')} → {new Date(b.check_out).toLocaleDateString('vi-VN')} · {b.room_type_name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
                                                     </div>
-                                                    <span
-                                                        className="font-medium text-sm text-neutral-700 dark:text-white">5.0</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex justify-between items-center gap-4">
-                                                <span className="text-neutral-500 dark:text-neutral-200">Giao tiếp</span>
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1">
-                                                        <div className="bg-neutral-700 dark:bg-white h-1 rounded-full"
-                                                        ></div>
+
+                                                    {/* Rating sao */}
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-neutral-300 mb-2">Đánh giá</label>
+                                                        <div className="flex items-center gap-1">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <button
+                                                                    key={star}
+                                                                    type="button"
+                                                                    onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                                                                    className="p-0.5 transition-transform hover:scale-110"
+                                                                >
+                                                                    <span
+                                                                        className="material-symbols-outlined !text-2xl"
+                                                                        style={{
+                                                                            color: star <= reviewForm.rating ? '#f59e0b' : '#d1d5db',
+                                                                            fontVariationSettings: `'FILL' ${star <= reviewForm.rating ? 1 : 0}`
+                                                                        }}
+                                                                    >star</span>
+                                                                </button>
+                                                            ))}
+                                                            <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-300">{reviewForm.rating}/5</span>
+                                                        </div>
                                                     </div>
-                                                    <span
-                                                        className="font-medium text-sm text-neutral-700 dark:text-white">{property.rating}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex justify-between items-center gap-4">
-                                                <span className="text-neutral-500 dark:text-neutral-200">Vị trí</span>
-                                                <div className="flex items-center gap-2 flex-1">
-                                                    <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1">
-                                                        <div className="bg-neutral-700 dark:bg-white h-1 rounded-full"
-                                                        ></div>
+
+                                                    {/* Comment */}
+                                                    <div>
+                                                        <label className="block text-xs font-bold uppercase text-neutral-500 dark:text-neutral-300 mb-1">Nhận xét</label>
+                                                        <textarea
+                                                            value={reviewForm.comment}
+                                                            onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                                                            placeholder="Chia sẻ trải nghiệm của bạn..."
+                                                            rows={3}
+                                                            className="w-full px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-white text-sm resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                        />
                                                     </div>
-                                                    <span
-                                                        className="font-medium text-sm text-neutral-700 dark:text-white">{property.rating}</span>
-                                                </div>
-                                            </div>
-                                        </div>
+
+                                                    {reviewError && <p className="text-red-500 text-xs">{reviewError}</p>}
+                                                    {reviewSuccess && <p className="text-green-500 text-xs font-bold">{reviewSuccess}</p>}
+
+                                                    <button
+                                                        type="submit"
+                                                        disabled={reviewSubmitting}
+                                                        className="self-start flex items-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white font-bold text-sm hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                                    >
+                                                        {reviewSubmitting ? (
+                                                            <>
+                                                                <span className="material-symbols-outlined !text-lg animate-spin">progress_activity</span>
+                                                                Đang gửi...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <span className="material-symbols-outlined !text-lg">send</span>
+                                                                Gửi đánh giá
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </form>
+                                            );
+                                        })()}
                                     </div>
                                     <div ref={mapSectionRef}>
                                         <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Vị trí chỗ ở</h2>

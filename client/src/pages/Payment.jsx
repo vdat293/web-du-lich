@@ -24,6 +24,12 @@ export default function Payment() {
     const [bookingId, setBookingId] = useState(null);
     const [paymentError, setPaymentError] = useState('');
 
+    // Guest checkout state
+    const isLoggedIn = !!localStorage.getItem('token');
+    const [guestName, setGuestName] = useState('');
+    const [guestEmail, setGuestEmail] = useState('');
+    const [guestPhone, setGuestPhone] = useState('');
+
     useEffect(() => {
         const fetchProperties = async () => {
             if (propertyId) {
@@ -132,61 +138,115 @@ export default function Payment() {
         }
     };
 
-    const handleConfirmPayment = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setPaymentError('Bạn chưa đăng nhập. Vui lòng đăng nhập để đặt phòng.');
-            return;
+    // Lấy room_type_id thực từ property.rooms
+    const getRoomTypeId = () => {
+        const rooms = property.rooms || [];
+        if (rooms.length > 0) {
+            const idx = roomTypeParam === 'double' ? 1 : roomTypeParam === 'quad' ? 2 : 0;
+            return rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
         }
+        return null;
+    };
 
+    const formatDateForDB = (date) => {
+        const y = date.getFullYear();
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const d = date.getDate().toString().padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    const handleConfirmPayment = async () => {
         setIsProcessing(true);
         setPaymentError('');
 
-        // Lấy room_type_id thực từ property.rooms
-        const rooms = property.rooms || [];
-        let roomTypeId = null;
-        if (rooms.length > 0) {
-            const idx = roomTypeParam === 'double' ? 1 : roomTypeParam === 'quad' ? 2 : 0;
-            roomTypeId = rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
-        }
+        const roomTypeId = getRoomTypeId();
 
-        const formatDateForDB = (date) => {
-            const y = date.getFullYear();
-            const m = (date.getMonth() + 1).toString().padStart(2, '0');
-            const d = date.getDate().toString().padStart(2, '0');
-            return `${y}-${m}-${d}`;
-        };
+        if (isLoggedIn) {
+            // === FLOW CŨ: ĐÃ ĐĂNG NHẬP ===
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch('/api/user/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        property_id: propertyId,
+                        room_type_id: roomTypeId,
+                        check_in: formatDateForDB(checkInDate),
+                        check_out: formatDateForDB(checkOutDate),
+                        number_of_rooms: 1,
+                        total_price: total,
+                        special_requests: specialRequests || null,
+                    }),
+                });
 
-        try {
-            const res = await fetch('/api/user/bookings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    property_id: propertyId,
-                    room_type_id: roomTypeId,
-                    check_in: formatDateForDB(checkInDate),
-                    check_out: formatDateForDB(checkOutDate),
-                    number_of_rooms: 1,
-                    total_price: total,
-                    special_requests: specialRequests || null,
-                }),
-            });
+                const data = await res.json();
+                setIsProcessing(false);
 
-            const data = await res.json();
-            setIsProcessing(false);
-
-            if (res.ok) {
-                setBookingId(data.booking_id);
-                setIsSuccess(true);
-            } else {
-                setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
+                if (res.ok) {
+                    setBookingId(data.booking_id);
+                    setIsSuccess(true);
+                } else {
+                    setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
+                }
+            } catch (err) {
+                setIsProcessing(false);
+                setPaymentError('Lỗi kết nối máy chủ.');
             }
-        } catch (err) {
-            setIsProcessing(false);
-            setPaymentError('Lỗi kết nối máy chủ.');
+        } else {
+            // === FLOW MỚI: GUEST CHECKOUT ===
+            if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
+                setIsProcessing(false);
+                setPaymentError('Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(guestEmail)) {
+                setIsProcessing(false);
+                setPaymentError('Email không hợp lệ.');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/guest/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: guestEmail.trim(),
+                        phone: guestPhone.trim(),
+                        guest_name: guestName.trim(),
+                        property_id: propertyId,
+                        room_type_id: roomTypeId,
+                        check_in: formatDateForDB(checkInDate),
+                        check_out: formatDateForDB(checkOutDate),
+                        number_of_rooms: 1,
+                        total_price: total,
+                        special_requests: specialRequests || null,
+                    }),
+                });
+
+                const data = await res.json();
+                setIsProcessing(false);
+
+                if (res.ok) {
+                    if (data.status === 'confirmed') {
+                        // Email đã tồn tại → booking tạo trực tiếp
+                        setBookingId(data.booking_id);
+                        setIsSuccess(true);
+                    } else if (data.status === 'pending') {
+                        // Email mới → redirect sang booking-alert để xem danh sách booking
+                        navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
+                    }
+                } else {
+                    setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
+                }
+            } catch (err) {
+                setIsProcessing(false);
+                setPaymentError('Lỗi kết nối máy chủ.');
+            }
         }
     };
 
@@ -268,6 +328,48 @@ export default function Payment() {
                         </div>
 
                         <div className="border-t border-neutral-200 dark:border-neutral-700"></div>
+
+                        {/* Guest Info Form - chỉ hiện khi chưa login */}
+                        {!isLoggedIn && (
+                            <div>
+                                <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Thông tin khách hàng</h2>
+                                <p className="text-neutral-500 dark:text-neutral-200 text-sm mb-4">Bạn chưa đăng nhập. Vui lòng nhập thông tin để đặt phòng.</p>
+                                <div className="flex flex-col gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Họ và tên</label>
+                                        <input
+                                            type="text"
+                                            value={guestName}
+                                            onChange={(e) => setGuestName(e.target.value)}
+                                            placeholder="Nguyễn Văn A"
+                                            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Email</label>
+                                        <input
+                                            type="email"
+                                            value={guestEmail}
+                                            onChange={(e) => setGuestEmail(e.target.value)}
+                                            placeholder="email@example.com"
+                                            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Số điện thoại</label>
+                                        <input
+                                            type="tel"
+                                            value={guestPhone}
+                                            onChange={(e) => setGuestPhone(e.target.value)}
+                                            placeholder="0912 345 678"
+                                            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!isLoggedIn && <div className="border-t border-neutral-200 dark:border-neutral-700"></div>}
 
                         <div>
                             <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Thông tin cần thiết cho chuyến đi</h2>
@@ -404,9 +506,9 @@ export default function Payment() {
                             <h3 className="text-2xl font-bold text-neutral-700 dark:text-white mb-2">Thanh toán thành công!</h3>
                             <p className="text-neutral-500 dark:text-neutral-300">Cảm ơn bạn đã đặt phòng. Mã đặt phòng của bạn là <span className="font-bold text-primary">#{bookingId}</span></p>
                         </div>
-                        <button onClick={() => navigate('/')}
+                        <button onClick={() => navigate('/bookings')}
                             className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors">
-                            Quay về trang chủ
+                            Xem lịch sử đặt phòng
                         </button>
                     </div>
                 </div>

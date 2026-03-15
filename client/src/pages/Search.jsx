@@ -140,6 +140,15 @@ export default function Search() {
     };
 
     const toggleFavorite = (property) => {
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
+            window.dispatchEvent(new CustomEvent('openLoginModal', {
+                detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
+            }));
+            return;
+        }
+
         const stored = JSON.parse(localStorage.getItem('favoriteProperties') || '[]');
         const exists = stored.some((item) => item.id === property.id);
         let updated = [];

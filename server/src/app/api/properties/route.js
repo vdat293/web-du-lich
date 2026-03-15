@@ -20,6 +20,12 @@ export async function GET(req) {
             `, [p.id]);
             const [rooms] = await db.execute('SELECT * FROM room_types WHERE property_id = ?', [p.id]);
 
+            // Lấy rating và số lượng reviews thật từ DB
+            const [reviewStats] = await db.execute(`
+                SELECT COUNT(*) as total_reviews, COALESCE(AVG(rating), 0) as avg_rating
+                FROM reviews WHERE property_id = ?
+            `, [p.id]);
+
             const mainImage = images.find(img => img.is_main) || images[0];
             const galleryImages = images.filter(img => !mainImage || img.id !== mainImage.id).map(img => img.image_url);
 
@@ -31,15 +37,15 @@ export async function GET(req) {
                 type: p.type,
                 location: p.location,
                 price: rawPrice ? rawPrice.toLocaleString('vi-VN') + '₫' : 'Liên hệ',
-                rating: 4.8,
-                reviews: Math.floor(Math.random() * 500) + 50,
+                rating: parseFloat(Number(reviewStats[0].avg_rating).toFixed(1)),
+                reviews: Number(reviewStats[0].total_reviews),
                 host: {
                     name: p.host_name || 'Unknown',
                     avatar: p.host_avatar || '',
                     superhost: p.host_role === 'host',
                 },
-                bedrooms: 3, // mock data or we could calculate if needed
-                bathrooms: 2, // mock data or we could calculate if needed
+                bedrooms: 3,
+                bathrooms: 2,
                 maxGuests: rooms.length > 0 ? rooms[0].max_adults : 2,
                 isHot: p.is_hot,
                 description: p.description,

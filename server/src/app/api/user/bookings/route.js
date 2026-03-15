@@ -98,7 +98,7 @@ export async function POST(req) {
         // Tạo booking
         const [result] = await db.execute(
             `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmed', ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
             [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, finalPrice, special_requests || null]
         );
 
@@ -121,9 +121,28 @@ export async function POST(req) {
 
         // Lưu lịch sử trạng thái
         await db.execute(
-            `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, 'confirmed', 'Đặt phòng thành công', ?)`,
+            `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, 'pending', 'Chờ xác nhận', ?)`,
             [bookingId, userId]
         );
+
+        // Get property info to include in the notification
+        const [propertyInfo] = await db.execute(
+            `SELECT p.name as property_name, p.host_id FROM properties p WHERE p.id = ?`,
+            [property_id]
+        );
+
+        // Emit Socket.IO event for new booking - notify admin
+        if (global.io) {
+            global.io.emit('newBooking', {
+                bookingId,
+                propertyId: property_id,
+                propertyName: propertyInfo[0]?.property_name,
+                hostId: propertyInfo[0]?.host_id,
+                status: 'pending',
+                checkIn: check_in,
+                checkOut: check_out,
+            });
+        }
 
         return NextResponse.json({
             message: 'Đặt phòng thành công',
