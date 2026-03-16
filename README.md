@@ -380,5 +380,5 @@ guest_bookings         ├── id (PK)             ├── code (UNIQUE)
 ---
 
 <p align="center">
-  <b>Team 8386</b> — Lập trình Web · BDU · 2026
+  <b>Team 8386</b> — Lập trình Web · BDU · 2026 a
 </p>
