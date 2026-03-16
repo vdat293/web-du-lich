@@ -16,7 +16,6 @@ export default function Home() {
   const [properties, setProperties] = useState([]);
   const [featuredProperties, setFeaturedProperties] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
-  const [heroDropped, setHeroDropped] = useState(false);
   const [showPromo, setShowPromo] = useState(true);
 
   const totalRealItems = featuredProperties.length;
@@ -250,13 +249,6 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [totalRealItems, startAutoPlay, stopAutoPlay]);
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setHeroDropped(true);
-    }, 120);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
     <>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
@@ -312,7 +304,7 @@ export default function Home() {
                 <span
                   role="button"
                   tabIndex={0}
-                  className={`hero-entry-drop italic text-accent-light inline-block select-none align-baseline cursor-pointer ${heroDropped ? 'hero-entry-drop-active' : 'hero-entry-drop-rise'}`}
+                  className="italic text-accent-light inline-block select-none align-baseline cursor-pointer"
                 >
                   đẳng cấp
                 </span>{' '}dành cho bạn
