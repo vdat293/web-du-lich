@@ -41,7 +41,7 @@ export async function GET(req) {
             SELECT b.*, p.name as property_name, u.name as user_name
             FROM bookings b
             LEFT JOIN properties p ON b.property_id = p.id
-            LEFT JOIN users u ON b.user_id = u.id
+            LEFT JOIN users u ON b.customer_id = u.id
             ORDER BY b.created_at DESC
             LIMIT 5
         `);

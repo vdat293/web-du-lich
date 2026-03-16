@@ -45,7 +45,7 @@ export async function GET(req) {
             WHERE ${whereClause}
             ORDER BY b.created_at DESC
             LIMIT ? OFFSET ?
-        `, [...params, limit, offset]);
+        `, [...params, String(limit), String(offset)]);
 
         return NextResponse.json({
             bookings,
