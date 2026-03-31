@@ -1,15 +1,34 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 
 export default function Details() {
     const { id } = useParams();
+    const navigate = useNavigate();
+    const bookingSidebarRef = useRef(null);
+    const [showMobileBookingBar, setShowMobileBookingBar] = useState(false);
+    const [isMobilePaymentOpen, setIsMobilePaymentOpen] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('card');
+    const [discountCode, setDiscountCode] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState(null);
+    const [discountMessage, setDiscountMessage] = useState({ text: '', type: '' });
+    const [specialRequests, setSpecialRequests] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [bookingId, setBookingId] = useState(null);
+    const [paymentError, setPaymentError] = useState('');
+    const [guestName, setGuestName] = useState('');
+    const [guestEmail, setGuestEmail] = useState('');
+    const [guestPhone, setGuestPhone] = useState('');
+    const [mobileCheckIn, setMobileCheckIn] = useState('');
+    const [mobileCheckOut, setMobileCheckOut] = useState('');
+    const [mobileRoomType, setMobileRoomType] = useState('single');
     const [property, setProperty] = useState(null);
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [roomType, setRoomType] = useState('single');
     const [dateError, setDateError] = useState('');
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
     const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
@@ -32,6 +51,20 @@ export default function Details() {
     const [reviewSuccess, setReviewSuccess] = useState('');
 
     const today = new Date().toISOString().split('T')[0];
+
+    // Show mobile booking bar on scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            if (bookingSidebarRef.current) {
+                const rect = bookingSidebarRef.current.getBoundingClientRect();
+                setShowMobileBookingBar(rect.bottom < 0);
+            } else {
+                setShowMobileBookingBar(window.scrollY > 300);
+            }
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const resolveImageUrl = (url) => {
         if (!url) return '';
@@ -255,7 +288,7 @@ export default function Details() {
     const fullDescription = property.description || '';
     const isLongDescription = fullDescription.length > MAX_DESCRIPTION_CHARS;
     const displayedDescription =
-        isDescriptionExpanded || !isLongDescription
+        !isLongDescription
             ? fullDescription
             : fullDescription.slice(0, MAX_DESCRIPTION_CHARS).trimEnd() + '...';
 
@@ -341,10 +374,10 @@ export default function Details() {
     };
 
     return (
-        <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+        <div className="relative flex min-h-screen w-full flex-col">
             {/* The body content from details.html goes here */}
 
-            <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+            <div className="relative flex min-h-screen w-full flex-col">
                 <Header />
                 <main className="flex h-full grow flex-col pt-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -521,17 +554,12 @@ export default function Details() {
                                         {isLongDescription && (
                                             <button
                                                 type="button"
-                                                onClick={() => setIsDescriptionExpanded(prev => !prev)}
-                                                className="mt-4 inline-flex items-center gap-1 font-bold text-neutral-700 dark:text-white hover:text-primary cursor-pointer"
+                                                onClick={() => setIsDescriptionModalOpen(true)}
+                                                className="mt-4 inline-flex items-center gap-1 font-bold text-neutral-700 dark:text-white hover:text-primary cursor-pointer transition-colors"
                                                 id="description-toggle-btn"
                                             >
-                                                <span>{isDescriptionExpanded ? 'Thu gọn' : 'Xem thêm'}</span>
-                                                <span
-                                                    className={`material-symbols-outlined !text-xl transition-transform duration-200 ${isDescriptionExpanded ? 'rotate-90' : ''
-                                                        }`}
-                                                >
-                                                    chevron_right
-                                                </span>
+                                                <span className="underline select-none">Hiển thị thêm</span>
+                                                <span className="material-symbols-outlined !text-xl hover:translate-x-1 transition-transform duration-200">chevron_right</span>
                                             </button>
                                         )}
                                     </div>
@@ -743,7 +771,7 @@ export default function Details() {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="lg:col-span-1">
+                                <div className="hidden lg:block lg:col-span-1">
                                     <div className="sticky top-24">
                                         <div
                                             className="rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-lg p-6 flex flex-col gap-5">
@@ -827,6 +855,39 @@ export default function Details() {
                         </div>
                     </div>
                 </main>
+
+                {/* Mobile Sticky Booking Bar */}
+                <div className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transform transition-all duration-300 ease-out ${showMobileBookingBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                    <div className="bg-white/95 backdrop-blur-lg border-t border-neutral-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3">
+                        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+                            <div className="flex flex-col">
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-lg font-bold text-neutral-800">{property.price}</span>
+                                    <span className="text-sm text-neutral-500">/ đêm</span>
+                                </div>
+                                {checkIn && checkOut ? (
+                                    <span className="text-xs text-neutral-400">{nights} đêm · Tổng {total.toLocaleString('vi-VN')}₫</span>
+                                ) : (
+                                    <span className="text-xs text-neutral-400">Chọn ngày để xem giá</span>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setMobileCheckIn(checkIn);
+                                    setMobileCheckOut(checkOut);
+                                    setMobileRoomType(roomType);
+                                    setIsMobilePaymentOpen(true);
+                                    setIsSuccess(false);
+                                    setPaymentError('');
+                                }}
+                                className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 active:scale-[0.97] transition-all shadow-lg shadow-primary/25"
+                            >
+                                <span>{(!checkIn || !checkOut) ? 'Chọn ngay' : 'Đặt ngay'}</span>
+                                <span className="material-symbols-outlined !text-lg">arrow_forward</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <footer id="about-section" className="bg-charcoal text-white">
                     <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-20">
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12">
@@ -1063,12 +1124,394 @@ export default function Details() {
                 </div>
             </div>
 
+            {/* Mobile Payment Modal - only on mobile */}
+            {isMobilePaymentOpen && (() => {
+                const isLoggedIn = !!localStorage.getItem('token');
 
+                const discountCodes = {
+                    'GIAM10': { type: 'percent', value: 10 },
+                    'GIAM20': { type: 'percent', value: 20 },
+                    'GIAM50K': { type: 'fixed', value: 50000 },
+                    'WELCOME': { type: 'percent', value: 15 }
+                };
 
+                let mRoomTypeText = 'Phòng đơn';
+                if (mobileRoomType === 'double') mRoomTypeText = 'Phòng đôi';
+                if (mobileRoomType === 'quad') mRoomTypeText = 'Phòng 4 người';
 
+                let mRoomMultiplier = 1;
+                if (mobileRoomType === 'double') mRoomMultiplier = 1.3;
+                if (mobileRoomType === 'quad') mRoomMultiplier = 1.5;
 
+                const mPriceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
+                const mPriceBase = parseInt(mPriceString) || 0;
+                const mPricePerNight = Math.round(mPriceBase * mRoomMultiplier);
 
+                const mCheckInDate = mobileCheckIn ? new Date(mobileCheckIn) : null;
+                const mCheckOutDate = mobileCheckOut ? new Date(mobileCheckOut) : null;
+                let mNights = 0;
+                if (mCheckInDate && mCheckOutDate) {
+                    mNights = Math.max(0, Math.ceil((mCheckOutDate - mCheckInDate) / (1000 * 3600 * 24)));
+                }
+                const mTotalBase = mPricePerNight * mNights;
+                const mServiceFee = Math.round(mTotalBase * 0.1);
+                const mTotal = mTotalBase + mServiceFee;
 
+                let mDiscountAmount = 0;
+                if (appliedDiscount) {
+                    mDiscountAmount = appliedDiscount.type === 'percent'
+                        ? Math.round(mTotal * (appliedDiscount.value / 100))
+                        : appliedDiscount.value;
+                }
+                const mFinalTotal = mTotal - mDiscountAmount;
+                const datesSelected = !!(mobileCheckIn && mobileCheckOut && mNights > 0);
+
+                const formatDateForDB = (date) => {
+                    const y = date.getFullYear();
+                    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const d = date.getDate().toString().padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                };
+
+                const handleApplyDiscount = () => {
+                    const code = discountCode.trim().toUpperCase();
+                    if (!code) { setDiscountMessage({ text: 'Vui lòng nhập mã giảm giá', type: 'error' }); return; }
+                    if (discountCodes[code]) {
+                        setAppliedDiscount({ code, ...discountCodes[code] });
+                        setDiscountMessage({ text: `Áp dụng mã "${code}" thành công!`, type: 'success' });
+                        setDiscountCode('');
+                    } else {
+                        setDiscountMessage({ text: 'Mã giảm giá không hợp lệ', type: 'error' });
+                        setAppliedDiscount(null);
+                    }
+                };
+
+                const getRoomTypeId = () => {
+                    const rooms = property.rooms || [];
+                    if (rooms.length > 0) {
+                        const idx = mobileRoomType === 'double' ? 1 : mobileRoomType === 'quad' ? 2 : 0;
+                        return rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
+                    }
+                    return null;
+                };
+
+                const handleConfirmPayment = async () => {
+                    if (!datesSelected) { setPaymentError('Vui lòng chọn ngày nhận và trả phòng.'); return; }
+                    setIsProcessing(true);
+                    setPaymentError('');
+                    const roomTypeId = getRoomTypeId();
+                    if (isLoggedIn) {
+                        const token = localStorage.getItem('token');
+                        try {
+                            const res = await fetch('/api/user/bookings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    property_id: property.id, room_type_id: roomTypeId,
+                                    check_in: formatDateForDB(new Date(mobileCheckIn)),
+                                    check_out: formatDateForDB(new Date(mobileCheckOut)),
+                                    number_of_rooms: 1, total_price: mFinalTotal,
+                                    special_requests: specialRequests || null,
+                                }),
+                            });
+                            const data = await res.json();
+                            setIsProcessing(false);
+                            if (res.ok) { setBookingId(data.booking_id); setIsSuccess(true); }
+                            else { setPaymentError(data.message || 'Đặt phòng thất bại.'); }
+                        } catch { setIsProcessing(false); setPaymentError('Lỗi kết nối máy chủ.'); }
+                    } else {
+                        if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
+                            setIsProcessing(false); setPaymentError('Vui lòng nhập đầy đủ thông tin.'); return;
+                        }
+                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
+                            setIsProcessing(false); setPaymentError('Email không hợp lệ.'); return;
+                        }
+                        try {
+                            const res = await fetch('/api/guest/bookings', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    email: guestEmail.trim(), phone: guestPhone.trim(), guest_name: guestName.trim(),
+                                    property_id: property.id, room_type_id: roomTypeId,
+                                    check_in: formatDateForDB(new Date(mobileCheckIn)),
+                                    check_out: formatDateForDB(new Date(mobileCheckOut)),
+                                    number_of_rooms: 1, total_price: mFinalTotal,
+                                    special_requests: specialRequests || null,
+                                }),
+                            });
+                            const data = await res.json();
+                            setIsProcessing(false);
+                            if (res.ok) {
+                                if (data.status === 'confirmed') { setBookingId(data.booking_id); setIsSuccess(true); }
+                                else if (data.status === 'pending') { navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`); }
+                            } else { setPaymentError(data.message || 'Đặt phòng thất bại.'); }
+                        } catch { setIsProcessing(false); setPaymentError('Lỗi kết nối máy chủ.'); }
+                    }
+                };
+
+                return (
+                    <div className="fixed inset-0 z-50 lg:hidden" style={{ animation: 'mPayFadeIn 0.2s ease-out' }}>
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { if (!isProcessing) setIsMobilePaymentOpen(false); }} />
+
+                        {/* Processing overlay */}
+                        {isProcessing && (
+                            <div className="absolute inset-0 z-[60] flex items-center justify-center">
+                                <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4">
+                                    <div className="relative w-12 h-12">
+                                        <div className="absolute inset-0 border-4 border-neutral-200 rounded-full" />
+                                        <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
+                                    </div>
+                                    <p className="font-bold text-neutral-700">Đang xử lý...</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Success overlay */}
+                        {isSuccess && (
+                            <div className="absolute inset-0 z-[60] flex items-center justify-center p-6">
+                                <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-5 w-full max-w-sm" style={{ animation: 'mPayScaleIn 0.3s ease-out' }}>
+                                    <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-green-600 !text-5xl">check_circle</span>
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-bold text-neutral-700 mb-1">Đặt phòng thành công!</h3>
+                                        <p className="text-neutral-500 text-sm">Mã đặt phòng: <span className="font-bold text-primary">#{bookingId}</span></p>
+                                    </div>
+                                    <button onClick={() => navigate('/bookings')} className="w-full py-3 bg-primary text-white rounded-xl font-bold">Xem lịch sử</button>
+                                    <button onClick={() => { setIsMobilePaymentOpen(false); setIsSuccess(false); }} className="w-full py-3 border border-neutral-300 text-neutral-700 rounded-xl font-bold">Tiếp tục xem</button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Modal panel slides up from bottom */}
+                        {!isSuccess && (
+                            <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden" style={{ animation: 'mPaySlideUp 0.3s ease-out' }}>
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 flex-shrink-0">
+                                    <h2 className="text-lg font-bold text-neutral-800">Đặt phòng</h2>
+                                    <button onClick={() => { if (!isProcessing) setIsMobilePaymentOpen(false); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-neutral-100 active:bg-neutral-200">
+                                        <span className="material-symbols-outlined !text-xl text-neutral-600">close</span>
+                                    </button>
+                                </div>
+
+                                {/* Scrollable body */}
+                                <div className="flex-1 overflow-y-auto px-5 py-5">
+                                    <div className="flex flex-col gap-5">
+
+                                        {/* Property card */}
+                                        <div className="flex gap-3 p-3 bg-neutral-50 rounded-xl">
+                                            <div className="w-20 h-16 rounded-lg bg-cover bg-center flex-shrink-0" style={{ backgroundImage: `url(${resolveImageUrl(property.images.main)})` }} />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-neutral-700 text-sm truncate">{property.name}</p>
+                                                <div className="flex items-center gap-1 mt-1">
+                                                    <span className="material-symbols-outlined text-accent-gold !text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                                                    <span className="text-xs font-bold text-neutral-700">{property.rating}</span>
+                                                    <span className="text-xs text-neutral-400">({property.reviews} đánh giá)</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Date pickers */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">Chọn ngày</h3>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">Nhận phòng</label>
+                                                    <input type="date" value={mobileCheckIn} min={today}
+                                                        onChange={(e) => { setMobileCheckIn(e.target.value); if (mobileCheckOut && e.target.value >= mobileCheckOut) setMobileCheckOut(''); }}
+                                                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">Trả phòng</label>
+                                                    <input type="date" value={mobileCheckOut} min={mobileCheckIn || today}
+                                                        onChange={(e) => setMobileCheckOut(e.target.value)}
+                                                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Room type */}
+                                        <div>
+                                            <label className="block text-sm font-bold text-neutral-700 mb-2">Loại phòng</label>
+                                            <select value={mobileRoomType} onChange={(e) => setMobileRoomType(e.target.value)}
+                                                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent">
+                                                <option value="single">Phòng đơn</option>
+                                                <option value="double">Phòng đôi</option>
+                                                <option value="quad">Phòng 4 người</option>
+                                            </select>
+                                        </div>
+
+                                        {/* Guest info (not logged in) */}
+                                        {!isLoggedIn && (
+                                            <div>
+                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">Thông tin khách</h3>
+                                                <div className="flex flex-col gap-3">
+                                                    <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
+                                                        placeholder="Họ và tên"
+                                                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                                    <input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)}
+                                                        placeholder="Email"
+                                                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                                    <input type="tel" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)}
+                                                        placeholder="Số điện thoại"
+                                                        className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Payment method */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">Phương thức thanh toán</h3>
+                                            <div className="flex flex-col gap-2">
+                                                <div onClick={() => setPaymentMethod('card')}
+                                                    className={`p-3 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center">
+                                                            <span className="material-symbols-outlined text-neutral-600 !text-lg">credit_card</span>
+                                                        </div>
+                                                        <span className="font-medium text-sm text-neutral-700">Thẻ tín dụng/ghi nợ</span>
+                                                    </div>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'card' ? 'border-primary' : 'border-neutral-300'}`}>
+                                                        {paymentMethod === 'card' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                                    </div>
+                                                </div>
+                                                <div onClick={() => setPaymentMethod('momo')}
+                                                    className={`p-3 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === 'momo' ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-9 h-9 rounded-lg overflow-hidden border border-neutral-200">
+                                                            <img src="/assets/MoMo_Logo_Primary/MOMO-Logo-App.png" alt="MoMo" className="w-full h-full object-contain" />
+                                                        </div>
+                                                        <span className="font-medium text-sm text-neutral-700">Ví MoMo</span>
+                                                    </div>
+                                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'momo' ? 'border-primary' : 'border-neutral-300'}`}>
+                                                        {paymentMethod === 'momo' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Discount code */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">Mã giảm giá</h3>
+                                            <div className="flex gap-2">
+                                                <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)}
+                                                    onKeyDown={(e) => e.key === 'Enter' && handleApplyDiscount()}
+                                                    disabled={!!appliedDiscount}
+                                                    className="flex-1 px-3 py-2.5 rounded-lg border border-neutral-200 text-sm uppercase placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent"
+                                                    placeholder="Nhập mã" />
+                                                <button onClick={handleApplyDiscount} disabled={!!appliedDiscount}
+                                                    className={`px-4 py-2.5 bg-primary text-white font-bold text-sm rounded-lg ${appliedDiscount ? 'opacity-50' : ''}`}>
+                                                    {appliedDiscount ? 'Đã dùng' : 'Áp dụng'}
+                                                </button>
+                                            </div>
+                                            {discountMessage.text && (
+                                                <p className={`mt-1.5 text-xs ${discountMessage.type === 'error' ? 'text-red-500' : 'text-green-600'}`}>{discountMessage.text}</p>
+                                            )}
+                                        </div>
+
+                                        {/* Price breakdown */}
+                                        {datesSelected && (
+                                            <div className="bg-neutral-50 rounded-xl p-4">
+                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">Chi tiết giá</h3>
+                                                <div className="flex flex-col gap-2 text-sm">
+                                                    <div className="flex justify-between text-neutral-500">
+                                                        <span>{mPricePerNight.toLocaleString('vi-VN')}₫ × {mNights} đêm</span>
+                                                        <span>{mTotalBase.toLocaleString('vi-VN')}₫</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-neutral-500">
+                                                        <span>Phí dịch vụ 10%</span>
+                                                        <span>{mServiceFee.toLocaleString('vi-VN')}₫</span>
+                                                    </div>
+                                                    {appliedDiscount && (
+                                                        <div className="flex justify-between text-green-600">
+                                                            <span>Giảm giá ({appliedDiscount.code})</span>
+                                                            <span>-{mDiscountAmount.toLocaleString('vi-VN')}₫</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="border-t border-neutral-200 pt-2 mt-1">
+                                                        <div className="flex justify-between font-bold text-neutral-700">
+                                                            <span>Tổng cộng</span>
+                                                            <span className="text-primary">{mFinalTotal.toLocaleString('vi-VN')}₫</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Special requests */}
+                                        <div>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">Yêu cầu đặc biệt</h3>
+                                            <textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)}
+                                                placeholder="Nhắn gửi chủ nhà..." rows="2"
+                                                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
+                                        </div>
+
+                                        {paymentError && (
+                                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                <span className="material-symbols-outlined text-red-500 !text-lg">error</span>
+                                                <p className="text-sm text-red-600">{paymentError}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="px-5 py-4 border-t border-neutral-100 bg-white flex-shrink-0">
+                                    {datesSelected && (
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-sm text-neutral-500">{mNights} đêm · {mRoomTypeText}</span>
+                                            <span className="text-lg font-bold text-primary">{mFinalTotal.toLocaleString('vi-VN')}₫</span>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={handleConfirmPayment}
+                                        disabled={isProcessing || !datesSelected}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary text-white text-base font-bold active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <span className="material-symbols-outlined !text-lg">lock</span>
+                                        <span>{datesSelected ? 'Xác nhận thanh toán' : 'Chọn ngày để tiếp tục'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
+
+            {/* Description Modal Overlay */}
+            {isDescriptionModalOpen && (
+                <div role="dialog" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6 animate-fade-in flex-col">
+                    <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up sm:animate-scale-up">
+                        <div className="flex items-center border-b border-neutral-100 dark:border-neutral-800 px-6 py-4 shrink-0 justify-between">
+                            <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Về chỗ ở này</h3>
+                            <button
+                                type="button"
+                                onClick={() => setIsDescriptionModalOpen(false)}
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-colors"
+                            >
+                                <span className="material-symbols-outlined !text-xl">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 md:p-8 overflow-y-auto w-full">
+                            <p className="text-neutral-600 dark:text-neutral-300 text-base leading-[1.8] whitespace-pre-line font-medium mb-4">
+                                {fullDescription}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes mPayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes mPaySlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+                @keyframes mPayScaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slide-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+                @keyframes scale-up { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.2s ease-out; }
+                .animate-slide-up { animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+                .animate-scale-up { animation: scale-up 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+            `}</style>
 
         </div>
     );

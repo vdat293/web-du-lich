@@ -170,7 +170,7 @@ export default function Header() {
                         </Link>
 
                         {/* Navigation */}
-                        <nav className="hidden lg:flex items-center gap-10">
+                        <nav className="hidden lg:flex items-center gap-10 absolute left-1/2 -translate-x-1/2">
                             <a href="/#featured-properties-section" className="nav-link text-sm font-medium text-charcoal hover:text-primary transition-colors duration-300">
                                 Chỗ ở
                             </a>
@@ -189,18 +189,6 @@ export default function Header() {
 
                         {/* Action Buttons */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <div className="relative group cursor-pointer">
-                                <div className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-charcoal hover:text-primary transition-all duration-300">
-                                    <span className="material-symbols-outlined text-lg">home_work</span>
-                                    <span>Đăng cho thuê</span>
-                                </div>
-                                <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-neutral-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                                    <div className="p-2 flex flex-col">
-                                        <Link to="/host/house" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Đăng cho thuê nhà</Link>
-                                        <Link to="/host/homestay" className="px-4 py-2 hover:bg-neutral-50 rounded-lg text-sm text-charcoal font-medium">Đăng cho thuê homestay</Link>
-                                    </div>
-                                </div>
-                            </div>
                             {!currentUser ? (
                                 <>
                                     <button onClick={openLogin} className="px-5 py-2.5 text-sm font-medium text-charcoal hover:text-primary transition-colors duration-300">
@@ -238,67 +226,119 @@ export default function Header() {
                     </div>
                 </div>
 
-                {/* Mobile Menu */}
-                <div className={`fixed inset-0 z-50 bg-white transform ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'} transition-transform duration-300 lg:hidden`}>
-                    <div className="flex flex-col h-full">
-                        <div className="flex items-center justify-between p-6 border-b border-neutral-100">
-                            <span className="font-display text-xl font-bold text-primary">Menu</span>
-                            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-charcoal hover:bg-neutral-100 rounded-full transition-colors">
-                                <span className="material-symbols-outlined">close</span>
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            <nav className="flex flex-col gap-4">
-                                <a href="/#featured-properties-section" className="text-lg font-medium text-charcoal hover:text-primary">Chỗ ở</a>
-                                <a href="/#destinations-section" className="text-lg font-medium text-charcoal hover:text-primary">Điểm đến</a>
-                                <a href="/#about-section" className="text-lg font-medium text-charcoal hover:text-primary">Về chúng tôi</a>
-                                {currentUser && currentUser.role === 'admin' && (
-                                    <Link to="/quan-ly" className="text-lg font-medium text-primary hover:text-primary-light">Quản lý</Link>
-                                )}
-                            </nav>
-                            <hr className="border-neutral-100" />
-                            <div className="flex flex-col gap-4">
-                                <a href="#" className="flex items-center gap-3 text-lg font-medium text-charcoal hover:text-primary">
-                                    <span className="material-symbols-outlined">home_work</span>
-                                    Đăng cho thuê
-                                </a>
-                                {!currentUser ? (
-                                    <>
-                                        <button onClick={openLogin} className="w-full py-3 text-center border border-neutral-200 rounded-xl font-medium text-charcoal hover:bg-neutral-50">
-                                            Đăng nhập
-                                        </button>
-                                        <button onClick={openRegister} className="w-full py-3 text-center bg-primary text-white rounded-xl font-medium hover:bg-primary-light shadow-lg shadow-primary/20">
-                                            Đăng ký
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className="flex items-center gap-3 py-3">
-                                            <img src={currentUser.avatar} alt="Avatar" className="w-10 h-10 rounded-full border border-neutral-200" />
-                                            <span className="text-lg font-medium text-charcoal">{currentUser.name}</span>
-                                        </div>
-                                        <div className="flex flex-col gap-3">
-                                            <Link to="/profile" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
-                                                Thông tin
-                                            </Link>
-                                            <Link to="/profile#favorites" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
-                                                Ưu thích
-                                            </Link>
-                                            <Link to="/bookings" className="w-full py-3 text-center border border-neutral-200 text-charcoal rounded-xl font-medium hover:bg-neutral-50 transition-colors">
-                                                Lịch sử đặt phòng
-                                            </Link>
-                                            <hr className="border-neutral-100" />
-                                            <button onClick={handleLogout} className="w-full py-3 text-center border border-red-200 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors">
-                                                Đăng xuất
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
+            </header>
+
+            {/* Mobile Menu Overlay */}
+            <div 
+                className={`fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Mobile Menu Panel */}
+            <div className={`fixed inset-y-0 right-0 z-[1000] w-[85%] max-w-sm bg-white shadow-2xl transform transition-transform duration-400 ease-out lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                 style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+                <div className="flex flex-col h-full">
+                    {/* Menu Header */}
+                    <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100">
+                        <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5">
+                            <div className="relative w-8 h-8 flex items-center justify-center">
+                                <div className="absolute inset-0 bg-primary rounded-lg transform rotate-45"></div>
+                                <span className="relative text-white font-display font-bold text-sm">A</span>
                             </div>
+                            <span className="font-display text-lg font-semibold text-primary tracking-tight">Aoklevart</span>
+                        </Link>
+                        <button onClick={() => setIsMobileMenuOpen(false)} className="w-9 h-9 flex items-center justify-center text-charcoal hover:bg-neutral-100 rounded-full transition-colors">
+                            <span className="material-symbols-outlined text-xl">close</span>
+                        </button>
+                    </div>
+
+                    {/* Menu Content */}
+                    <div className="flex-1 overflow-y-auto">
+                        {/* Navigation Links */}
+                        <nav className="px-4 py-4">
+                            <a href="/#featured-properties-section" onClick={() => setIsMobileMenuOpen(false)}
+                               className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>hotel</span>
+                                <span className="text-[15px] font-medium">Chỗ ở</span>
+                            </a>
+                            <a href="/#destinations-section" onClick={() => setIsMobileMenuOpen(false)}
+                               className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>explore</span>
+                                <span className="text-[15px] font-medium">Điểm đến</span>
+                            </a>
+                            <a href="/#about-section" onClick={() => setIsMobileMenuOpen(false)}
+                               className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>info</span>
+                                <span className="text-[15px] font-medium">Về chúng tôi</span>
+                            </a>
+                            {currentUser && currentUser.role === 'admin' && (
+                                <Link to="/quan-ly" onClick={() => setIsMobileMenuOpen(false)}
+                                      className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-primary hover:bg-primary/5 transition-all duration-200 group">
+                                    <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>admin_panel_settings</span>
+                                    <span className="text-[15px] font-medium">Quản lý</span>
+                                </Link>
+                            )}
+                        </nav>
+
+                        <div className="mx-6 border-t border-neutral-100"></div>
+
+                        {/* User Section */}
+                        <div className="px-4 py-4">
+                            {!currentUser ? (
+                                <div className="flex flex-col gap-3 px-2">
+                                    <button onClick={openLogin} className="w-full py-3 text-center border border-neutral-200 rounded-xl font-medium text-charcoal hover:bg-neutral-50 transition-colors duration-200">
+                                        Đăng nhập
+                                    </button>
+                                    <button onClick={openRegister} className="w-full py-3 text-center bg-primary text-white rounded-xl font-medium hover:bg-primary-light shadow-lg shadow-primary/20 transition-all duration-200">
+                                        Đăng ký
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    {/* User Info */}
+                                    <div className="flex items-center gap-3 px-4 py-3 mb-2">
+                                        <img src={currentUser.avatar} alt="Avatar" className="w-11 h-11 rounded-full border-2 border-primary/20 object-cover" />
+                                        <div className="flex flex-col">
+                                            <span className="text-[15px] font-semibold text-charcoal">{currentUser.name}</span>
+                                            <span className="text-xs text-warm-gray">Xem hồ sơ</span>
+                                        </div>
+                                    </div>
+
+                                    {/* User Menu Items */}
+                                    <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)}
+                                          className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                        <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>person</span>
+                                        <span className="text-[15px] font-medium">Thông tin</span>
+                                    </Link>
+                                    <Link to="/profile#favorites" onClick={() => setIsMobileMenuOpen(false)}
+                                          className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                        <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>favorite</span>
+                                        <span className="text-[15px] font-medium">Ưu thích</span>
+                                    </Link>
+                                    <Link to="/bookings" onClick={() => setIsMobileMenuOpen(false)}
+                                          className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-charcoal hover:bg-primary/5 hover:text-primary transition-all duration-200 group">
+                                        <span className="material-symbols-outlined text-xl text-warm-gray group-hover:text-primary transition-colors" style={{ fontVariationSettings: "'FILL' 0" }}>calendar_month</span>
+                                        <span className="text-[15px] font-medium">Lịch sử đặt phòng</span>
+                                    </Link>
+
+                                    <div className="mx-2 my-2 border-t border-neutral-100"></div>
+
+                                    <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                                            className="flex items-center gap-4 px-4 py-3.5 rounded-xl text-red-500 hover:bg-red-50 transition-all duration-200 w-full group">
+                                        <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 0" }}>logout</span>
+                                        <span className="text-[15px] font-medium">Đăng xuất</span>
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
+
+                    {/* Menu Footer */}
+                    <div className="px-6 py-4 border-t border-neutral-100 bg-neutral-50/50">
+                        <p className="text-[11px] text-warm-gray text-center">© 2026 Aoklevart · Luxury Stays</p>
+                    </div>
                 </div>
-            </header>
+            </div>
 
             {/* Login Modal */}
             {isLoginOpen && (
@@ -309,7 +349,7 @@ export default function Header() {
                             <span className="material-symbols-outlined text-neutral-500">close</span>
                         </button>
 
-                        <div className="p-8">
+                        <div className={`p-8 ${loginPromptMessage ? 'pt-14' : ''}`}>
                             {loginPromptMessage && (
                                 <div className="flex items-center gap-3 p-4 mb-6 bg-primary/5 border border-primary/20 rounded-xl">
                                     <span className="material-symbols-outlined text-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>

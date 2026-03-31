@@ -18,6 +18,43 @@ export default function Home() {
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [showPromo, setShowPromo] = useState(true);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+
+  const POPULAR_LOCATIONS = [
+    'Vũng Tàu', 'Hà Nội', 'Đà Lạt', 'Hội An', 'Đà Nẵng',
+    'Nha Trang', 'Phú Quốc', 'Sapa', 'Phan Thiết', 'Hạ Long', 'Quy Nhơn', 'Hồ Chí Minh', 'Bà Rịa - Vũng Tàu'
+  ];
+
+  const normalizeText = (text) => {
+    return text.normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+      .toLowerCase();
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (value.trim()) {
+      const query = normalizeText(value);
+      const filtered = POPULAR_LOCATIONS.filter(loc =>
+        normalizeText(loc).includes(query)
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (location) => {
+    setSearchQuery(location);
+    setShowSuggestions(false);
+    navigate(`/search?q=${encodeURIComponent(location)}`);
+  };
+
   const totalRealItems = featuredProperties.length;
 
   // Tạo mảng: clone CLONE_COUNT items ở mỗi đầu cho seamless infinite loop
@@ -249,6 +286,8 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [totalRealItems, startAutoPlay, stopAutoPlay]);
 
+
+
   return (
     <>
       <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
@@ -298,16 +337,18 @@ export default function Home() {
                 style={{ animationDelay: '0.1s' }}>
                 Khám phá Việt Nam
               </p>
-              <h1 className="animate-fade-in-up font-display text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.1] mb-6"
+              <h1 className="animate-fade-in-up font-display text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.45] mb-6"
                 style={{ animationDelay: '0.2s' }}>
-                Không gian nghỉ dưỡng<br />
-                <span
-                  role="button"
-                  tabIndex={0}
-                  className="italic text-accent-light inline-block select-none align-baseline cursor-pointer"
-                >
-                  đẳng cấp
-                </span>{' '}dành cho bạn
+                Không gian nghỉ dưỡng
+                <span className="block pt-3 pl-4">
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    className="italic text-accent-light inline-block select-none align-baseline cursor-pointer"
+                  >
+                    đẳng cấp
+                  </span>{' '}dành cho bạn
+                </span>
               </h1>
               <p className="animate-fade-in-up text-lg md:text-xl text-white/80 font-light max-w-2xl mx-auto mb-12"
                 style={{ animationDelay: '0.3s' }}>
@@ -326,10 +367,31 @@ export default function Home() {
                         <span className="material-symbols-outlined text-accent mr-3">location_on</span>
                         <input type="text" id="home-search-input" placeholder="Bạn muốn đến đâu?"
                           value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onChange={handleSearchChange}
+                          onFocus={() => {
+                            if (filteredSuggestions.length > 0 && searchQuery.trim()) setShowSuggestions(true);
+                          }}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSearchSubmit()}
-                          className="search-input w-full bg-transparent text-charcoal placeholder-warm-gray text-sm font-medium border-none focus:ring-0" />
+                          className="search-input w-full bg-transparent text-charcoal placeholder-warm-gray text-sm font-medium border-none focus:ring-0 auto-complete-input"
+                          autoComplete="off" />
                       </div>
+
+                      {/* Suggestions Dropdown */}
+                      {showSuggestions && filteredSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden z-20 text-left">
+                          {filteredSuggestions.map((loc, idx) => (
+                            <div
+                              key={idx}
+                              className="px-5 py-3 hover:bg-neutral-50 cursor-pointer flex items-center gap-3 transition-colors"
+                              onClick={() => handleSuggestionClick(loc)}
+                            >
+                              <span className="material-symbols-outlined text-warm-gray text-sm">location_city</span>
+                              <span className="text-charcoal text-sm font-medium">{loc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Search Button */}
@@ -344,14 +406,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Scroll Indicator */}
-            <div
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce flex flex-col items-center gap-1 cursor-pointer"
-              onClick={() => document.getElementById('featured-properties-section')?.scrollIntoView({ behavior: 'smooth' })}>
-              <span className="text-white/70 text-sm font-medium">Cuộn xuống</span>
-              <span className="material-symbols-outlined text-white/70">keyboard_arrow_down</span>
             </div>
           </section>
 
@@ -488,11 +542,10 @@ export default function Home() {
                       <button
                         key={idx}
                         onClick={() => scrollToIndex(idx)}
-                        className={`carousel-indicator h-2.5 rounded-full transition-all duration-200 cursor-pointer ${
-                          idx === getDisplayIndex()
-                            ? 'bg-primary w-8 shadow-sm'
-                            : 'bg-warm-gray/25 w-2.5 hover:bg-warm-gray/40'
-                        }`}
+                        className={`carousel-indicator h-2.5 rounded-full transition-all duration-200 cursor-pointer ${idx === getDisplayIndex()
+                          ? 'bg-primary w-8 shadow-sm'
+                          : 'bg-warm-gray/25 w-2.5 hover:bg-warm-gray/40'
+                          }`}
                       ></button>
                     ))}
                   </div>
