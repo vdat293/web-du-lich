@@ -24,6 +24,18 @@ export default function Payment() {
     const [bookingId, setBookingId] = useState(null);
     const [paymentError, setPaymentError] = useState('');
 
+    // Card payment modal states
+    const [showCardModal, setShowCardModal] = useState(false);
+    const [cardStep, setCardStep] = useState(1); // 1 = card input, 2 = OTP input
+    const [cardNumber, setCardNumber] = useState('');
+    const [cardHolder, setCardHolder] = useState('');
+    const [cardExpiry, setCardExpiry] = useState('');
+    const [cardCvv, setCardCvv] = useState('');
+    const [transactionId, setTransactionId] = useState('');
+    const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
+    const [otpCountdown, setOtpCountdown] = useState(300);
+    const [cardError, setCardError] = useState('');
+
     // Guest checkout state
     const isLoggedIn = !!localStorage.getItem('token');
     const [guestName, setGuestName] = useState('');
@@ -50,6 +62,14 @@ export default function Payment() {
         };
         fetchProperties();
     }, [propertyId]);
+
+    // OTP countdown timer (phải đặt trước early returns để tuân thủ Rules of Hooks)
+    React.useEffect(() => {
+        if (cardStep === 2 && otpCountdown > 0) {
+            const timer = setTimeout(() => setOtpCountdown(otpCountdown - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [cardStep, otpCountdown]);
 
     const discountCodes = {
         'GIAM10': { type: 'percent', value: 10 },
@@ -155,14 +175,203 @@ export default function Payment() {
         return `${y}-${m}-${d}`;
     };
 
-    const handleConfirmPayment = async () => {
+
+
+    // Handle OTP input with auto-focus
+    const handleOtpChange = (index, value) => {
+        if (value.length > 1) value = value.slice(-1);
+        if (!/^\d*$/.test(value)) return;
+        const newOtp = [...otpValues];
+        newOtp[index] = value;
+        setOtpValues(newOtp);
+        if (value && index < 5) {
+            const nextInput = document.getElementById(`otp-${index + 1}`);
+            if (nextInput) nextInput.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+            const prevInput = document.getElementById(`otp-${index - 1}`);
+            if (prevInput) prevInput.focus();
+        }
+    };
+
+    // Step 1: Submit card info to initiate payment
+    const handleCardSubmit = async () => {
+        setCardError('');
+        if (!cardNumber.trim() || !cardHolder.trim() || !cardExpiry.trim() || !cardCvv.trim()) {
+            setCardError('Vui lòng nhập đầy đủ thông tin thẻ');
+            return;
+        }
         setIsProcessing(true);
+        try {
+            const res = await fetch('/api/sandbox/payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'initiate',
+                    card_number: cardNumber.trim(),
+                    card_holder: cardHolder.trim(),
+                    expiry_date: cardExpiry.trim(),
+                    cvv: cardCvv.trim(),
+                    amount: total
+                })
+            });
+            const data = await res.json();
+            setIsProcessing(false);
+            if (data.success) {
+                setTransactionId(data.transaction_id);
+                setCardStep(2);
+                setOtpCountdown(300);
+                setOtpValues(['', '', '', '', '', '']);
+            } else {
+                setCardError(data.message);
+            }
+        } catch (err) {
+            setIsProcessing(false);
+            setCardError('Lỗi kết nối máy chủ');
+        }
+    };
+
+    // Step 2: Confirm OTP
+    const handleOtpSubmit = async () => {
+        const otpCode = otpValues.join('');
+        if (otpCode.length !== 6) {
+            setCardError('Vui lòng nhập đủ 6 số OTP');
+            return;
+        }
+        setCardError('');
+        setIsProcessing(true);
+        try {
+            const res = await fetch('/api/sandbox/payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'confirm',
+                    transaction_id: transactionId,
+                    otp: otpCode
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Thanh toán thành công → tạo booking
+                setShowCardModal(false);
+                await createBookingAfterPayment();
+            } else {
+                setIsProcessing(false);
+                setCardError(data.message);
+            }
+        } catch (err) {
+            setIsProcessing(false);
+            setCardError('Lỗi kết nối máy chủ');
+        }
+    };
+
+    // Create booking after successful card payment
+    const createBookingAfterPayment = async () => {
+        const roomTypeId = getRoomTypeId();
+        const token = localStorage.getItem('token');
+        try {
+            if (isLoggedIn) {
+                const res = await fetch('/api/user/bookings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        property_id: propertyId,
+                        room_type_id: roomTypeId,
+                        check_in: formatDateForDB(checkInDate),
+                        check_out: formatDateForDB(checkOutDate),
+                        number_of_rooms: 1,
+                        total_price: total,
+                        special_requests: specialRequests || null,
+                        status: 'confirmed',
+                        payment_method: 'card',
+                    }),
+                });
+                const data = await res.json();
+                setIsProcessing(false);
+                if (res.ok) {
+                    setBookingId(data.booking_id);
+                    setIsSuccess(true);
+                } else {
+                    setPaymentError(data.message || 'Đặt phòng thất bại.');
+                }
+            } else {
+                const res = await fetch('/api/guest/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: guestEmail.trim(),
+                        phone: guestPhone.trim(),
+                        guest_name: guestName.trim(),
+                        property_id: propertyId,
+                        room_type_id: roomTypeId,
+                        check_in: formatDateForDB(checkInDate),
+                        check_out: formatDateForDB(checkOutDate),
+                        number_of_rooms: 1,
+                        total_price: total,
+                        special_requests: specialRequests || null,
+                        status: 'confirmed',
+                        payment_method: 'card',
+                    }),
+                });
+                const data = await res.json();
+                setIsProcessing(false);
+                if (res.ok) {
+                    if (data.status === 'confirmed') {
+                        setBookingId(data.booking_id);
+                        setIsSuccess(true);
+                    } else if (data.status === 'pending') {
+                        navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
+                    }
+                } else {
+                    setPaymentError(data.message || 'Đặt phòng thất bại.');
+                }
+            }
+        } catch (err) {
+            setIsProcessing(false);
+            setPaymentError('Lỗi kết nối máy chủ.');
+        }
+    };
+
+    const handleConfirmPayment = async () => {
         setPaymentError('');
 
+        // Guest validation
+        if (!isLoggedIn) {
+            if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
+                setPaymentError('Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
+                return;
+            }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(guestEmail)) {
+                setPaymentError('Email không hợp lệ.');
+                return;
+            }
+        }
+
+        if (paymentMethod === 'card') {
+            // Mở modal thanh toán thẻ
+            setShowCardModal(true);
+            setCardStep(1);
+            setCardError('');
+            setCardNumber('');
+            setCardHolder('');
+            setCardExpiry('');
+            setCardCvv('');
+            setOtpValues(['', '', '', '', '', '']);
+            return;
+        }
+
+        // MoMo flow (giữ nguyên)
+        setIsProcessing(true);
         const roomTypeId = getRoomTypeId();
 
         if (isLoggedIn) {
-            // === FLOW CŨ: ĐÃ ĐĂNG NHẬP ===
             const token = localStorage.getItem('token');
             try {
                 const res = await fetch('/api/user/bookings', {
@@ -196,20 +405,6 @@ export default function Payment() {
                 setPaymentError('Lỗi kết nối máy chủ.');
             }
         } else {
-            // === FLOW MỚI: GUEST CHECKOUT ===
-            if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
-                setIsProcessing(false);
-                setPaymentError('Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
-                return;
-            }
-
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(guestEmail)) {
-                setIsProcessing(false);
-                setPaymentError('Email không hợp lệ.');
-                return;
-            }
-
             try {
                 const res = await fetch('/api/guest/bookings', {
                     method: 'POST',
@@ -233,11 +428,9 @@ export default function Payment() {
 
                 if (res.ok) {
                     if (data.status === 'confirmed') {
-                        // Email đã tồn tại → booking tạo trực tiếp
                         setBookingId(data.booking_id);
                         setIsSuccess(true);
                     } else if (data.status === 'pending') {
-                        // Email mới → redirect sang booking-alert để xem danh sách booking
                         navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
                     }
                 } else {
@@ -510,6 +703,190 @@ export default function Payment() {
                             className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors">
                             Xem lịch sử đặt phòng
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Card Payment Modal */}
+            {showCardModal && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                    <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                        {/* Header */}
+                        <div className="p-6 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-primary">{cardStep === 1 ? 'credit_card' : 'password'}</span>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-neutral-700 dark:text-white">
+                                        {cardStep === 1 ? 'Thông tin thẻ' : 'Xác nhận OTP'}
+                                    </h3>
+                                    <p className="text-xs text-neutral-500">Bước {cardStep}/2</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowCardModal(false)}
+                                className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-full">
+                                <span className="material-symbols-outlined text-neutral-500">close</span>
+                            </button>
+                        </div>
+
+                        {/* Step indicator */}
+                        <div className="px-6 pt-4">
+                            <div className="flex items-center gap-2">
+                                <div className={`flex-1 h-1 rounded-full ${cardStep >= 1 ? 'bg-primary' : 'bg-neutral-200'}`}></div>
+                                <div className={`flex-1 h-1 rounded-full ${cardStep >= 2 ? 'bg-primary' : 'bg-neutral-200'}`}></div>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            {/* Error */}
+                            {cardError && (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+                                    <span className="material-symbols-outlined !text-lg">error</span>
+                                    {cardError}
+                                </div>
+                            )}
+
+                            {/* Step 1: Card Input */}
+                            {cardStep === 1 && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Số thẻ</label>
+                                        <input
+                                            type="text"
+                                            value={cardNumber}
+                                            onChange={(e) => setCardNumber(e.target.value)}
+                                            placeholder="9704 0000 0000 0018"
+                                            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary font-mono text-lg tracking-wider"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Tên chủ thẻ</label>
+                                        <input
+                                            type="text"
+                                            value={cardHolder}
+                                            onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+                                            placeholder="NGUYEN VAN A"
+                                            className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary uppercase"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Ngày hết hạn</label>
+                                            <input
+                                                type="text"
+                                                value={cardExpiry}
+                                                onChange={(e) => setCardExpiry(e.target.value)}
+                                                placeholder="12/28"
+                                                maxLength={5}
+                                                className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">CVV</label>
+                                            <input
+                                                type="password"
+                                                value={cardCvv}
+                                                onChange={(e) => setCardCvv(e.target.value)}
+                                                placeholder="•••"
+                                                maxLength={4}
+                                                className="w-full px-4 py-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={handleCardSubmit}
+                                        disabled={isProcessing}
+                                        className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Đang xử lý...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined">lock</span>
+                                                Thanh toán {total.toLocaleString('vi-VN')}₫
+                                            </>
+                                        )}
+                                    </button>
+
+                                    {/* Test cards info */}
+                                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <p className="text-xs font-semibold text-amber-800 mb-1">🛠️ Thẻ test (Sandbox)</p>
+                                        <p className="text-xs text-amber-700 font-mono">Số thẻ: 9704 0000 0000 0018</p>
+                                        <p className="text-xs text-amber-700 font-mono">Tên: NGUYEN VAN A | Hết hạn: 12/28 | CVV: 123</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Step 2: OTP Input */}
+                            {cardStep === 2 && (
+                                <div className="space-y-6">
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                                            <span className="material-symbols-outlined text-primary !text-3xl">sms</span>
+                                        </div>
+                                        <p className="text-neutral-500 dark:text-neutral-300 text-sm">
+                                            Mã OTP đã được tạo. Vui lòng vào trang <strong>Quản trị → Quản lý OTP</strong> để lấy mã xác nhận.
+                                        </p>
+                                    </div>
+
+                                    {/* OTP Input Fields */}
+                                    <div className="flex justify-center gap-3">
+                                        {otpValues.map((val, i) => (
+                                            <input
+                                                key={i}
+                                                id={`otp-${i}`}
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={1}
+                                                value={val}
+                                                onChange={(e) => handleOtpChange(i, e.target.value)}
+                                                onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                                                className="w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Countdown */}
+                                    <div className="text-center">
+                                        <p className="text-sm text-neutral-500">
+                                            Mã hết hạn sau: <span className={`font-bold ${otpCountdown < 60 ? 'text-red-500' : 'text-primary'}`}>
+                                                {Math.floor(otpCountdown / 60)}:{(otpCountdown % 60).toString().padStart(2, '0')}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={handleOtpSubmit}
+                                        disabled={isProcessing || otpValues.join('').length !== 6}
+                                        className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isProcessing ? (
+                                            <>
+                                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                Đang xác nhận...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined">verified</span>
+                                                Xác nhận OTP
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setCardStep(1); setCardError(''); }}
+                                        className="w-full py-2 text-neutral-500 hover:text-neutral-700 text-sm font-medium"
+                                    >
+                                        ← Quay lại nhập thẻ
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}

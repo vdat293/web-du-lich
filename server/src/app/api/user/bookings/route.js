@@ -62,7 +62,7 @@ export async function POST(req) {
 
         const userId = decoded.user.id;
         const body = await req.json();
-        const { property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, coupon_code } = body;
+        const { property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, coupon_code, status: bookingStatus, payment_method } = body;
 
         if (!property_id || !room_type_id || !check_in || !check_out || !total_price) {
             return NextResponse.json({ message: 'Thiếu thông tin đặt phòng' }, { status: 400 });
@@ -95,20 +95,23 @@ export async function POST(req) {
             }
         }
 
-        // Tạo booking
+        // Tạo booking (status mặc định 'pending', hoặc 'confirmed' nếu đã thanh toán ATM)
+        const finalStatus = bookingStatus || 'pending';
         const [result] = await db.execute(
             `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-            [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, finalPrice, special_requests || null]
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, finalPrice, finalStatus, special_requests || null]
         );
 
         const bookingId = result.insertId;
 
-        // Tạo payment record (mặc định pending - chờ thanh toán)
+        // Tạo payment record
+        const finalPaymentMethod = payment_method || 'momo';
+        const finalPaymentStatus = finalStatus === 'confirmed' ? 'completed' : 'pending';
         await db.execute(
             `INSERT INTO payments (booking_id, amount, payment_method, payment_status)
-             VALUES (?, ?, 'momo', 'pending')`,
-            [bookingId, finalPrice]
+             VALUES (?, ?, ?, ?)`,
+            [bookingId, finalPrice, finalPaymentMethod, finalPaymentStatus]
         );
 
         // Lưu coupon đã sử dụng
@@ -120,9 +123,10 @@ export async function POST(req) {
         }
 
         // Lưu lịch sử trạng thái
+        const statusNote = finalStatus === 'confirmed' ? 'Đã thanh toán qua thẻ ATM' : 'Chờ xác nhận';
         await db.execute(
-            `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, 'pending', 'Chờ xác nhận', ?)`,
-            [bookingId, userId]
+            `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, ?, ?, ?)`,
+            [bookingId, finalStatus, statusNote, userId]
         );
 
         // Get property info to include in the notification
@@ -138,7 +142,7 @@ export async function POST(req) {
                 propertyId: property_id,
                 propertyName: propertyInfo[0]?.property_name,
                 hostId: propertyInfo[0]?.host_id,
-                status: 'pending',
+                status: finalStatus,
                 checkIn: check_in,
                 checkOut: check_out,
             });

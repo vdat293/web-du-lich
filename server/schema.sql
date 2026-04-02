@@ -222,3 +222,29 @@ CREATE TABLE guest_bookings (
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
   FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE
 );
+
+-- =====================================================
+-- SANDBOX PAYMENT: Thẻ giả lập & Log OTP
+-- =====================================================
+
+CREATE TABLE sandbox_cards (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  card_number VARCHAR(19) NOT NULL UNIQUE,
+  card_holder VARCHAR(255) NOT NULL,
+  expiry_date VARCHAR(5) NOT NULL,
+  cvv VARCHAR(4) NOT NULL,
+  balance DECIMAL(15,0) NOT NULL DEFAULT 10000000,
+  bank_name VARCHAR(100) DEFAULT 'Vietcombank',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sandbox_otp_logs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  transaction_id VARCHAR(100) NOT NULL UNIQUE,
+  card_number VARCHAR(19) NOT NULL,
+  otp_code VARCHAR(6) NOT NULL,
+  amount DECIMAL(15,0) NOT NULL,
+  status VARCHAR(20) DEFAULT 'PENDING',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
