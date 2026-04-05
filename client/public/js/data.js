@@ -2012,5 +2012,1080 @@ window.properties = [
         ],
         mapImage: "http://googleusercontent.com/profile/picture/48",
         mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3899.1731199514365!2d109.1964462!3d12.236554700000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3170677ae037716b%3A0x34f80a4db849a372!2sM%C6%B0%E1%BB%9Dng%20Thanh%20Luxury%20Nha%20Trang!5e0!3m2!1svi!2s!4v1764612377046!5m2!1svi!2s"
+    },
+    {
+        id: 110,
+        name: "Sofitel Legend Metropole Hanoi",
+        type: "hotel",
+        location: "Quận Hoàn Kiếm, Hà Nội",
+        price: "8.500.000đ",
+        rating: 4.9,
+        reviews: 3420,
+        host: {
+            name: "Chủ nhà Thu Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 3,
+        bathrooms: 2,
+        maxGuests: 6,
+        isHot: true,
+        description: "Sofitel Legend Metropole Hanoi là khách sạn huyền thoại tọa lạc ngay tại trái tim phố cổ Hà Nội, mang đến trải nghiệm lưu trú đẳng cấp với hơn 120 năm lịch sử. Đây là điểm đến lý tưởng cho những ai yêu thích sự kết hợp hoàn hảo giữa kiến trúc Pháp cổ điển và văn hóa Việt Nam.\nKhách sạn này là sự lựa chọn hoàn hảo cho các cặp đôi đang tìm kiếm một kỳ nghỉ lãng mạn hoặc tuần trăng mật ngay giữa lòng Hà Nội. Tận hưởng những đêm đáng nhớ với người thương tại Metropole.\nVới các phòng hội nghị và tiện nghi sang trọng, Sofitel Legend Metropole Hanoi đáp ứng mọi nhu cầu từ sự kiện doanh nghiệp đến họp mặt công ty.\nHãy vui vẻ với các tiện nghi giải trí như spa, phòng gym và hồ bơi ngoài trời tại Sofitel Legend Metropole Hanoi, nơi lý tưởng cho kỳ nghỉ gia đình của quý khách.\nDịch vụ ẩm thực tại khách sạn mang đến những trải nghiệm ẩm thực Pháp và Việt Nam đặc sắc, được chế biến bởi đầu bếp quốc tế.\nWi-Fi miễn phí phủ khắp các khu vực công cộng giúp quý khách luôn kết nối trong suốt kỳ lưu trú.\nVới tất cả các tiện nghi xa hoa và dịch vụ chu đáo, Sofitel Legend Metropole Hanoi chắc chắn sẽ khiến quý khách không phàn nàn trong suốt kỳ lưu trú.\nHãy sẵn sàng đón nhận những giây phút vô giá khó phai tại Sofitel Legend Metropole Hanoi.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/90064088_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/90064088_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/99981318_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/87770194_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/99982546_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/99170153_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/99982620_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/36678/photos/87770132_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ concierge", "Dịch vụ giặt ủi", "Dịch vụ phòng 24 giờ", "Bảo vệ 24 giờ", "Dịch vụ lưu trữ hành lý"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Pháp", "Nhà hàng Việt Nam", "Quầy bar", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại phòng"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi ngoài trời", "Két an toàn", "WiFi miễn phí", "Thang máy", "Bãi đậu xe"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Sân thượng"]
+            },
+            {
+                category: "Các hoạt động",
+                icon: "sports_esports",
+                items: ["Spa", "Trung tâm thể dục", "Mát-xa", "Xông hơi"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Hồ Hoàn Kiếm", "Phố cổ Hà Nội", "Nhà hát Lớn Hà Nội", "Lăng Chủ tịch Hồ Chí Minh"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/110",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.0968030898544!2d105.85756097466077!3d21.02808798023217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab4cd376479b%3A0xbc2e0b8e8d8f9a3!2sSofitel%20Legend%20Metropole%20Hanoi!5e0!3m2!1svi!2s!4v1764613000000!5m2!1svi!2s"
+    },
+    {
+        id: 111,
+        name: "Hotel de l'Opera Hanoi",
+        type: "hotel",
+        location: "Quận Hoàn Kiếm, Hà Nội",
+        price: "3.200.000đ",
+        rating: 4.7,
+        reviews: 1875,
+        host: {
+            name: "Chủ nhà Thu Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "Hotel de l'Opera Hanoi là khách sạn boutique sang trọng tọa lạc ngay cạnh Nhà hát Lớn Hà Nội, mang đến tầm nhìn tuyệt đẹp ra khu vực trung tâm thủ đô. Khách sạn được thiết kế theo phong cách kiến trúc Pháp thuộc địa, mang lại cảm giác cổ điển và thanh lịch.\nĐây là lựa chọn hoàn hảo cho các cặp đôi tìm kiếm không gian lãng mạn ngay giữa lòng Hà Nội với dịch vụ đẳng cấp và không gian yên tĩnh.\nHotel de l'Opera Hanoi cung cấp đầy đủ tiện nghi cho các sự kiện doanh nghiệp, hội nghị và tiệc riêng tư.\nQuý khách sẽ được trải nghiệm ẩm thực Pháp tinh tế ngay tại nhà hàng của khách sạn với đầu bếp quốc tế.\nWiFi miễn phí và các tiện nghi hiện đại giúp quý khách luôn kết nối và thoải mái trong suốt kỳ lưu trú.\nVới vị trí chiến lược và dịch vụ chu đáo, Hotel de l'Opera Hanoi chắc chắn sẽ là điểm đến lý tưởng cho chuyến công tác hay du lịch tại Hà Nội.",
+        images: {
+            main: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/843031488.jpg",
+            gallery: [
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/843031488.jpg",
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/819873527.jpg",
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/846269759.jpg",
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/765772827.jpg",
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/765772832.jpg",
+                "https://cf.bstatic.com/xdata/images/hotel/max1024x768/794971638.jpg"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "elevator", name: "Thang máy" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Dịch vụ lưu trữ hành lý"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Pháp", "Quầy bar", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Két an toàn", "WiFi miễn phí", "Thang máy", "Bãi đậu xe"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Nhà hát Lớn Hà Nội", "Hồ Hoàn Kiếm", "Phố cổ Hà Nội", "Cầu Thê Húc"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/111",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.0968030898544!2d105.85756097466077!3d21.02788798023217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab4cd376479b%3A0xa1b2c3d4e5f6g7h!2sHotel%20de%20l'Opera%20Hanoi!5e0!3m2!1svi!2s!4v1764613001000!5m2!1svi!2s"
+    },
+    {
+        id: 112,
+        name: "La Siesta Premium Hanoi",
+        type: "hotel",
+        location: "Quận Hoàn Kiếm, Hà Nội",
+        price: "2.100.000đ",
+        rating: 4.8,
+        reviews: 2230,
+        host: {
+            name: "Chủ nhà Thu Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "La Siesta Premium Hanoi là khách sạn boutique cao cấp tọa lạc ngay trong lòng phố cổ Hà Nội, cách Hồ Hoàn Kiếm chỉ vài bước chân. Khách sạn mang đến sự kết hợp hoàn hảo giữa tiện nghi hiện đại và nét đẹp truyền thống Việt Nam.\nVới vị trí chiến lược, La Siesta Premium Hanoi là điểm xuất phát lý tưởng để khám phá các danh lam thắng cảnh nổi tiếng của Hà Nội như Đền Ngọc Sương, Chùa Trấn Quốc và Văn Miếu.\nKhách sạn cung cấp các dịch vụ đẳng cấp bao gồm spa, nhà hàng phục vụ ẩm thực Việt Nam đa dạng và phòng họp hiện đại.\nWi-Fi miễn phí trong toàn bộ khách sạn giúp quý khách luôn kết nối với gia đình và bạn bè.\nĐội ngũ nhân viên thân thiện và chu đáo luôn sẵn sàng hỗ trợ quý khách 24/7.\nLa Siesta Premium Hanoi là sự lựa chọn tuyệt vời cho cả du lịch và công tác tại Hà Nội.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-a0319e49057fd4c1b3216d032d5b702d.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-a0319e49057fd4c1b3216d032d5b702d.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-311e800e1f772cc0cebe2aae9c8e8143.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-8b1b15051caceaed29eab49d14d3231e.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-18d490e85b2ac05c3d66ab9c359e655a.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-e6b4296eab7f2ac89e7ce7921df1a3a3.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-7e69c101e39e9710b2a322e11098129f.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20054449-311e800e1f772cc0cebe2aae9c8e8143.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "elevator", name: "Thang máy" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Dịch vụ đưa đón sân bay"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Việt Nam", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại phòng"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Két an toàn", "WiFi miễn phí", "Thang máy", "Spa"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Hồ Hoàn Kiếm", "Phố cổ Hà Nội", "Đền Ngọc Sương", "Chợ Đồng Xuân"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/112",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.1968030898544!2d105.84756097466077!3d21.02808798023217!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab4cd376479b%3A0xb2c3d4e5f6g7h8!2sLa%20Siesta%20Premium%20Hanoi!5e0!3m2!1svi!2s!4v1764613002000!5m2!1svi!2s"
+    },
+    {
+        id: 113,
+        name: "JW Marriott Phu Quoc Emerald Bay Resort",
+        type: "resort",
+        location: "Bãi Khem, Thành phố Phú Quốc, Kiên Giang",
+        price: "12.800.000đ",
+        rating: 4.9,
+        reviews: 4120,
+        host: {
+            name: "Chủ nhà Lan Phương",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 4,
+        bathrooms: 3,
+        maxGuests: 8,
+        isHot: true,
+        description: "JW Marriott Phu Quoc Emerald Bay Resort là khu nghỉ dưỡng sang trọng bậc nhất tại đảo ngọc Phú Quốc, tọa lạc tại bãi biển riêng biệt với tầm nhìn panorama ra vịnh Thái Lan. Khu nghỉ dưỡng được thiết kế bởi kiến trúc sư nổi tiếng Bill Bensley, mang đến một không gian độc đáo và đầy nghệ thuật.\nĐây là điểm đến hoàn hảo cho các cặp đôi tìm kiếm kỳ nghỉ lãng mạn và tuần trăng mật với dịch vụ spa đẳng cấp và không gian riêng tư tuyệt đối.\nJW Marriott Phu Quoc sở hữu 5 nhà hàng và quầy bar với ẩm thực đa dạng từ quốc tế đến đặc sản địa phương.\nKhu nghỉ dưỡng cung cấp các hoạt động giải trí biển đỉnh cao bao gồm lặn biển, kayak, dù lượn và các môn thể thao nước khác.\nHồ bơi vô cực Infinity Edge rộng lớn nhìn ra biển là điểm nhấn ấn tượng của khu nghỉ dưỡng.\nDịch vụ spa JWHearbal zới các liệu pháp độc đáo sử dụng nguyên liệu thiên nhiên Việt Nam.\nWi-Fi miễn phí và các tiện nghi hiện đại giúp quý khách luôn kết nối trong suốt kỳ lưu trú.\nVới tất cả các tiện nghi xa hoa, JW Marriott Phu Quoc chắc chắn sẽ mang đến cho quý khách một kỳ nghỉ không thể nào quên.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/dbd1ca68_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/dbd1ca68_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/f1c778ad_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/52f2701d_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/dede15eb_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/732c92cf_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/TzEv3ZUmG4-4Dz22hvmO9NUDzw1DGCIdWl4oPtKumOg=/lodging/18000000/17280000/17273100/17273008/9fef011b_z.jpg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" },
+            { icon: "beach_access", name: "Bãi biển riêng" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khu nghỉ dưỡng",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ concierge", "Dịch vụ giặt ủi", "Dịch vụ phòng 24 giờ", "Bảo vệ 24 giờ", "Đưa đón sân bay", "Dịch vụ cưới"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng quốc tế", "Nhà hàng biển", "Quầy bar", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại bãi biển", "Bữa tối riêng tư"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi vô cực", "Bãi biển riêng", "Két an toàn", "WiFi miễn phí", "Bãi đậu xe", "Spa"]
+            },
+            {
+                category: "Các hoạt động",
+                icon: "sports_esports",
+                items: ["Lặn biển", "Kayak", "Dù lượn", "Mát-xa", "Spa", "Trung tâm thể dục", "Sân tennis"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Hồ bơi", "Sân thượng"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi Khem", "Vinpearl Safari Phú Quốc", "Vinpearl Land Phú Quốc", "Chợ đêm Phú Quốc"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/113",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31392.45678901234!2d103.9876543!3d10.1234567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x319d8a1b2c3d4e5f%3A0x1a2b3c4d5e6f7g8!2sJW%20Marriott%20Phu%20Quoc!5e0!3m2!1svi!2s!4v1764613003000!5m2!1svi!2s"
+    },
+    {
+        id: 114,
+        name: "Salinda Resort Phu Quoc Island",
+        type: "resort",
+        location: "Bãi Dài, Thành phố Phú Quốc, Kiên Giang",
+        price: "6.500.000đ",
+        rating: 4.8,
+        reviews: 2890,
+        host: {
+            name: "Chủ nhà Lan Phương",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 3,
+        bathrooms: 2,
+        maxGuests: 6,
+        isHot: true,
+        description: "Salinda Resort Phu Quoc Island là khu nghỉ dưỡng cao cấp tọa lạc tại bãi Dài nổi tiếng của Phú Quốc, cách sân bay quốc tế Phú Quốc chỉ 10 phút lái xe. Với thiết kế hiện đại mang đậm nét văn hóa Việt Nam, khu nghỉ dưỡng mang đến trải nghiệm lưu trú thoải mái và thư giãn.\nĐây là lựa chọn hoàn hảo cho các gia đình muốn tận hưởng kỳ nghỉ biển với nhiều tiện nghi giải trí phong phú dành cho trẻ em và người lớn.\nKhu nghỉ dưỡng sở hữu hồ bơi người lớn và hồ bơi trẻ em riêng biệt, cùng với bãi biển riêng tuyệt đẹp.\nẨm thực tại Salinda Resort bao gồm các món ăn Việt Nam và quốc tế, được chế biến từ nguyên liệu tươi sống.\nDịch vụ spa và mát-xa giúp quý khách thư giãn sau một ngày dài khám phá đảo ngọc.\nWi-Fi miễn phí và các tiện nghi hiện đại luôn đảm bảo quý khách thoải mái trong suốt kỳ lưu trú.\nSalinda Resort Phu Quoc Island là sự lựa chọn tuyệt vời cho kỳ nghỉ biển đáng nhớ tại Phú Quốc.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-461d9e6cae15936a48387e0381252c31.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-461d9e6cae15936a48387e0381252c31.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-4096x2731-FIT_AND_TRIM-6a89940df9ebc9059667f3979855a4e4.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-4096x2731-FIT_AND_TRIM-b6ab662cca087964843c406d31966f5d.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-4096x2731-FIT_AND_TRIM-58150d795e960398cc84739ef9636b46.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10018152-e10dc7c10c46e682b0a96268ac1a54b0.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "beach_access", name: "Bãi biển riêng" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khu nghỉ dưỡng",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Đưa đón sân bay"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Việt Nam", "Nhà hàng quốc tế", "Quầy bar", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi người lớn", "Hồ bơi trẻ em", "Bãi biển riêng", "WiFi miễn phí", "Két an toàn"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Sân thượng"]
+            },
+            {
+                category: "Các hoạt động",
+                icon: "sports_esports",
+                items: ["Spa", "Trung tâm thể dục", "Mát-xa", "Câu cá"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi Dài", "Sân bay quốc tế Phú Quốc", "Chợ đêm Phú Quốc", "Dinh Cậu"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/114",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31392.45678901234!2d103.9765432!3d10.1334567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x319d8a1b2c3d4e5f%3A0x9a8b7c6d5e4f3g2!2sSalinda%20Resort%20Phu%20Quoc!5e0!3m2!1svi!2s!4v1764613004000!5m2!1svi!2s"
+    },
+    {
+        id: 115,
+        name: "Novotel Ha Long Bay Hotel",
+        type: "hotel",
+        location: "Thành phố Hạ Long, Quảng Ninh",
+        price: "2.800.000đ",
+        rating: 4.6,
+        reviews: 1950,
+        host: {
+            name: "Chủ nhà Hoàng Nam",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 3,
+        bathrooms: 2,
+        maxGuests: 6,
+        isHot: true,
+        description: "Novotel Ha Long Bay Hotel tọa lạc ngay bên bờ vịnh Hạ Long, một trong những kỳ quan thiên nhiên được UNESCO công nhận. Khách sạn mang đến tầm nhìn tuyệt đẹp ra hàng nghìn đảo đá vôi và làn nước xanh ngọc của vịnh.\nKhách sạn này là lựa chọn hoàn hảo cho các cặp đôi đang tìm kiếm một kỳ nghỉ lãng mạn với khung cảnh thiên nhiên ngoạn mục và dịch vụ đẳng cấp.\nNovotel Ha Long Bay cung cấp đầy đủ tiện nghi cho các sự kiện doanh nghiệp với phòng hội nghị hiện đại và view vịnh ấn tượng.\nKhu vực hồ bơi ngoài trời của khách sạn nhìn thẳng ra vịnh Hạ Long, mang đến trải nghiệm bơi lội độc đáo giữa thiên nhiên.\nẨm thực tại khách sạn bao gồm các món hải sản tươi sống đặc trưng vùng Hạ Long cùng các món ăn quốc tế.\nWi-Fi miễn phí và các tiện nghi hiện đại giúp quý khách luôn kết nối trong suốt kỳ lưu trú.\nNovotel Ha Long Bay Hotel là điểm đến lý tưởng để khám phá vịnh Hạ Long và trải nghiệm vẻ đẹp kỳ vĩ của di sản thiên nhiên thế giới.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216210_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216210_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216226_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216360_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216398_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/rvN7CENfvyT2YVqT-7R6UjRIibYDnsWI+-nAv8mJ7GI=/37810/photos/87216346_XL.jpg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Đưa đón sân bay", "Dịch vụ đặt tour vịnh"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng hải sản", "Quầy bar", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại hồ bơi"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi ngoài trời", "WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Thang máy"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Vịnh Hạ Long", "Động Tam Cúc", "Chợ đêm Hạ Long", "Bảo tàng Quảng Ninh"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/115",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.67890123456!2d107.0823456!3d20.9101234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a56a5b6c7d89f%3A0x1234567890abcdef!2sNovotel%20Ha%20Long%20Bay!5e0!3m2!1svi!2s!4v1764613005000!5m2!1svi!2s"
+    },
+    {
+        id: 116,
+        name: "Wyndham Haledon Ha Long Hotel",
+        type: "hotel",
+        location: "Thành phố Hạ Long, Quảng Ninh",
+        price: "2.200.000đ",
+        rating: 4.5,
+        reviews: 1230,
+        host: {
+            name: "Chủ nhà Hoàng Nam",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "Wyndham Haledon Ha Long Hotel là khách sạn cao cấp tọa lạc tại trung tâm thành phố Hạ Long, cách bến tàu du lịch vịnh Hạ Long chỉ 5 phút lái xe. Khách sạn mang đến tầm nhìn đẹp ra vịnh và các đảo đá vôi hùng vĩ.\nVới vị trí thuận tiện, Wyndham Haledon Ha Long Hotel là điểm xuất phát lý tưởng để khám phá vịnh Hạ Long và các điểm du lịch nổi tiếng của Quảng Ninh.\nKhách sạn cung cấp các phòng nghỉ rộng rãi với tiện nghi hiện đại và dịch vụ chu đáo.\nNhà hàng của khách sạn phục vụ các món ăn đa dạng từ ẩm thực Việt Nam đến quốc tế, đặc biệt là các món hải sản tươi sống.\nWi-Fi miễn phí và các tiện nghi văn phòng đáp ứng tốt nhu cầu công tác của quý khách.\nĐội ngũ nhân viên thân thiện luôn sẵn sàng hỗ trợ quý khách 24/7.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-3a0113fa07e16a18a7ed6b74564806db.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-3a0113fa07e16a18a7ed6b74564806db.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-e50b06f78e7510b77229d093fa7d995c.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-153b61f7c95404b0de42c29f03960e68.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-625f1bc29e0daf877a0610bff2e648fe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10031693-edc048d666026cb5516899a464919a73.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "elevator", name: "Thang máy" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Đưa đón sân bay"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Việt Nam", "Quầy bar", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Thang máy"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Vịnh Hạ Long", "Bến tàu Hạ Long", "Chợ đêm Hạ Long", "Đảo Tuần Châu"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/116",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3725.67890123456!2d107.0823456!3d20.9201234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a56a5b6c7d89f%3A0xabcdef1234567890!2sWyndham%20Haledon%20Ha%20Long!5e0!3m2!1svi!2s!4v1764613006000!5m2!1svi!2s"
+    },
+    {
+        id: 117,
+        name: "Avani Quy Nhon Resort",
+        type: "resort",
+        location: "Thành phố Quy Nhơn, Bình Định",
+        price: "4.800.000đ",
+        rating: 4.8,
+        reviews: 1640,
+        host: {
+            name: "Chủ nhà Minh Tuấn",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 3,
+        bathrooms: 2,
+        maxGuests: 6,
+        isHot: true,
+        description: "Avani Quy Nhon Resort tọa lạc tại bờ biển hoang sơ của Quy Nhơn, một trong những bãi biển đẹp nhất miền Trung Việt Nam. Khu nghỉ dưỡng mang đến sự kết hợp hoàn hảo giữa không gian thiên nhiên yên bình và tiện nghi hiện đại.\nĐây là điểm đến lý tưởng cho những ai muốn trốn khỏi sự ồn ào của thành phố và tận hưởng kỳ nghỉ biển thanh bình.\nKhu nghỉ dưỡng sở hữu bãi biển riêng dài và đẹp, hồ bơi vô cực nhìn ra biển và các villa riêng biệt với view tuyệt đẹp.\nAvani Quy Nhon cung cấp các dịch vụ spa và mát-xa chuyên nghiệp sử dụng các sản phẩm thiên nhiên địa phương.\nẨm thực tại khu nghỉ dưỡng tập trung vào hải sản tươi sống và các món ăn miền Trung Việt Nam đặc sắc.\nWi-Fi miễn phí và các tiện nghi hiện đại luôn đảm bảo quý khách thoải mái trong suốt kỳ lưu trú.\nAvani Quy Nhon Resort là sự lựa chọn hoàn hảo cho kỳ nghỉ biển đáng nhớ tại Quy Nhơn.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10020409-59a74a25d37adeb549daaf646c8d0994.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10020409-59a74a25d37adeb549daaf646c8d0994.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10020409-1600x1065-FIT_AND_TRIM-1c31f5ccdb8cee484e8485510b9b41e3.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10020409-c74ef73eafec1891b90d412b94df96d4.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10020409-b191de8df234d4bf885aedd8dbe71f63.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10020409-1211x768-FIT_AND_TRIM-41076af287ef45c9de56357e3670900b.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10020409-1600x1065-FIT_AND_TRIM-48822ac1c30189ef20349d88beeda95c.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "beach_access", name: "Bãi biển riêng" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khu nghỉ dưỡng",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Đưa đón sân bay"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng biển", "Quầy bar", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại bãi biển"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi vô cực", "Bãi biển riêng", "WiFi miễn phí", "Két an toàn", "Spa"]
+            },
+            {
+                category: "Các hoạt động",
+                icon: "sports_esports",
+                items: ["Spa", "Trung tâm thể dục", "Mát-xa", "Lặn biển", "Kayak"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi biển Quy Nhơn", "Eo Gió", "Bảo tàng Chăm Pa", "Tháp Đôi"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/117",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30745.12345678901!2d109.2234567!3d13.7761234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f90a1b2c3d4e5f%3A0x1234567890abcdef!2sAvani%20Quy%20Nhon%20Resort!5e0!3m2!1svi!2s!4v1764613007000!5m2!1svi!2s"
+    },
+    {
+        id: 118,
+        name: "Hoian Sincerity Hotel",
+        type: "hotel",
+        location: "Thành phố Quy Nhơn, Bình Định",
+        price: "1.600.000đ",
+        rating: 4.4,
+        reviews: 890,
+        host: {
+            name: "Chủ nhà Minh Tuấn",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "Hoian Sincerity Hotel là khách sạn 4 sao tọa lạc ngay bên bờ biển Quy Nhơn, cách bãi biển chỉ vài bước chân. Khách sạn mang đến sự kết hợp hoàn hảo giữa tiện nghi hiện đại và dịch vụ chu đáo của vùng biển miền Trung.\nVới vị trí thuận tiện, Hoian Sincerity Hotel là điểm xuất phát lý tưởng để khám phá các điểm du lịch nổi tiếng của Quy Nhơn như Eo Gió, Bảo tàng Chăm Pa và Tháp Đôi.\nKhách sạn cung cấp các phòng nghỉ rộng rãi với tầm nhìn ra biển và các tiện nghi đầy đủ.\nHồ bơi ngoài trời và nhà hàng phục vụ ẩm thực địa phương là những điểm nhấn của khách sạn.\nWi-Fi miễn phí và dịch vụ lễ tân 24/7 đảm bảo quý khách luôn thoải mái trong suốt kỳ lưu trú.\nHoian Sincerity Hotel là sự lựa chọn tuyệt vời cho du lịch và công tác tại Quy Nhơn.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10025420-9de63ca47b318ac264767479f9cb48af.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10025420-9de63ca47b318ac264767479f9cb48af.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10025420-236f170a1911284b98d893638a92a1ea.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025420-76508b78a17aed4b696882fa03a46007.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10025420-dd451d6ff0db462dd6fd6862bb4ac010.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng hải sản", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi ngoài trời", "WiFi miễn phí", "Két an toàn"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi biển Quy Nhơn", "Eo Gió", "Bảo tàng Chăm Pa", "Tháp Đôi"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/118",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d30745.12345678901!2d109.2334567!3d13.7861234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x316f90a1b2c3d4e5f%3A0xabcdef1234567890!2sHoian%20Sincerity%20Hotel!5e0!3m2!1svi!2s!4v1764613008000!5m2!1svi!2s"
+    },
+    {
+        id: 119,
+        name: "The Capella by Fusion Vung Tau",
+        type: "resort",
+        location: "Thành phố Vũng Tàu, Bà Rịa - Vũng Tàu",
+        price: "7.200.000đ",
+        rating: 4.9,
+        reviews: 2150,
+        host: {
+            name: "Chủ nhà Ngọc Linh",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 4,
+        bathrooms: 3,
+        maxGuests: 8,
+        isHot: true,
+        description: "The Capella by Fusion Vung Tau là khu nghỉ dưỡng cao cấp tọa lạc trên một góc đồi view toàn cảnh bãi biển Vũng Tàu. Khách sạn mang đến trải nghiệm nghỉ dưỡng sang trọng với không gian riêng tư và dịch vụ cá nhân hóa theo tiêu chuẩn quốc tế.\nĐây là lựa chọn hoàn hảo cho các cặp đôi tìm kiếm kỳ nghỉ lãng mạn và riêng tư tại Vũng Tàu, với các villa riêng biệt có hồ bơi private.\nKhu nghỉ dưỡng sở hữu các tiện nghi đẳng cấp bao gồm spa, trung tâm thể dục, nhà hàng fine dining và quầy bar trên cao với tầm nhìn 360 độ ra biển.\nẨm thực tại The Capella mang đến trải nghiệm ẩm thực cao cấp với các món ăn quốc tế và đặc sản Vũng Tàu.\nDịch vụ spa với các liệu pháp độc đáo sử dụng nguyên liệu thiên nhiên Việt Nam.\nWi-Fi miễn phí và các tiện nghi hiện đại giúp quý khách luôn kết nối trong suốt kỳ lưu trú.\nThe Capella by Fusion Vung Tau là sự lựa chọn tuyệt vời cho kỳ nghỉ đáng nhớ tại Vũng Tàu.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20034514-5fb21ca9cfd94081b723445886155b73.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20034514-5fb21ca9cfd94081b723445886155b73.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20034514-ecc1f6615f93c7be7281fc0cf049f7c5.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/20034514-39cef15909119631b4c418a500a7c363.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/20034514-612592126e853dc0555ee0ca6546430b.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "spa", name: "Spa" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khu nghỉ dưỡng",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ concierge", "Dịch vụ giặt ủi", "Dịch vụ phòng 24 giờ", "Bảo vệ 24 giờ", "Dịch vụ cưới", "Đưa đón sân bay"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng fine dining", "Quầy bar trên cao", "Bữa sáng món tự chọn", "Dịch vụ ăn uống tại villa"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi vô cực", "Spa", "WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Trung tâm thể dục"]
+            },
+            {
+                category: "Các hoạt động",
+                icon: "sports_esports",
+                items: ["Spa", "Trung tâm thể dục", "Mát-xa", "Yoga"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Hồ bơi"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi Sau Vũng Tàu", "Tượng Chúa Kitô Vua", "Mũi Nghinh Phong", "Bến xe Vũng Tàu"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/119",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d107.0834567!3d10.3434567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175166789a0bcab%3A0x1234567890abcdef!2sThe%20Capella%20by%20Fusion%20Vung%20Tau!5e0!3m2!1svi!2s!4v1764613009000!5m2!1svi!2s"
+    },
+    {
+        id: 120,
+        name: "Imperial Hotel Vung Tau",
+        type: "hotel",
+        location: "Thành phố Vũng Tàu, Bà Rịa - Vũng Tàu",
+        price: "2.400.000đ",
+        rating: 4.5,
+        reviews: 1780,
+        host: {
+            name: "Chủ nhà Ngọc Linh",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "Imperial Hotel Vung Tau là khách sạn cao cấp tọa lạc ngay trung tâm thành phố Vũng Tàu, cách bãi biển và các điểm tham quan nổi tiếng chỉ vài phút đi bộ. Khách sạn mang đến sự kết hợp giữa tiện nghi hiện đại và dịch vụ chu đáo của vùng biển miền Nam.\nVới vị trí chiến lược, Imperial Hotel Vung Tau là điểm xuất phát lý tưởng để khám phá các điểm du lịch Vũng Tàu như Tượng Chúa Kitô Vua, Mũi Nghinh Phong và Bãi Sau.\nKhách sạn cung cấp các phòng nghỉ rộng rãi với view thành phố hoặc biển và các tiện nghi đầy đủ.\nNhà hàng của khách sạn phục vụ các món ăn đa dạng từ ẩm thực Việt Nam đến quốc tế.\nWi-Fi miễn phí và dịch vụ lễ tân 24/7 đảm bảo quý khách luôn thoải mái.\nImperial Hotel Vung Tau là sự lựa chọn tuyệt vời cho du lịch và công tác tại Vũng Tàu.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-6dba465809edf7d9bf3d0c7cf2308a33.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-6dba465809edf7d9bf3d0c7cf2308a33.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-73a2e79cccc804796eb3f051f7917fd0.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-18881d2dea2c69b20d65b941be728412.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-d7d0e19494db8dff1780f4abf2e8b3f5.jpeg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10019885-c58f21ed173c419e78a8bab4be959210.jpeg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng Việt Nam", "Quầy bar", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi", "WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Thang máy"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bãi Sau Vũng Tàu", "Tượng Chúa Kitô Vua", "Mũi Nghinh Phong", "Chợ đêm Vũng Tàu"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/120",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d107.0834567!3d10.3534567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3175166789a0bcab%3A0xabcdef1234567890!2sImperial%20Hotel%20Vung%20Tau!5e0!3m2!1svi!2s!4v1764613010000!5m2!1svi!2s"
+    },
+    {
+        id: 121,
+        name: "Azerai Can Tho Hotel",
+        type: "hotel",
+        location: "Quận Ninh Kiều, Thành phố Cần Thơ",
+        price: "3.500.000đ",
+        rating: 4.8,
+        reviews: 2030,
+        host: {
+            name: "Chủ nhà Thanh Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: true
+        },
+        bedrooms: 3,
+        bathrooms: 2,
+        maxGuests: 6,
+        isHot: true,
+        description: "Azerai Can Tho Hotel tọa lạc ngay bên bờ sông Hậu thơ mộng, mang đến tầm nhìn tuyệt đẹp ra dòng sông Mekong và là điểm xuất phát lý tưởng để khám phá chợ nổi Cái Răng nổi tiếng. Khách sạn mang đến trải nghiệm lưu trú đẳng cấp giữa lòng đô thị miền Tây.\nĐây là lựa chọn hoàn hảo cho những ai muốn khám phá văn hóa miền Tây sông nước với các dịch vụ đẳng cấp và tiện nghi hiện đại.\nKhách sạn cung cấp các tour tham quan chợ nổi Cái Răng và các làng nghề truyền thống miền Tây.\nHồ bơi ngoài trời của khách sạn nhìn thẳng ra sông Hậu, mang đến trải nghiệm bơi lội độc đáo giữa thiên nhiên sông nước.\nẨm thực tại Azerai Can Tho mang đến các món ăn đặc sản miền Tây Nam Bộ như cá lóc nướng trui, lẩu mắm và các món chay thanh đạm.\nWi-Fi miễn phí và các tiện nghi hiện đại giúp quý khách luôn kết nối trong suốt kỳ lưu trú.\nAzerai Can Tho Hotel là sự lựa chọn tuyệt vời để khám phá vùng đất Tây Nam Bộ.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1620x1080-FIT_AND_TRIM-f9d4c2cb1452f94551e5a2d2de5f945e.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1440x1080-FIT_AND_TRIM-b6ccfb1071f245f528b062c8bef9d6a7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1850x1080-FIT_AND_TRIM-4a22fe44d455f5cb8be34bf4d6f0f8c7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-c3ef4e4e51681dbb8e9653da5b8fc5f5.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-2920x1947-FIT_AND_TRIM-c16348ef7ed79bcba7337de4d08e5233.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "pool", name: "Hồ bơi" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ", "Đưa đón sân bay", "Dịch vụ đặt tour chợ nổi"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng miền Tây", "Nhà hàng quốc tế", "Quầy bar", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["Hồ bơi ngoài trời", "WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Thang máy"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Sân thượng"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Chợ nổi Cái Răng", "Sông Hậu", "Bến Ninh Kiều", "Nhà cổ Bình Thủy"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/121",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d105.7834567!3d10.0334567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313a30098a5e8f9f%3A0x1234567890abcdef!2sAzerai%20Can%20Tho!5e0!3m2!1svi!2s!4v1764613011000!5m2!1svi!2s"
+    },
+    {
+        id: 122,
+        name: "Co Do Palace Hotel Can Tho",
+        type: "hotel",
+        location: "Quận Ninh Kiều, Thành phố Cần Thơ",
+        price: "1.800.000đ",
+        rating: 4.3,
+        reviews: 1100,
+        host: {
+            name: "Chủ nhà Thanh Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 4,
+        isHot: false,
+        description: "Co Do Palace Hotel Can Tho là khách sạn cao cấp tọa lạc ngay trung tâm quận Ninh Kiều, cách bến Ninh Kiều và sông Hậu chỉ vài bước chân. Khách sạn mang đến sự kết hợp giữa kiến trúc hiện đại và nét đẹp văn hóa miền Tây sông nước.\nVới vị trí thuận tiện, Co Do Palace Hotel là điểm xuất phát lý tưởng để khám phá chợ nổi Cái Răng, vườn trái cây và các làng nghề truyền thống miền Tây.\nKhách sạn cung cấp các phòng nghỉ rộng rãi với view thành phố hoặc sông Hậu và các tiện nghi đầy đủ.\nNhà hàng của khách sạn phục vụ các món ăn đặc sản miền Tây Nam Bộ đặc trưng.\nWi-Fi miễn phí và dịch vụ lễ tân 24/7 đảm bảo quý khách luôn thoải mái trong suốt kỳ lưu trú.\nCo Do Palace Hotel Can Tho là sự lựa chọn tuyệt vời cho du lịch và công tác tại Cần Thơ.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1620x1080-FIT_AND_TRIM-f9d4c2cb1452f94551e5a2d2de5f945e.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1440x1080-FIT_AND_TRIM-b6ccfb1071f245f528b062c8bef9d6a7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1850x1080-FIT_AND_TRIM-4a22fe44d455f5cb8be34bf4d6f0f8c7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-c3ef4e4e51681dbb8e9653da5b8fc5f5.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-2920x1947-FIT_AND_TRIM-c16348ef7ed79bcba7337de4d08e5233.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "elevator", name: "Thang máy" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ giặt ủi", "Dịch vụ phòng", "Bảo vệ 24 giờ"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng miền Tây", "Bữa sáng món tự chọn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["WiFi miễn phí", "Két an toàn", "Bãi đậu xe", "Thang máy"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bến Ninh Kiều", "Chợ nổi Cái Răng", "Sông Hậu", "Vườn trái cây Cần Thơ"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/122",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d105.7934567!3d10.0434567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313a30098a5e8f9f%3A0xabcdef1234567890!2sCo%20Do%20Palace%20Hotel%20Can%20Tho!5e0!3m2!1svi!2s!4v1764613012000!5m2!1svi!2s"
+    },
+    {
+        id: 123,
+        name: "TTC Hotel - Crs Can Tho",
+        type: "hotel",
+        location: "Quận Ninh Kiều, Thành phố Cần Thơ",
+        price: "1.350.000đ",
+        rating: 4.2,
+        reviews: 890,
+        host: {
+            name: "Chủ nhà Thanh Hà",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 2,
+        bathrooms: 1,
+        maxGuests: 3,
+        isHot: false,
+        description: "TTC Hotel - Crs Can Tho là khách sạn tọa lạc ngay trung tâm thành phố Cần Thơ, cách bến Ninh Kiều và chợ nổi Cái Răng không xa. Khách sạn mang đến sự tiện lợi và thoải mái cho du khách với vị trí chiến lược và dịch vụ chu đáo.\nVới giá cả hợp lý và tiện nghi đầy đủ, TTC Hotel - Crs Can Tho là lựa chọn lý tưởng cho du khách muốn khám phá Cần Thơ và vùng đồng bằng sông Cửu Long.\nKhách sạn cung cấp các phòng nghỉ sạch sẽ, thoáng mát và các dịch vụ cơ bản đáp ứng nhu cầu lưu trú của quý khách.\nNhà hàng của khách sạn phục vụ bữa sáng miễn phí và các món ăn địa phương đơn giản nhưng ngon miệng.\nWi-Fi miễn phí và dịch vụ lễ tân nhiệt tình giúp quý khách luôn thoải mái trong suốt kỳ lưu trú.\nTTC Hotel - Crs Can Tho là sự lựa chọn tiết kiệm nhưng chất lượng cho chuyến đi Cần Thơ.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-fda34a29c15746f16f1deab6ffc17ffe.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1620x1080-FIT_AND_TRIM-f9d4c2cb1452f94551e5a2d2de5f945e.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1440x1080-FIT_AND_TRIM-b6ccfb1071f245f528b062c8bef9d6a7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-1850x1080-FIT_AND_TRIM-4a22fe44d455f5cb8be34bf4d6f0f8c7.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/10027635-c3ef4e4e51681dbb8e9653da5b8fc5f5.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/apr-asset/dgXfoyh24ryQLRcGq00cIdKHRmotrWLNlvG-TxlcLxGkiDwaUSggleJNPRgIHCX6/hotel/asset/10027635-2920x1947-FIT_AND_TRIM-c16348ef7ed79bcba7337de4d08e5233.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "ac_unit", name: "Máy lạnh" },
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "wifi", name: "WiFi" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ phòng", "Bảo vệ 24 giờ"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Bữa sáng miễn phí", "Nhà hàng địa phương"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["WiFi miễn phí", "Két an toàn", "Thang máy"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi (miễn phí)"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Bến Ninh Kiều", "Chợ nổi Cái Răng", "Sông Hậu", "Miệt vườn Cần Thơ"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/123",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d105.7934567!3d10.0534567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313a30098a5e8f9f%3A0x1234567890abcdef!2sTTC%20Hotel%20Can%20Tho!5e0!3m2!1svi!2s!4v1764613013000!5m2!1svi!2s"
+    },
+    {
+        id: 124,
+        name: "An Hotel Can Tho",
+        type: "hotel",
+        location: "Quận Cái Răng, Thành phố Cần Thơ",
+        price: "900.000đ",
+        rating: 4.5,
+        reviews: 8,
+        host: {
+            name: "Chủ nhà Minh An",
+            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuB_ZlLjJ-1BfUws8lSR4bIoXJpcIjEsdYqd-MC4f-nZHSKGCX-OYpTFshXnMq5BR36vZbowgGctUIbMDv3eOPmXZtLixTxHqUysLu_MRXbDFtUMrheJr13IbKGEM04x-mcA27RKr3huD4YcDLph_vmYaEE-bIcghKqgXGgfaI2EBI3VBrUkqEg598nJcGKUzGJWAkDNU2lkZa7zbCr8SAPbBc2McJn0HbGNxyo12Ie3xIoDBS6gcc8VDmyQnJNTQ3aQMkLqf5yz1XY",
+            superhost: false
+        },
+        bedrooms: 1,
+        bathrooms: 1,
+        maxGuests: 2,
+        isHot: false,
+        description: "An Hotel Can Tho tọa lạc tại khu vực Hưng Phú, quận Cái Răng, thành phố Cần Thơ — cửa ngõ của vùng đồng bằng sông Cửu Long. Khách sạn mang đến không gian lưu trú tiện nghi và thoải mái cho du khách thập phương.\n\nAn Hotel Can Tho là lựa chọn lý tưởng cho những ai muốn khám phá vùng Tây Nam Bộ sông nước, đặc biệt là chợ nổi Cái Răng — một trong những chợ nổi lớn và nổi tiếng nhất miền Tây.\n\nDịch vụ lễ tân 24 giờ luôn sẵn sàng hỗ trợ quý khách từ thủ tục nhận phòng đến trả phòng hay bất kỳ yêu cầu nào. Đội ngũ nhân viên thân thiện và chu đáo luôn đảm bảo quý khách có kỳ lưu trú thoải mái nhất.\n\nWi-Fi miễn phí phủ khắp các khu vực công cộng giúp quý khách luôn kết nối với gia đình và bạn bè trong suốt kỳ lưu trú.\n\nTừ khách sạn, quý khách có thể dễ dàng di chuyển đến các điểm tham quan nổi tiếng như Chợ nổi Cái Răng, Vườn trái cây Mỹ Khánh và Khu du lịch Phú Sa.\n\nẨm thực địa phương Cần Thơ với các món đặc sản như bánh mì xá xíu, hải sản tươi sống và trái cây nhiệt đới được phục vụ ngay tại nhà hàng của khách sạn.\n\nAn Hotel Can Tho là sự lựa chọn tuyệt vời cho chuyến đi khám phá miền Tây sông nước.",
+        images: {
+            main: "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/680040652-a8b87e8b54075161ddc2dce38b6a5f0d.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+            gallery: [
+                "https://ik.imagekit.io/tvlk/apr-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/680040652-a8b87e8b54075161ddc2dce38b6a5f0d.jpeg?_src=imagekit&tr=c-at_max,h-720,q-80,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/680040652-2390fbf2b8a5fe39ae7b9b244a05bd98.jpeg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280",
+                "https://ik.imagekit.io/tvlk/generic-asset/Ixf4aptF5N2Qdfmh4fGGYhTN274kJXuNMkUAzpL5HuD9jzSxIGG5kZNhhHY-p7nw/hotel/asset/680040652-b608270f9275b1446338527449169643.jpeg?_src=imagekit&tr=c-at_max,h-720,q-40,w-1280"
+            ]
+        },
+        amenities: [
+            { icon: "restaurant", name: "Nhà hàng" },
+            { icon: "support_agent", name: "Lễ tân 24h" },
+            { icon: "local_parking", name: "Chỗ đậu xe" },
+            { icon: "wifi", name: "WiFi miễn phí" },
+            { icon: "elevator", name: "Thang máy" },
+            { icon: "local_laundry_service", name: "Giặt ủi" },
+            { icon: "coffee", name: "Quán cà phê" }
+        ],
+        detailedAmenities: [
+            {
+                category: "Dịch vụ khách sạn",
+                icon: "room_service",
+                items: ["Lễ tân 24h", "Dịch vụ phòng", "Dịch vụ giặt ủi", "Trả phòng nhanh", "Bảo vệ 24 giờ"]
+            },
+            {
+                category: "Ẩm thực",
+                icon: "restaurant_menu",
+                items: ["Nhà hàng địa phương", "Quán cà phê", "Các quán ăn gần khách sạn"]
+            },
+            {
+                category: "Tiện nghi công cộng",
+                icon: "domain",
+                items: ["WiFi miễn phí", "Két an toàn", "Thang máy", "Chỗ đậu xe", "ATM/Ngân hàng gần đó"]
+            },
+            {
+                category: "Tiện nghi chung",
+                icon: "apartment",
+                items: ["Máy lạnh", "Phòng không hút thuốc", "Khu vực hút thuốc"]
+            },
+            {
+                category: "Kết nối mạng",
+                icon: "wifi",
+                items: ["Wifi miễn phí"]
+            },
+            {
+                category: "Các tiện ích lân cận",
+                icon: "storefront",
+                items: ["Chợ nổi Cái Răng", "Vườn trái cây Mỹ Khánh", "Khu du lịch Phú Sa", "Bến Ninh Kiều", "Sông Hậu"]
+            }
+        ],
+        mapImage: "http://googleusercontent.com/profile/picture/124",
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31393.12345678901!2d105.7834567!3d10.0334567!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313a30098a5e8f9f%3A0xabcdef1234567890!2sAn%20Hotel%20Can%20Tho!5e0!3m2!1svi!2s!4v1764613014000!5m2!1svi!2s"
     }
 ];

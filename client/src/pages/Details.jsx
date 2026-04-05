@@ -22,11 +22,11 @@ export default function Details() {
     const [guestPhone, setGuestPhone] = useState('');
     const [mobileCheckIn, setMobileCheckIn] = useState('');
     const [mobileCheckOut, setMobileCheckOut] = useState('');
-    const [mobileRoomType, setMobileRoomType] = useState('single');
+    const [mobileRoomType, setMobileRoomType] = useState(null); // room_type_id
     const [property, setProperty] = useState(null);
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
-    const [roomType, setRoomType] = useState('single');
+    const [roomType, setRoomType] = useState(null); // room_type_id
     const [dateError, setDateError] = useState('');
     const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
     const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false);
@@ -275,11 +275,16 @@ export default function Details() {
     const timeDiff = checkOutDate - checkInDate;
     const nights = Math.max(0, Math.ceil(timeDiff / (1000 * 3600 * 24))); // Fix negative nights returning 0
 
-    let roomMultiplier = 1;
-    if (roomType === 'double') roomMultiplier = 1.3;
-    if (roomType === 'quad') roomMultiplier = 1.5;
+    // Lấy giá từ room type được chọn (dynamic từ DB)
+    const rooms = Array.isArray(property.rooms) ? property.rooms : [];
+    const selectedRoom = rooms.find(r => String(r.id) === String(roomType)) || rooms[0];
+    const pricePerNight = selectedRoom ? Number(selectedRoom.price) : pricePerNightBase;
 
-    const pricePerNight = Math.round(pricePerNightBase * roomMultiplier);
+    // Auto-select room type nếu chưa chọn
+    if (!roomType && rooms.length > 0) {
+        setRoomType(String(rooms[0].id));
+    }
+
     const totalBase = pricePerNight * nights;
     const serviceFee = Math.round(totalBase * 0.1);
     const total = totalBase + serviceFee;
@@ -805,12 +810,21 @@ export default function Details() {
                                                     htmlFor="room-type">Loại phòng</label>
                                                 <select
                                                     className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
-                                                    id="room-type" value={roomType} onChange={(e) => setRoomType(e.target.value)}>
-                                                    <option value="single">Phòng đơn</option>
-                                                    <option value="double">Phòng đôi</option>
-                                                    <option value="quad">Phòng 4 người</option>
+                                                    id="room-type" value={roomType || ''} onChange={(e) => setRoomType(e.target.value)}>
+                                                    {rooms.map(r => (
+                                                        <option key={r.id} value={r.id}>
+                                                            {r.name} — {Number(r.price).toLocaleString('vi-VN')}₫
+                                                        </option>
+                                                    ))}
+                                                    {rooms.length === 0 && <option value="">Không có phòng</option>}
                                                 </select>
                                             </div>
+                                            {selectedRoom && (
+                                                <div className="text-xs text-neutral-500 dark:text-neutral-300 flex flex-wrap gap-3 mt-1">
+                                                    {selectedRoom.bed_type && <span>🛏️ {selectedRoom.bed_type}</span>}
+                                                    <span>👥 Tối đa {selectedRoom.max_adults} người lớn{selectedRoom.max_children > 0 ? `, ${selectedRoom.max_children} trẻ em` : ''}</span>
+                                                </div>
+                                            )}
                                             {dateError && (
                                                 <p className="text-xs text-red-500">{dateError}</p>
                                             )}
@@ -822,7 +836,7 @@ export default function Details() {
                                                     <span>Chọn ngày để đặt</span>
                                                 </button>
                                             ) : (
-                                                <Link to={`/payment?id=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&roomType=${roomType}`} className="w-full">
+                                                <Link to={`/payment?id=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&roomTypeId=${roomType}`} className="w-full">
                                                     <button
                                                         className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-white text-base font-bold leading-normal tracking-[0.015em] hover:bg-primary/90">
                                                         <span>Đặt ngay</span>
@@ -875,7 +889,7 @@ export default function Details() {
                                 onClick={() => {
                                     setMobileCheckIn(checkIn);
                                     setMobileCheckOut(checkOut);
-                                    setMobileRoomType(roomType);
+                                    setMobileRoomType(roomType || (rooms[0] && String(rooms[0].id)));
                                     setIsMobilePaymentOpen(true);
                                     setIsSuccess(false);
                                     setPaymentError('');
@@ -1135,17 +1149,11 @@ export default function Details() {
                     'WELCOME': { type: 'percent', value: 15 }
                 };
 
-                let mRoomTypeText = 'Phòng đơn';
-                if (mobileRoomType === 'double') mRoomTypeText = 'Phòng đôi';
-                if (mobileRoomType === 'quad') mRoomTypeText = 'Phòng 4 người';
+                const mRooms = Array.isArray(property.rooms) ? property.rooms : [];
+                const mSelectedRoom = mRooms.find(r => String(r.id) === String(mobileRoomType)) || mRooms[0];
+                let mRoomTypeText = mSelectedRoom ? mSelectedRoom.name : 'Phòng';
 
-                let mRoomMultiplier = 1;
-                if (mobileRoomType === 'double') mRoomMultiplier = 1.3;
-                if (mobileRoomType === 'quad') mRoomMultiplier = 1.5;
-
-                const mPriceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
-                const mPriceBase = parseInt(mPriceString) || 0;
-                const mPricePerNight = Math.round(mPriceBase * mRoomMultiplier);
+                const mPricePerNight = mSelectedRoom ? Number(mSelectedRoom.price) : 0;
 
                 const mCheckInDate = mobileCheckIn ? new Date(mobileCheckIn) : null;
                 const mCheckOutDate = mobileCheckOut ? new Date(mobileCheckOut) : null;
@@ -1187,12 +1195,7 @@ export default function Details() {
                 };
 
                 const getRoomTypeId = () => {
-                    const rooms = property.rooms || [];
-                    if (rooms.length > 0) {
-                        const idx = mobileRoomType === 'double' ? 1 : mobileRoomType === 'quad' ? 2 : 0;
-                        return rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
-                    }
-                    return null;
+                    return mSelectedRoom ? mSelectedRoom.id : null;
                 };
 
                 const handleConfirmPayment = async () => {
@@ -1333,12 +1336,21 @@ export default function Details() {
                                         {/* Room type */}
                                         <div>
                                             <label className="block text-sm font-bold text-neutral-700 mb-2">Loại phòng</label>
-                                            <select value={mobileRoomType} onChange={(e) => setMobileRoomType(e.target.value)}
+                                            <select value={mobileRoomType || ''} onChange={(e) => setMobileRoomType(e.target.value)}
                                                 className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent">
-                                                <option value="single">Phòng đơn</option>
-                                                <option value="double">Phòng đôi</option>
-                                                <option value="quad">Phòng 4 người</option>
+                                                {mRooms.map(r => (
+                                                    <option key={r.id} value={r.id}>
+                                                        {r.name} — {Number(r.price).toLocaleString('vi-VN')}₫
+                                                    </option>
+                                                ))}
+                                                {mRooms.length === 0 && <option value="">Không có phòng</option>}
                                             </select>
+                                            {mSelectedRoom && (
+                                                <div className="text-xs text-neutral-400 flex flex-wrap gap-2 mt-1">
+                                                    {mSelectedRoom.bed_type && <span>🛏️ {mSelectedRoom.bed_type}</span>}
+                                                    <span>👥 {mSelectedRoom.max_adults} người lớn</span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Guest info (not logged in) */}

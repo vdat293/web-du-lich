@@ -55,7 +55,16 @@ export async function GET(req) {
                 },
                 amenities: amenitiesResult,
                 detailedAmenities: [],
-                rooms: rooms,
+                rooms: rooms.map(r => ({
+                    id: r.id,
+                    name: r.name,
+                    price: Number(r.price),
+                    total_allotment: r.total_allotment,
+                    max_adults: r.max_adults,
+                    max_children: r.max_children,
+                    room_size: r.room_size,
+                    bed_type: r.bed_type,
+                })),
                 mapImage: p.map_image,
                 mapEmbed: p.map_embed
             };

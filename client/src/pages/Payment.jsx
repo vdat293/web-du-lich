@@ -9,7 +9,7 @@ export default function Payment() {
     const propertyId = parseInt(searchParams.get('id'));
     const checkInParam = searchParams.get('checkIn');
     const checkOutParam = searchParams.get('checkOut');
-    const roomTypeParam = searchParams.get('roomType');
+    const roomTypeIdParam = searchParams.get('roomTypeId');
 
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -99,9 +99,10 @@ export default function Payment() {
         );
     }
 
-    // Price calculations
-    const priceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
-    const pricePerNightBase = parseInt(priceString);
+    // Price calculations - lấy giá từ room type thực tế
+    const rooms = Array.isArray(property.rooms) ? property.rooms : [];
+    const selectedRoom = rooms.find(r => String(r.id) === String(roomTypeIdParam)) || rooms[0];
+    const roomTypeText = selectedRoom ? selectedRoom.name : 'Phòng';
 
     let checkInDate = checkInParam ? new Date(checkInParam) : new Date();
     let checkOutDate = checkOutParam ? new Date(checkOutParam) : new Date(Date.now() + 86400000); // 1 night default
@@ -112,17 +113,7 @@ export default function Payment() {
     const timeDiff = checkOutDate - checkInDate;
     const nights = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
 
-    let roomMultiplier = 1;
-    let roomTypeText = 'Phòng đơn';
-    if (roomTypeParam === 'double') {
-        roomMultiplier = 1.3;
-        roomTypeText = 'Phòng đôi';
-    } else if (roomTypeParam === 'quad') {
-        roomMultiplier = 1.5;
-        roomTypeText = 'Phòng 4 người';
-    }
-
-    const pricePerNight = Math.round(pricePerNightBase * roomMultiplier);
+    const pricePerNight = selectedRoom ? Number(selectedRoom.price) : 0;
     const totalBase = pricePerNight * nights;
     const serviceFee = Math.round(totalBase * 0.1);
     const initialTotal = totalBase + serviceFee;
@@ -158,14 +149,9 @@ export default function Payment() {
         }
     };
 
-    // Lấy room_type_id thực từ property.rooms
+    // Lấy room_type_id thực từ URL param
     const getRoomTypeId = () => {
-        const rooms = property.rooms || [];
-        if (rooms.length > 0) {
-            const idx = roomTypeParam === 'double' ? 1 : roomTypeParam === 'quad' ? 2 : 0;
-            return rooms[Math.min(idx, rooms.length - 1)]?.id || rooms[0]?.id;
-        }
-        return null;
+        return selectedRoom ? selectedRoom.id : null;
     };
 
     const formatDateForDB = (date) => {
@@ -469,7 +455,7 @@ export default function Payment() {
                                             {formatDate(checkInDate)} – {formatDate(checkOutDate)}
                                         </p>
                                     </div>
-                                    <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomType=${roomTypeParam || ''}`)}
+                                    <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomTypeId=${roomTypeIdParam || ''}`)}
                                         className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">Sửa</button>
                                 </div>
                                 <div className="flex justify-between items-center">
@@ -477,7 +463,7 @@ export default function Payment() {
                                         <p className="font-bold text-neutral-700 dark:text-white">Loại phòng</p>
                                         <p className="text-neutral-500 dark:text-neutral-200">{roomTypeText}</p>
                                     </div>
-                                    <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomType=${roomTypeParam || ''}`)}
+                                    <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomTypeId=${roomTypeIdParam || ''}`)}
                                         className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">Sửa</button>
                                 </div>
                             </div>

@@ -1247,7 +1247,7 @@ function BookingModal({ booking, onClose }) {
     );
 }
 
-// Property Modal Component
+// Property Modal Component with Room Types Management
 function PropertyModal({ property, onSave, onClose }) {
     const [formData, setFormData] = useState({
         name: property?.name || '',
@@ -1259,6 +1259,125 @@ function PropertyModal({ property, onSave, onClose }) {
         status: property?.property_status || 'active'
     });
     const [loading, setLoading] = useState(false);
+    const [roomTypes, setRoomTypes] = useState([]);
+    const [roomTypesLoading, setRoomTypesLoading] = useState(false);
+    const [editingRoomType, setEditingRoomType] = useState(null);
+    const [showAddRoom, setShowAddRoom] = useState(false);
+    const [newRoom, setNewRoom] = useState({ name: '', price: '', total_allotment: '', max_adults: 2, max_children: 1, room_size: '', bed_type: '' });
+    const [roomError, setRoomError] = useState('');
+    const [roomSuccess, setRoomSuccess] = useState('');
+
+    const getAuthHeaders = () => ({
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    });
+
+    // Fetch room types
+    useEffect(() => {
+        if (property?.id) {
+            fetchRoomTypes();
+        }
+    }, [property?.id]);
+
+    const fetchRoomTypes = async () => {
+        setRoomTypesLoading(true);
+        try {
+            const res = await fetch(`/api/admin/properties/${property.id}/rooms`, {
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setRoomTypes(data.rooms || []);
+            }
+        } catch (err) {
+            console.error('Lỗi khi lấy room types:', err);
+        } finally {
+            setRoomTypesLoading(false);
+        }
+    };
+
+    const handleAddRoom = async () => {
+        setRoomError('');
+        if (!newRoom.name || !newRoom.price || !newRoom.total_allotment) {
+            setRoomError('Vui lòng nhập tên, giá và số phòng');
+            return;
+        }
+        try {
+            const res = await fetch(`/api/admin/properties/${property.id}/rooms`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(newRoom)
+            });
+            if (res.ok) {
+                setRoomSuccess('Thêm loại phòng thành công!');
+                setNewRoom({ name: '', price: '', total_allotment: '', max_adults: 2, max_children: 1, room_size: '', bed_type: '' });
+                setShowAddRoom(false);
+                fetchRoomTypes();
+                setTimeout(() => setRoomSuccess(''), 3000);
+            } else {
+                const data = await res.json();
+                setRoomError(data.message);
+            }
+        } catch (err) {
+            setRoomError('Lỗi kết nối máy chủ');
+        }
+    };
+
+    const handleUpdateRoom = async (roomType) => {
+        setRoomError('');
+        try {
+            const res = await fetch(`/api/admin/properties/${property.id}/rooms`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    room_type_id: roomType.id,
+                    name: roomType.name,
+                    price: roomType.price,
+                    total_allotment: roomType.total_allotment,
+                    max_adults: roomType.max_adults,
+                    max_children: roomType.max_children,
+                    room_size: roomType.room_size,
+                    bed_type: roomType.bed_type,
+                })
+            });
+            if (res.ok) {
+                setRoomSuccess('Cập nhật thành công!');
+                setEditingRoomType(null);
+                fetchRoomTypes();
+                setTimeout(() => setRoomSuccess(''), 3000);
+            } else {
+                const data = await res.json();
+                setRoomError(data.message);
+            }
+        } catch (err) {
+            setRoomError('Lỗi kết nối máy chủ');
+        }
+    };
+
+    const handleDeleteRoom = async (roomTypeId) => {
+        if (!window.confirm('Bạn có chắc chắn muốn xóa loại phòng này?')) return;
+        setRoomError('');
+        try {
+            const res = await fetch(`/api/admin/properties/${property.id}/rooms?room_type_id=${roomTypeId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (res.ok) {
+                setRoomSuccess('Xóa loại phòng thành công!');
+                fetchRoomTypes();
+                setTimeout(() => setRoomSuccess(''), 3000);
+            } else {
+                const data = await res.json();
+                setRoomError(data.message);
+            }
+        } catch (err) {
+            setRoomError('Lỗi kết nối máy chủ');
+        }
+    };
+
+    const formatPrice = (price) => {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -1269,7 +1388,7 @@ function PropertyModal({ property, onSave, onClose }) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold">Sửa Property</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
@@ -1277,29 +1396,31 @@ function PropertyModal({ property, onSave, onClose }) {
                     </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Tên</label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Loại</label>
-                        <select
-                            value={formData.type}
-                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-                        >
-                            <option value="">Chọn loại</option>
-                            <option value="house">House</option>
-                            <option value="apartment">Apartment</option>
-                            <option value="villa">Villa</option>
-                            <option value="homestay">Homestay</option>
-                            <option value="resort">Resort</option>
-                        </select>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Tên</label>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Loại</label>
+                            <select
+                                value={formData.type}
+                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                            >
+                                <option value="">Chọn loại</option>
+                                <option value="house">House</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="villa">Villa</option>
+                                <option value="homestay">Homestay</option>
+                                <option value="resort">Resort</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Location</label>
@@ -1310,21 +1431,34 @@ function PropertyModal({ property, onSave, onClose }) {
                             className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Giá hiển thị</label>
-                        <input
-                            type="number"
-                            value={formData.price_display}
-                            onChange={(e) => setFormData({ ...formData, price_display: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Giá hiển thị</label>
+                            <input
+                                type="number"
+                                value={formData.price_display}
+                                onChange={(e) => setFormData({ ...formData, price_display: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Trạng thái</label>
+                            <select
+                                value={formData.status}
+                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                            >
+                                <option value="active">Hoạt động</option>
+                                <option value="inactive">Không hoạt động</option>
+                            </select>
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1">Mô tả</label>
                         <textarea
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            rows="3"
+                            rows="2"
                             className="w-full px-4 py-2 border border-gray-200 rounded-lg"
                         />
                     </div>
@@ -1339,18 +1473,188 @@ function PropertyModal({ property, onSave, onClose }) {
                             <span className="text-sm font-medium">Property Hot</span>
                         </label>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Trạng thái</label>
-                        <select
-                            value={formData.status}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg"
-                        >
-                            <option value="active">Hoạt động</option>
-                            <option value="inactive">Không hoạt động</option>
-                        </select>
+
+                    {/* Room Types Section */}
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary">hotel</span>
+                                Quản lý loại phòng
+                                <span className="text-sm font-normal text-gray-500">({roomTypes.length} loại)</span>
+                            </h4>
+                            <button
+                                type="button"
+                                onClick={() => setShowAddRoom(!showAddRoom)}
+                                className="px-3 py-1.5 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 flex items-center gap-1"
+                            >
+                                <span className="material-symbols-outlined !text-sm">{showAddRoom ? 'close' : 'add'}</span>
+                                {showAddRoom ? 'Đóng' : 'Thêm phòng'}
+                            </button>
+                        </div>
+
+                        {/* Messages */}
+                        {roomError && (
+                            <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+                                <span className="material-symbols-outlined !text-base">error</span>
+                                {roomError}
+                                <button onClick={() => setRoomError('')} className="ml-auto font-bold">&times;</button>
+                            </div>
+                        )}
+                        {roomSuccess && (
+                            <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-600 flex items-center gap-2">
+                                <span className="material-symbols-outlined !text-base">check_circle</span>
+                                {roomSuccess}
+                            </div>
+                        )}
+
+                        {/* Add Room Form */}
+                        {showAddRoom && (
+                            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                                <h5 className="font-bold text-sm text-blue-800 mb-3">Thêm loại phòng mới</h5>
+                                <div className="grid grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Tên loại phòng *</label>
+                                        <input type="text" value={newRoom.name}
+                                            onChange={(e) => setNewRoom({ ...newRoom, name: e.target.value })}
+                                            placeholder="VD: Phòng Deluxe"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Giá/đêm (VND) *</label>
+                                        <input type="number" value={newRoom.price}
+                                            onChange={(e) => setNewRoom({ ...newRoom, price: e.target.value })}
+                                            placeholder="3500000"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Số phòng *</label>
+                                        <input type="number" value={newRoom.total_allotment}
+                                            onChange={(e) => setNewRoom({ ...newRoom, total_allotment: e.target.value })}
+                                            placeholder="10"
+                                            min="1"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 gap-3 mb-3">
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Người lớn</label>
+                                        <input type="number" value={newRoom.max_adults}
+                                            onChange={(e) => setNewRoom({ ...newRoom, max_adults: e.target.value })}
+                                            min="1"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Trẻ em</label>
+                                        <input type="number" value={newRoom.max_children}
+                                            onChange={(e) => setNewRoom({ ...newRoom, max_children: e.target.value })}
+                                            min="0"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Diện tích (m²)</label>
+                                        <input type="number" value={newRoom.room_size}
+                                            onChange={(e) => setNewRoom({ ...newRoom, room_size: e.target.value })}
+                                            placeholder="25"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-600 mb-1">Loại giường</label>
+                                        <input type="text" value={newRoom.bed_type}
+                                            onChange={(e) => setNewRoom({ ...newRoom, bed_type: e.target.value })}
+                                            placeholder="1 Giường đôi"
+                                            className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm" />
+                                    </div>
+                                </div>
+                                <button type="button" onClick={handleAddRoom}
+                                    className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                                    Thêm
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Room Types List */}
+                        {roomTypesLoading ? (
+                            <div className="text-center py-4 text-gray-500 text-sm">Đang tải...</div>
+                        ) : roomTypes.length === 0 ? (
+                            <div className="text-center py-4 text-gray-400 text-sm">
+                                <span className="material-symbols-outlined text-3xl block mb-1">bed</span>
+                                Chưa có loại phòng nào
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                {roomTypes.map((rt) => (
+                                    <div key={rt.id} className="border border-gray-200 rounded-xl p-3 hover:border-primary/30 transition-colors">
+                                        {editingRoomType?.id === rt.id ? (
+                                            /* Inline Edit Mode */
+                                            <div>
+                                                <div className="grid grid-cols-3 gap-2 mb-2">
+                                                    <input type="text" value={editingRoomType.name}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, name: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Tên phòng" />
+                                                    <input type="number" value={editingRoomType.price}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, price: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Giá" />
+                                                    <input type="number" value={editingRoomType.total_allotment}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, total_allotment: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Số phòng" min="1" />
+                                                </div>
+                                                <div className="grid grid-cols-4 gap-2 mb-2">
+                                                    <input type="number" value={editingRoomType.max_adults || ''}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, max_adults: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Người lớn" min="1" />
+                                                    <input type="number" value={editingRoomType.max_children || ''}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, max_children: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Trẻ em" min="0" />
+                                                    <input type="number" value={editingRoomType.room_size || ''}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, room_size: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="m²" />
+                                                    <input type="text" value={editingRoomType.bed_type || ''}
+                                                        onChange={(e) => setEditingRoomType({ ...editingRoomType, bed_type: e.target.value })}
+                                                        className="px-2 py-1 border border-gray-200 rounded text-sm" placeholder="Loại giường" />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={() => handleUpdateRoom(editingRoomType)}
+                                                        className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">Lưu</button>
+                                                    <button type="button" onClick={() => setEditingRoomType(null)}
+                                                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs hover:bg-gray-300">Hủy</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            /* View Mode */
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-1">
+                                                        <span className="font-bold text-sm text-gray-800">{rt.name}</span>
+                                                        <span className="text-primary font-bold text-sm">{formatPrice(rt.price)}</span>
+                                                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                                            {rt.total_allotment} phòng
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                                                        {rt.room_size && <span>📐 {rt.room_size}m²</span>}
+                                                        {rt.bed_type && <span>🛏️ {rt.bed_type}</span>}
+                                                        <span>👥 {rt.max_adults} người lớn{rt.max_children > 0 ? `, ${rt.max_children} trẻ em` : ''}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <button type="button" onClick={() => setEditingRoomType({ ...rt })}
+                                                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded">
+                                                        <span className="material-symbols-outlined !text-lg">edit</span>
+                                                    </button>
+                                                    <button type="button" onClick={() => handleDeleteRoom(rt.id)}
+                                                        className="p-1.5 text-red-600 hover:bg-red-50 rounded">
+                                                        <span className="material-symbols-outlined !text-lg">delete</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
-                    <div className="flex gap-3 pt-4">
+
+                    <div className="flex gap-3 pt-4 border-t border-gray-200">
                         <button
                             type="button"
                             onClick={onClose}
@@ -1363,7 +1667,7 @@ function PropertyModal({ property, onSave, onClose }) {
                             disabled={loading}
                             className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-light disabled:opacity-50"
                         >
-                            {loading ? 'Đang lưu...' : 'Lưu'}
+                            {loading ? 'Đang lưu...' : 'Lưu thông tin'}
                         </button>
                     </div>
                 </form>
@@ -1371,3 +1675,4 @@ function PropertyModal({ property, onSave, onClose }) {
         </div>
     );
 }
+
