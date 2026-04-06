@@ -75,8 +75,8 @@ export async function POST(req) {
             // Tạo booking chính thức
             const [bookingResult] = await connection.execute(
                 `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-                [userId, guestBooking.property_id, guestBooking.room_type_id, guestBooking.check_in, guestBooking.check_out, guestBooking.number_of_rooms, guestBooking.total_price, guestBooking.special_requests]
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [userId, guestBooking.property_id, guestBooking.room_type_id, guestBooking.check_in, guestBooking.check_out, guestBooking.number_of_rooms, guestBooking.total_price, guestBooking.status, guestBooking.special_requests]
             );
 
             const bookingId = bookingResult.insertId;
@@ -84,14 +84,15 @@ export async function POST(req) {
             // Tạo payment record
             await connection.execute(
                 `INSERT INTO payments (booking_id, amount, payment_method, payment_status)
-                 VALUES (?, ?, 'guest', 'completed')`,
-                [bookingId, guestBooking.total_price]
+                 VALUES (?, ?, ?, ?)`,
+                [bookingId, guestBooking.total_price, guestBooking.payment_method, guestBooking.status === 'confirmed' ? 'completed' : 'pending']
             );
 
             // Lưu lịch sử trạng thái
+            const statusNote = guestBooking.status === 'confirmed' ? 'Đã thanh toán (Sau khi xác nhận email)' : 'Chờ xác nhận (Sau khi xác nhận email)';
             await connection.execute(
-                `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, 'pending', 'Chờ xác nhận', ?)`,
-                [bookingId, userId]
+                `INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, ?, ?, ?)`,
+                [bookingId, guestBooking.status, statusNote, userId]
             );
 
             // Đánh dấu guest booking đã xác nhận

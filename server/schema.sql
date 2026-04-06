@@ -218,6 +218,8 @@ CREATE TABLE guest_bookings (
   special_requests TEXT,
   confirm_token VARCHAR(255) NOT NULL UNIQUE,
   is_confirmed BOOLEAN DEFAULT FALSE,
+  payment_method VARCHAR(50) DEFAULT 'momo',
+  status VARCHAR(50) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
   FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE

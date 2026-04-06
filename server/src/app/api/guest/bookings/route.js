@@ -6,7 +6,7 @@ export async function POST(req) {
     let connection;
     try {
         const body = await req.json();
-        const { email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests } = body;
+        const { email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, payment_method, status: bookingStatus } = body;
 
         // Validation
         if (!email || !phone || !guest_name || !property_id || !room_type_id || !check_in || !check_out || !total_price) {
@@ -41,19 +41,22 @@ export async function POST(req) {
                 // Email đã tồn tại → tạo booking trực tiếp cho user đó
                 const userId = existingUsers[0].id;
 
+                const finalStatus = bookingStatus || 'pending';
                 const [result] = await connection.execute(
                     `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
-                    [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, special_requests || null]
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, finalStatus, special_requests || null]
                 );
 
                 const bookingId = result.insertId;
 
                 // Tạo payment record
+                const finalPaymentMethod = payment_method || 'guest';
+                const finalPaymentStatus = (finalStatus === 'confirmed') ? 'completed' : 'pending';
                 await connection.execute(
                     `INSERT INTO payments (booking_id, amount, payment_method, payment_status)
-                     VALUES (?, ?, 'guest', 'completed')`,
-                    [bookingId, total_price]
+                     VALUES (?, ?, ?, ?)`,
+                    [bookingId, total_price, finalPaymentMethod, finalPaymentStatus]
                 );
 
                 // Lưu lịch sử trạng thái
@@ -73,10 +76,13 @@ export async function POST(req) {
                 // Email chưa tồn tại → lưu guest_bookings + tạo token
                 const confirmToken = crypto.randomUUID();
 
+                const finalStatus = bookingStatus || 'pending';
+                const finalPaymentMethod = payment_method || 'momo';
+
                 await connection.execute(
-                    `INSERT INTO guest_bookings (email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, confirm_token)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, special_requests || null, confirmToken]
+                    `INSERT INTO guest_bookings (email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, confirm_token, payment_method, status)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, special_requests || null, confirmToken, finalPaymentMethod, finalStatus]
                 );
 
                 await connection.commit();

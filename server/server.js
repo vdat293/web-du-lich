@@ -45,6 +45,13 @@ app.prepare().then(() => {
                 console.log(`Socket ${socket.id} joined user_${userId} room`);
             }
         });
+        
+        socket.on('joinBookingRoom', (bookingId) => {
+            if (bookingId) {
+                socket.join(`booking_${bookingId}`);
+                console.log(`Socket ${socket.id} joined booking_${bookingId} room`);
+            }
+        });
 
         socket.on('disconnect', () => {
             console.log('Client disconnected:', socket.id);

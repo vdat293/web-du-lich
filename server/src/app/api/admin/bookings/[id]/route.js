@@ -114,8 +114,13 @@ export async function PUT(req, { params }) {
                 booking: updatedBooking,
             });
 
-            // Also emit to specific user room
+            // Also emit to specific user room and booking room
             global.io.to(`user_${updatedBooking.customer_id}`).emit('bookingStatusChanged', {
+                bookingId: id,
+                newStatus: status,
+                booking: updatedBooking,
+            });
+            global.io.to(`booking_${id}`).emit('bookingStatusChanged', {
                 bookingId: id,
                 newStatus: status,
                 booking: updatedBooking,

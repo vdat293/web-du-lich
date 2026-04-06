@@ -254,8 +254,8 @@ export default function Payment() {
         }
     };
 
-    // Create booking after successful card payment
-    const createBookingAfterPayment = async () => {
+    // Create booking after successful payment
+    const createBookingAfterPayment = async (method = 'card', status = 'confirmed') => {
         const roomTypeId = getRoomTypeId();
         const token = localStorage.getItem('token');
         try {
@@ -274,15 +274,19 @@ export default function Payment() {
                         number_of_rooms: 1,
                         total_price: total,
                         special_requests: specialRequests || null,
-                        status: 'confirmed',
-                        payment_method: 'card',
+                        status: status,
+                        payment_method: method,
                     }),
                 });
                 const data = await res.json();
                 setIsProcessing(false);
                 if (res.ok) {
-                    setBookingId(data.booking_id);
-                    setIsSuccess(true);
+                    if (method === 'momo') {
+                        navigate(`/momo-payment/${data.booking_id}`);
+                    } else {
+                        setBookingId(data.booking_id);
+                        setIsSuccess(true);
+                    }
                 } else {
                     setPaymentError(data.message || 'Đặt phòng thất bại.');
                 }
@@ -301,18 +305,24 @@ export default function Payment() {
                         number_of_rooms: 1,
                         total_price: total,
                         special_requests: specialRequests || null,
-                        status: 'confirmed',
-                        payment_method: 'card',
+                        status: status,
+                        payment_method: method,
                     }),
                 });
                 const data = await res.json();
                 setIsProcessing(false);
                 if (res.ok) {
-                    if (data.status === 'confirmed') {
-                        setBookingId(data.booking_id);
-                        setIsSuccess(true);
-                    } else if (data.status === 'pending') {
-                        navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
+                    if (method === 'momo' && data.booking_id) {
+                        navigate(`/momo-payment/${data.booking_id}`);
+                        return;
+                    }
+                    if (data.status === 'confirmed' || data.status === 'pending') {
+                        if (data.token) {
+                            navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
+                        } else {
+                            setBookingId(data.booking_id);
+                            setIsSuccess(true);
+                        }
                     }
                 } else {
                     setPaymentError(data.message || 'Đặt phòng thất bại.');
@@ -353,79 +363,10 @@ export default function Payment() {
             return;
         }
 
-        // MoMo flow (giữ nguyên)
-        setIsProcessing(true);
-        const roomTypeId = getRoomTypeId();
-
-        if (isLoggedIn) {
-            const token = localStorage.getItem('token');
-            try {
-                const res = await fetch('/api/user/bookings', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        property_id: propertyId,
-                        room_type_id: roomTypeId,
-                        check_in: formatDateForDB(checkInDate),
-                        check_out: formatDateForDB(checkOutDate),
-                        number_of_rooms: 1,
-                        total_price: total,
-                        special_requests: specialRequests || null,
-                    }),
-                });
-
-                const data = await res.json();
-                setIsProcessing(false);
-
-                if (res.ok) {
-                    setBookingId(data.booking_id);
-                    setIsSuccess(true);
-                } else {
-                    setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
-                }
-            } catch (err) {
-                setIsProcessing(false);
-                setPaymentError('Lỗi kết nối máy chủ.');
-            }
-        } else {
-            try {
-                const res = await fetch('/api/guest/bookings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: guestEmail.trim(),
-                        phone: guestPhone.trim(),
-                        guest_name: guestName.trim(),
-                        property_id: propertyId,
-                        room_type_id: roomTypeId,
-                        check_in: formatDateForDB(checkInDate),
-                        check_out: formatDateForDB(checkOutDate),
-                        number_of_rooms: 1,
-                        total_price: total,
-                        special_requests: specialRequests || null,
-                    }),
-                });
-
-                const data = await res.json();
-                setIsProcessing(false);
-
-                if (res.ok) {
-                    if (data.status === 'confirmed') {
-                        setBookingId(data.booking_id);
-                        setIsSuccess(true);
-                    } else if (data.status === 'pending') {
-                        navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`);
-                    }
-                } else {
-                    setPaymentError(data.message || 'Đặt phòng thất bại, vui lòng thử lại.');
-                }
-            } catch (err) {
-                setIsProcessing(false);
-                setPaymentError('Lỗi kết nối máy chủ.');
-            }
+        if (paymentMethod === 'momo') {
+            setIsProcessing(true);
+            createBookingAfterPayment('momo', 'pending');
+            return;
         }
     };
 
@@ -876,7 +817,6 @@ export default function Payment() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
