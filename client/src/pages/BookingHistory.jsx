@@ -229,6 +229,7 @@ export default function BookingHistory() {
     const [selectedBookingForReview, setSelectedBookingForReview] = useState(null);
     const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     useEffect(() => {
         const checkAuth = () => {
@@ -330,7 +331,7 @@ export default function BookingHistory() {
                 rating: reviewForm.rating,
                 comment: reviewForm.comment
             });
-            alert('Đánh giá thành công! Cảm ơn bạn đã phản hồi.');
+            setShowSuccessModal(true);
             setReviewModalOpen(false);
         } catch (error) {
             alert(error.response?.data?.message || 'Lỗi kết nối, vui lòng thử lại sau');
@@ -497,6 +498,27 @@ export default function BookingHistory() {
                                 {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 text-center p-8">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                            <span className="material-symbols-outlined !text-5xl">check_circle</span>
+                        </div>
+                        <h3 className="text-2xl font-bold text-charcoal mb-2">Tuyệt vời!</h3>
+                        <p className="text-neutral-500 mb-8">
+                            Đánh giá của bạn đã được gửi thành công. Cảm ơn bạn đã chia sẻ trải nghiệm!
+                        </p>
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="w-full py-3.5 rounded-2xl bg-charcoal text-white font-bold hover:bg-charcoal/90 transition-all shadow-lg shadow-charcoal/20 active:scale-[0.98]"
+                        >
+                            Đóng
+                        </button>
                     </div>
                 </div>
             )}

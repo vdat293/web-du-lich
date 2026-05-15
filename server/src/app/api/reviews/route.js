@@ -68,7 +68,7 @@ export async function POST(req) {
 
         // Kiểm tra booking thuộc về user và đã confirmed
         const [bookings] = await db.execute(
-            `SELECT * FROM bookings WHERE id = ? AND customer_id = ? AND property_id = ? AND status = 'confirmed'`,
+            `SELECT * FROM bookings WHERE id = ? AND customer_id = ? AND property_id = ? AND status = 'checked_out'`,
             [booking_id, userId, property_id]
         );
 
