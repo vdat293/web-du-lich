@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import db from '../../../../lib/db';
 import { logActivity } from '../../../../lib/logger';
+import { toAbsoluteMediaUrl } from '../../../../lib/http';
 
 export async function POST(req) {
     try {
@@ -48,7 +49,7 @@ export async function POST(req) {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar,
+                avatar: toAbsoluteMediaUrl(req, user.avatar),
                 role: user.role,
                 phone: user.phone
             }

@@ -4,7 +4,7 @@ const next = require('next');
 const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
+const hostname = process.env.HOST || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
 
 const app = next({ dev, hostname, port });
@@ -59,9 +59,10 @@ app.prepare().then(() => {
     });
 
     // Start the server
-    server.listen(port, (err) => {
+    server.listen(port, hostname, (err) => {
         if (err) throw err;
-        console.log(`> Ready on http://${hostname}:${port}`);
+        console.log(`> Ready on http://localhost:${port}`);
+        console.log(`> Mobile devices can connect through this computer's LAN IP on port ${port}`);
         console.log('> Socket.IO server is running');
     });
 });

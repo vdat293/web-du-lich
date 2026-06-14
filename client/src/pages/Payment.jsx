@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import OtpModal from '../components/OtpModal';
 import api from '../utils/api';
+import { assetUrl } from '../utils/media';
 
 export default function Payment() {
     const location = useLocation();
@@ -461,7 +462,7 @@ export default function Payment() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-8 rounded-md bg-white flex items-center justify-center overflow-hidden border border-neutral-200 dark:border-neutral-700">
-                                                <img src="/assets/MoMo_Logo_Primary/MOMO-Logo-App.png" alt="MoMo Logo" className="w-full h-full object-contain" />
+                                                <img src={assetUrl('MoMo_Logo_Primary/MOMO-Logo-App.png')} alt="MoMo Logo" className="w-full h-full object-contain" />
                                             </div>
                                             <p className="font-bold text-neutral-700 dark:text-white">Ví MoMo</p>
                                         </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import api from '../utils/api';
+import { assetUrl } from '../utils/media';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -107,7 +108,7 @@ export default function Home() {
 
   const getPropertyImage = (property) => {
     const resolved = resolveImageUrl(property?.images?.main);
-    return resolved || '/assets/thumnails.jpg';
+    return resolved || assetUrl('thumnails.jpg');
   };
 
   const toggleFavorite = (property) => {
@@ -330,7 +331,7 @@ export default function Home() {
           <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden grain-texture">
             {/* Background Image with Overlay */}
             <div className="absolute inset-0">
-              <img src="assets/thumnails.jpg" alt="Luxury villa with ocean view" className="w-full h-full object-cover" />
+              <img src={assetUrl('thumnails.jpg')} alt="Luxury villa with ocean view" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-b from-charcoal/30 via-charcoal/40 to-charcoal/70"></div>
             </div>
 
@@ -468,7 +469,7 @@ export default function Home() {
                               src={getPropertyImage(property)}
                               alt={property.name}
                               onError={(event) => {
-                                event.currentTarget.src = '/assets/thumnails.jpg';
+                                event.currentTarget.src = assetUrl('thumnails.jpg');
                               }}
                               className="image-zoom w-full h-full object-cover"
                             />
@@ -654,7 +655,7 @@ export default function Home() {
 
                 <Link to="/search?q=Phan Thiết"
                   className="destination-card col-span-6 md:col-span-4 group relative h-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer">
-                  <img src="assets/phan_thiet.png" alt="Phan Thiết" className="image-zoom w-full h-full object-cover" />
+                  <img src={assetUrl('phan_thiet.png')} alt="Phan Thiết" className="image-zoom w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Phan Thiết</h3>
@@ -668,7 +669,7 @@ export default function Home() {
 
                 <Link to="/search?q=Nha Trang"
                   className="destination-card col-span-12 md:col-span-4 group relative h-[180px] md:h-[220px] rounded-2xl overflow-hidden cursor-pointer">
-                  <img src="assets/nha_trang.png" alt="Nha Trang" className="image-zoom w-full h-full object-cover" />
+                  <img src={assetUrl('nha_trang.png')} alt="Nha Trang" className="image-zoom w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/10 to-transparent"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Nha Trang</h3>

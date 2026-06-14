@@ -49,7 +49,19 @@ DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_NAME=web_du_lich
 JWT_SECRET=your_jwt_secret_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+CLOUDINARY_ASSET_FOLDER=web-du-lich
 ```
+
+Upload toàn bộ ảnh tĩnh trong `client/public/assets` lên Cloudinary một lần:
+
+```bash
+npm run media:migrate
+```
+
+Sau khi cấu hình Cloudinary, avatar mới được lưu trực tiếp trên Cloudinary và các đường dẫn `assets/...` cũ tự động được phân giải qua CDN.
 
 ### 3. Import cấu trúc database
 

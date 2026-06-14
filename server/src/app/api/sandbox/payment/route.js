@@ -38,12 +38,15 @@ async function handleInitiate({ card_number, card_holder, expiry_date, cvv, amou
         return NextResponse.json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin thẻ' }, { status: 400 });
     }
 
-    // Chuẩn hóa số thẻ (loại bỏ khoảng trắng thừa)
-    const normalizedCardNumber = card_number.trim();
+    // So sánh theo phần chữ số để chấp nhận cả dạng có hoặc không có khoảng trắng.
+    const normalizedCardNumber = String(card_number).replace(/\D/g, '');
+    if (normalizedCardNumber.length < 16 || normalizedCardNumber.length > 19) {
+        return NextResponse.json({ success: false, message: 'Số thẻ không hợp lệ' }, { status: 400 });
+    }
 
     // Tìm thẻ trong DB
     const [cards] = await db.execute(
-        'SELECT * FROM sandbox_cards WHERE card_number = ?',
+        "SELECT * FROM sandbox_cards WHERE REPLACE(card_number, ' ', '') = ?",
         [normalizedCardNumber]
     );
 
@@ -52,6 +55,7 @@ async function handleInitiate({ card_number, card_holder, expiry_date, cvv, amou
     }
 
     const card = cards[0];
+    const storedCardNumber = card.card_number;
 
     // Kiểm tra thông tin thẻ
     if (card.card_holder.toUpperCase() !== card_holder.trim().toUpperCase()) {
@@ -71,8 +75,12 @@ async function handleInitiate({ card_number, card_holder, expiry_date, cvv, amou
         return NextResponse.json({ success: false, message: 'Thẻ đã bị khóa' }, { status: 400 });
     }
 
-    // Kiểm tra số dư
     const numAmount = parseFloat(amount);
+    if (!Number.isFinite(numAmount) || numAmount <= 0) {
+        return NextResponse.json({ success: false, message: 'Số tiền thanh toán không hợp lệ' }, { status: 400 });
+    }
+
+    // Kiểm tra số dư
     if (parseFloat(card.balance) < numAmount) {
         return NextResponse.json({ success: false, message: 'Số dư không đủ để thanh toán' }, { status: 400 });
     }
@@ -84,7 +92,7 @@ async function handleInitiate({ card_number, card_holder, expiry_date, cvv, amou
     // Lưu vào bảng sandbox_otp_logs
     await db.execute(
         'INSERT INTO sandbox_otp_logs (transaction_id, card_number, phone_number, otp_code, amount, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [transactionId, normalizedCardNumber, card.phone_number, otpCode, numAmount, 'PENDING']
+        [transactionId, storedCardNumber, card.phone_number, otpCode, numAmount, 'PENDING']
     );
 
     console.log(`[Sandbox Payment] OTP đã được tạo: ${otpCode} cho giao dịch ${transactionId} (Gửi tới SĐT: ${card.phone_number})`);
@@ -97,7 +105,7 @@ async function handleInitiate({ card_number, card_holder, expiry_date, cvv, amou
     if (global.io) {
         global.io.emit('newOtp', {
             transaction_id: transactionId,
-            card_number: normalizedCardNumber,
+            card_number: storedCardNumber,
             phone_number: card.phone_number,
             amount: numAmount,
             status: 'PENDING'

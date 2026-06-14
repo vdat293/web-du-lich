@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Aoklevart | Luxury Stays</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=DM+Sans:wght@400;500;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@100..900&amp;family=Playfair+Display:wght@100..900&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eded",
+                        "secondary-fixed": "#ffdf9b",
+                        "primary-fixed": "#c7e9e8",
+                        "tertiary-fixed": "#e4e2df",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e5e2e1",
+                        "warm-gray": "#6B6B6B",
+                        "outline-variant": "#c1c8c7",
+                        "on-surface": "#1b1b1b",
+                        "on-tertiary-container": "#9e9d9b",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1b1b1b",
+                        "background": "#fcf9f8",
+                        "secondary-container": "#ffdb8f",
+                        "on-secondary-container": "#795f20",
+                        "secondary": "#745b1c",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#002020",
+                        "on-primary-container": "#83a4a3",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#abcdcc",
+                        "on-secondary-fixed-variant": "#5a4303",
+                        "on-primary-fixed-variant": "#2d4c4c",
+                        "surface-container-high": "#eae7e7",
+                        "on-secondary-fixed": "#251a00",
+                        "on-surface-variant": "#414848",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "primary-light": "#2D5A5A",
+                        "light-border": "rgba(0,0,0,0.06)",
+                        "surface-tint": "#446464",
+                        "surface-container-highest": "#e5e2e1",
+                        "primary-container": "#1a3a3a",
+                        "primary-fixed-dim": "#abcdcc",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#fcf9f8",
+                        "inverse-surface": "#313030",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "primary": "#012425",
+                        "secondary-fixed-dim": "#e4c279",
+                        "outline": "#717878",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface": "#fcf9f8",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#1f201e",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "tertiary-container": "#353533",
+                        "accent-light": "#E8D5A3",
+                        "on-error": "#ffffff",
+                        "white": "#FFFFFF",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "section-gap-desktop": "80px",
+                        "section-gap-mobile": "40px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "label-md": ["DM Sans"],
+                        "body-md": ["DM Sans"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "body-lg": ["DM Sans"],
+                        "label-sm": ["DM Sans"],
+                        "headline-lg-mobile": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "42px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fcf9f8;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="font-body-md text-on-surface">
+    <!-- Top AppBar (Shared Component Logic) -->
+    <header
+        class="bg-surface sticky top-0 z-[60] flex justify-between items-center w-full px-margin-mobile h-16 transition-all duration-300"
+        id="main-header">
+        <div class="flex items-center gap-4">
+            <button
+                class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-95 duration-150">menu</button>
+            <h1 class="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight">Aoklevart</h1>
+        </div>
+        <div class="w-10 h-10 rounded-full overflow-hidden border border-light-border bg-surface-container">
+            <img alt="User Profile" class="w-full h-full object-cover"
+                data-alt="A professional and elegant headshot of a sophisticated woman in her early thirties, set against a blurred, warm-toned architectural background. The lighting is soft and flattering, emphasizing a refined, luxury-traveler aesthetic. The color palette is composed of muted creams and soft earthy browns, maintaining a high-end editorial feel."
+                src="https://lh3.googleusercontent.com/aida/AP1WRLtKbWs6o72Sj3Qrak4tSLXxhSHxUbgnD4UiSSkn6qi4KvhF-BRpeENix6dwVSmOU96KOFuj1XlO5RlSpdMiO8JZTEVKvVfMXWJcDpJP71vqAckzjNdrDmCH_RRFARQuQQHZ_tpxhdDjtT5qOYXIyM8rM7NZ0Wsm__wk6YzlAildaL8GqQ9--95ISKZnak74LRAhBoM-UziwG90osEyWMw2MXp10QIDwlnzPI7zqhe1uL-jxNBfFWnCbKCQ" />
+        </div>
+    </header>
+    <!-- Sticky Filter Bar -->
+    <div
+        class="sticky top-16 z-50 bg-surface shadow-[0_4px_20px_rgba(28,28,28,0.04)] px-margin-mobile py-3 flex items-center gap-3 overflow-x-auto hide-scrollbar">
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full border border-light-border whitespace-nowrap active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-sm">calendar_today</span>
+            <span class="font-label-md text-label-md">Oct 12 - 18</span>
+        </button>
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-surface-container-low rounded-full border border-light-border whitespace-nowrap active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-sm">group</span>
+            <span class="font-label-md text-label-md">2 Guests</span>
+        </button>
+        <button
+            class="flex items-center gap-2 px-4 py-2 bg-primary-container text-white rounded-full whitespace-nowrap active:scale-95 transition-transform">
+            <span class="material-symbols-outlined text-sm">tune</span>
+            <span class="font-label-md text-label-md">Filters</span>
+        </button>
+        <div class="h-6 w-[1px] bg-outline-variant shrink-0 mx-1"></div>
+        <button class="font-label-md text-label-md text-secondary whitespace-nowrap">Price Range</button>
+    </div>
+    <!-- Main Content Canvas -->
+    <main class="px-margin-mobile pt-6 pb-32 max-w-7xl mx-auto">
+        <div class="mb-8">
+            <p class="font-label-sm text-label-sm text-warm-gray mb-1">STAYS IN TUSCANY</p>
+            <h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Found 128 exceptional villas</h2>
+        </div>
+        <!-- Property Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 gap-x-gutter">
+            <!-- Result Card 1 -->
+            <article class="group cursor-pointer">
+                <div class="relative aspect-[4/3] rounded-xl overflow-hidden mb-4 shadow-lg">
+                    <img alt="Luxury Villa"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        data-alt="An expansive luxury stone villa nestled in the rolling green hills of Tuscany during the golden hour. The property features large glass windows reflecting a warm, sunset sky. The surrounding landscape is lush with cypress trees and manicured gardens, creating an atmosphere of serene, high-end tranquility. The image has a warm, editorial film aesthetic with soft shadows."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLtO9SQe4hhUSeb2IX5QdDnQhEYiyMzPxbc8A3G48x2tl_zi1PpCBIO1aSY_Mb0CZkFvyXc2ACejumurlsJ-TURllqflQD4pzRdNlSflwuUSEsJGbSpMjmVmdr3i5Lk98V64E_1Rry9ZyIt69G5odPRjnussk7WpqLT_YQEexqqIgKdNKrjTefPOqSFTbFOgTnCBIhj5t0sF1mVynBiR-vWvSWr3-139lLhxsqIS1rVHuZIr_US0a6dk2y0" />
+                    <button
+                        class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                    <div
+                        class="absolute bottom-4 left-4 bg-secondary-fixed text-on-secondary-fixed px-3 py-1 rounded-full font-label-sm text-label-sm">
+                        FEATURED
+                    </div>
+                </div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-1">Villa Poggio Castello</h3>
+                        <div class="flex items-center gap-1 text-warm-gray mb-2">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span class="font-label-sm text-label-sm">Siena, Italy</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-secondary text-base"
+                            style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="font-label-md text-label-md">4.9</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1 mt-2">
+                    <span class="font-headline-md text-headline-md text-primary">$1,250</span>
+                    <span class="font-label-md text-label-md text-warm-gray">/ night</span>
+                </div>
+            </article>
+            <!-- Result Card 2 -->
+            <article class="group cursor-pointer">
+                <div class="relative aspect-[4/3] rounded-xl overflow-hidden mb-4 shadow-lg">
+                    <img alt="Coastal Retreat"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        data-alt="A minimalist white beach house perched on a cliff overlooking the deep blue Mediterranean Sea. The architecture is sharp and modern, with infinity pools that blend seamlessly into the horizon. Sunlight is bright and crisp, highlighting the clean lines of the building against the organic textures of the rocky coast. The overall mood is sophisticated, exclusive, and peaceful."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLva_hF9bKIspYKKIbeV5ZG05YO9HyfXDP7gJmdXDvMBsXv3__cYhYvJcaYUYXMsu8RvzjxFx7nQEUewMuH-w5RhM8Y7TSDF_UiwcLnOeOhApOM01m0iBpiqW9Q7yufMxJ6tleR1vokUWn4U2lQFmz2XGTO5ZEaZeKBeFIvjQVwCv5Aqsgf4UqL5bUs-rxXP5NbXlf8IP7qUw5AO5TfSOTyX6Z_Nb4D1cN7YZAvWerutbr9ccQbXs1eNlSg" />
+                    <button
+                        class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                </div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-1">Azure Cliffside Suite</h3>
+                        <div class="flex items-center gap-1 text-warm-gray mb-2">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span class="font-label-sm text-label-sm">Amalfi Coast, Italy</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-secondary text-base"
+                            style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="font-label-md text-label-md">5.0</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1 mt-2">
+                    <span class="font-headline-md text-headline-md text-primary">$2,800</span>
+                    <span class="font-label-md text-label-md text-warm-gray">/ night</span>
+                </div>
+            </article>
+            <!-- Result Card 3 -->
+            <article class="group cursor-pointer">
+                <div class="relative aspect-[4/3] rounded-xl overflow-hidden mb-4 shadow-lg">
+                    <img alt="Estate Vineyard"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        data-alt="A grand historic estate surrounded by endless rows of grapevines in the heart of a French vineyard region. The architecture features classic limestone and traditional slate roofing, illuminated by the soft, blue-hour light of twilight. Indoor lights glow warmly through large windows, creating an inviting and luxurious contrast with the cool outdoor atmosphere. Editorial, high-fashion travel photography style."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLsCA2_yGvzZpP57in-2qWJAhkhilasvN0ybqGM8aN2heLgrPQFW-3F3bHJYwymeV3H39cgQYGkt5NL63B5FDIi5N8jt7uSIGcN3cBqoCEo4yJfBu4DweAOx938OXabI0IuBppKXEAEKCgoBdgEtQx5Jibasm80LAQoobLve95ZAjjjlvn5q-skpFhGtbE_bemhcL3QSbxk1XYPCso32bdrd_XDCFf6MPzNUyaY0CfGpOUJICy_S2twMcg" />
+                    <button
+                        class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                </div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-1">Domain de L'Etoile</h3>
+                        <div class="flex items-center gap-1 text-warm-gray mb-2">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            <span class="font-label-sm text-label-sm">Provence, France</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-secondary text-base"
+                            style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="font-label-md text-label-md">4.8</span>
+                    </div>
+                </div>
+                <div class="flex items-baseline gap-1 mt-2">
+                    <span class="font-headline-md text-headline-md text-primary">$950</span>
+                    <span class="font-label-md text-label-md text-warm-gray">/ night</span>
+                </div>
+            </article>
+            <!-- Result Card 4 (Bento Variation) -->
+            <article class="group cursor-pointer md:col-span-2">
+                <div class="relative aspect-[16/9] md:aspect-[21/9] rounded-xl overflow-hidden mb-4 shadow-lg">
+                    <img alt="Mountain Lodge"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        data-alt="A modern architectural masterpiece made of glass and dark charred wood, situated in a snowy alpine forest. The cabin is framed by majestic snow-capped mountains under a clear starlit sky. The interior is visible through the floor-to-ceiling windows, showing a minimalist fireplace and plush textures. The mood is cozy yet ultra-luxurious, with a high-contrast, professional architectural photography look."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLslHeB0UGb1RmmgnjFMccp8EjYBWo5khhgb_mghoQzgaJGHLhzuCns4wTRK6C42RsJOYvmb2VR7LhDCXx_bOgKG-jkHfdOWK5_Fn2-y8Q7p7wFQuPjsoQV5YIkumoQckr-Gd7XwKs33U6fynzLPjObSc9SrQmGhVY9huhrk0q5zj5D_MP8RbJlqnjRtOTufHFYIvQM_gcxv7ltG5bKIc2hj7vISn9_5y8eI_Y3sSfiky22K5zXJsutCpk0" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div class="absolute bottom-6 left-6 text-white">
+                        <p class="font-label-sm text-label-sm opacity-80 mb-1">EXCLUSIVE ACCESS</p>
+                        <h3 class="font-headline-lg text-headline-lg">Summit Reserve Cabin</h3>
+                    </div>
+                    <button
+                        class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white active:scale-90 transition-transform">
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                </div>
+                <div class="flex justify-between items-baseline mt-2">
+                    <div class="flex items-center gap-1 text-warm-gray">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span class="font-label-sm text-label-sm">Swiss Alps, Zermatt</span>
+                    </div>
+                    <div class="flex items-baseline gap-1">
+                        <span class="font-headline-md text-headline-md text-primary">$4,200</span>
+                        <span class="font-label-md text-label-md text-warm-gray">/ night</span>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </main>
+    <!-- Map FAB (Contextual Action) -->
+    <button
+        class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-full shadow-xl hover:opacity-90 active:scale-95 transition-all">
+        <span class="material-symbols-outlined text-base">map</span>
+        <span class="font-label-md text-label-md">Show Map</span>
+    </button>
+    <!-- Bottom Navigation Bar (Shared Component Logic) -->
+    <nav
+        class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-6 bg-surface shadow-[0_-4px_20px_rgba(28,28,28,0.08)] rounded-t-xl md:hidden">
+        <a class="flex flex-col items-center justify-center text-primary relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-secondary after:rounded-full"
+            href="#">
+            <span class="material-symbols-outlined">explore</span>
+            <span class="font-label-sm text-label-sm">Explore</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-warm-gray hover:text-primary transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">favorite</span>
+            <span class="font-label-sm text-label-sm">Saved</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-warm-gray hover:text-primary transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">travel_explore</span>
+            <span class="font-label-sm text-label-sm">Trips</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-warm-gray hover:text-primary transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">person</span>
+            <span class="font-label-sm text-label-sm">Profile</span>
+        </a>
+    </nav>
+    <!-- Desktop Navigation (Semantic mapping from TopAppBar/BottomNavBar logic) -->
+    <nav class="hidden md:flex fixed top-0 left-1/2 -translate-x-1/2 z-[70] h-16 items-center gap-8">
+        <a class="font-label-md text-label-md text-primary border-b-2 border-secondary h-full flex items-center mt-1"
+            href="#">Explore</a>
+        <a class="font-label-md text-label-md text-warm-gray hover:text-primary transition-colors h-full flex items-center"
+            href="#">Saved</a>
+        <a class="font-label-md text-label-md text-warm-gray hover:text-primary transition-colors h-full flex items-center"
+            href="#">Trips</a>
+        <a class="font-label-md text-label-md text-warm-gray hover:text-primary transition-colors h-full flex items-center"
+            href="#">Profile</a>
+    </nav>
+    <script>
+        // Simple scroll behavior for the header
+        let lastScroll = 0;
+        const header = document.getElementById('main-header');
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            if (currentScroll > 50) {
+                header.classList.add('shadow-sm');
+            } else {
+                header.classList.remove('shadow-sm');
+            }
+            lastScroll = currentScroll;
+        });
+
+        // Add subtle interaction to cards
+        document.querySelectorAll('article').forEach(card => {
+            card.addEventListener('mousedown', () => card.style.transform = 'scale(0.98)');
+            card.addEventListener('mouseup', () => card.style.transform = 'scale(1)');
+            card.addEventListener('mouseleave', () => card.style.transform = 'scale(1)');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import fs from 'fs';
-import path from 'path';
 import db from '../../../../lib/db';
+import { uploadAvatar } from '../../../../lib/cloudinary';
+import { toAbsoluteMediaUrl } from '../../../../lib/http';
 
 export async function PUT(req) {
     try {
@@ -35,20 +35,16 @@ export async function PUT(req) {
 
         let avatarUrl = null;
         if (avatarBase64 && avatarBase64.startsWith('data:image')) {
-            const matches = avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-            if (matches && matches.length === 3) {
-                const imageBuffer = Buffer.from(matches[2], 'base64');
-                const extension = matches[1].split('/')[1] === 'jpeg' ? 'jpg' : matches[1].split('/')[1];
-                const fileName = `avatar_${userId}_${Date.now()}.${extension}`;
-
-                const uploadDir = path.join(process.cwd(), 'public/uploads');
-                if (!fs.existsSync(uploadDir)) {
-                    fs.mkdirSync(uploadDir, { recursive: true });
+            try {
+                avatarUrl = await uploadAvatar(avatarBase64, userId);
+            } catch (error) {
+                if (error.message === 'INVALID_IMAGE_TYPE') {
+                    return NextResponse.json({ message: 'Chỉ hỗ trợ ảnh JPG, PNG, WebP, GIF hoặc AVIF' }, { status: 400 });
                 }
-
-                fs.writeFileSync(path.join(uploadDir, fileName), imageBuffer);
-                const apiUrl = process.env.API_URL || 'http://localhost:3000';
-                avatarUrl = `${apiUrl}/uploads/${fileName}`;
+                if (error.message === 'INVALID_IMAGE_SIZE') {
+                    return NextResponse.json({ message: 'Ảnh phải nhỏ hơn 5 MB' }, { status: 400 });
+                }
+                throw error;
             }
         }
 
@@ -73,7 +69,7 @@ export async function PUT(req) {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                avatar: user.avatar,
+                avatar: toAbsoluteMediaUrl(req, user.avatar),
                 role: user.role,
                 phone: user.phone
             }

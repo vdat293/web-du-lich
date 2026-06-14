@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import db from '../../../../lib/db';
 import { sendVirtualSMS } from '../../../../lib/sms';
 import { sendVirtualEmail } from '../../../../lib/email';
+import { toAbsoluteMediaUrl } from '../../../../lib/http';
 
 export async function GET(req) {
     try {
@@ -57,7 +58,11 @@ export async function GET(req) {
                 }
             }
 
-            return { ...b, displayStatus };
+            return {
+                ...b,
+                property_image: toAbsoluteMediaUrl(req, b.property_image),
+                displayStatus
+            };
         });
 
         return NextResponse.json(processedBookings);

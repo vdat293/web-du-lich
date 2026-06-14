@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '../../../lib/db';
+import { toAbsoluteMediaUrl } from '../../../lib/http';
 
 export async function GET(req) {
     try {
@@ -27,7 +28,9 @@ export async function GET(req) {
             `, [p.id]);
 
             const mainImage = images.find(img => img.is_main) || images[0];
-            const galleryImages = images.filter(img => !mainImage || img.id !== mainImage.id).map(img => img.image_url);
+            const galleryImages = images
+                .filter(img => !mainImage || img.id !== mainImage.id)
+                .map(img => toAbsoluteMediaUrl(req, img.image_url));
 
             const rawPrice = p.price_display != null ? Number(p.price_display) : null;
 
@@ -41,7 +44,7 @@ export async function GET(req) {
                 reviews: Number(reviewStats[0].total_reviews),
                 host: {
                     name: p.host_name || 'Unknown',
-                    avatar: p.host_avatar || '',
+                    avatar: toAbsoluteMediaUrl(req, p.host_avatar),
                     superhost: p.host_role === 'host',
                 },
                 bedrooms: p.bedrooms || 0,
@@ -50,7 +53,7 @@ export async function GET(req) {
                 isHot: p.is_hot,
                 description: p.description,
                 images: {
-                    main: mainImage ? mainImage.image_url : '',
+                    main: mainImage ? toAbsoluteMediaUrl(req, mainImage.image_url) : '',
                     gallery: galleryImages.length ? galleryImages : []
                 },
                 amenities: amenitiesResult,
@@ -65,7 +68,7 @@ export async function GET(req) {
                     room_size: r.room_size,
                     bed_type: r.bed_type,
                 })),
-                mapImage: p.map_image,
+                mapImage: toAbsoluteMediaUrl(req, p.map_image),
                 mapEmbed: p.map_embed
             };
         }));

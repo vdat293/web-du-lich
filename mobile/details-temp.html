@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&amp;family=DM+Sans:wght@400;500;700&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet">
+    <style id="tailwind-config">
+        tailwind.config= {
+
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eded",
+                            "secondary-fixed": "#ffdf9b",
+                            "primary-fixed": "#c7e9e8",
+                            "tertiary-fixed": "#e4e2df",
+                            "error-container": "#ffdad6",
+                            "surface-variant": "#e5e2e1",
+                            "warm-gray": "#6B6B6B",
+                            "outline-variant": "#c1c8c7",
+                            "on-surface": "#1b1b1b",
+                            "on-tertiary-container": "#9e9d9b",
+                            "on-error-container": "#93000a",
+                            "on-background": "#1b1b1b",
+                            "background": "#fcf9f8",
+                            "secondary-container": "#ffdb8f",
+                            "on-secondary-container": "#795f20",
+                            "secondary": "#745b1c",
+                            "on-primary": "#ffffff",
+                            "on-primary-fixed": "#002020",
+                            "on-primary-container": "#83a4a3",
+                            "surface-container-lowest": "#ffffff",
+                            "inverse-primary": "#abcdcc",
+                            "on-secondary-fixed-variant": "#5a4303",
+                            "on-primary-fixed-variant": "#2d4c4c",
+                            "surface-container-high": "#eae7e7",
+                            "on-secondary-fixed": "#251a00",
+                            "on-surface-variant": "#414848",
+                            "inverse-on-surface": "#f3f0ef",
+                            "on-tertiary-fixed": "#1b1c1a",
+                            "primary-light": "#2D5A5A",
+                            "light-border": "rgba(0,0,0,0.06)",
+                            "surface-tint": "#446464",
+                            "surface-container-highest": "#e5e2e1",
+                            "primary-container": "#1a3a3a",
+                            "primary-fixed-dim": "#abcdcc",
+                            "error": "#ba1a1a",
+                            "surface-bright": "#fcf9f8",
+                            "inverse-surface": "#313030",
+                            "on-secondary": "#ffffff",
+                            "surface-dim": "#dcd9d9",
+                            "primary": "#012425",
+                            "secondary-fixed-dim": "#e4c279",
+                            "outline": "#717878",
+                            "on-tertiary-fixed-variant": "#474745",
+                            "surface": "#fcf9f8",
+                            "surface-container-low": "#f6f3f2",
+                            "tertiary": "#1f201e",
+                            "tertiary-fixed-dim": "#c8c6c4",
+                            "tertiary-container": "#353533",
+                            "accent-light": "#E8D5A3",
+                            "on-error": "#ffffff",
+                            "white": "#FFFFFF",
+                            "on-tertiary": "#ffffff"
+                    }
+
+                    ,
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    }
+
+                    ,
+                    "spacing": {
+                        "margin-desktop": "40px",
+                            "gutter": "16px",
+                            "margin-mobile": "20px",
+                            "section-gap-desktop": "80px",
+                            "section-gap-mobile": "40px",
+                            "base": "8px"
+                    }
+
+                    ,
+                    "fontFamily": {
+                        "headline-lg": ["Playfair Display"],
+                            "display-lg": ["Playfair Display"],
+                            "label-md": ["DM Sans"],
+                            "body-md": ["DM Sans"],
+                            "display-lg-mobile": ["Playfair Display"],
+                            "headline-md": ["Playfair Display"],
+                            "body-lg": ["DM Sans"],
+                            "label-sm": ["DM Sans"],
+                            "headline-lg-mobile": ["Playfair Display"]
+                    }
+
+                    ,
+                    "fontSize": {
+
+                        "headline-lg": ["32px",
+                        {
+                        "lineHeight": "40px", "fontWeight": "600"
+                    }
+
+                    ],
+                    "display-lg": ["48px",
+                    {
+                    "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"
+                }
+
+                ],
+                "label-md": ["14px",
+                {
+                "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"
+            }
+
+            ],
+            "body-md": ["16px",
+            {
+            "lineHeight": "24px", "fontWeight": "400"
+        }
+
+        ],
+        "display-lg-mobile": ["36px",
+        {
+        "lineHeight": "42px", "fontWeight": "700"
+        }
+
+        ],
+        "headline-md": ["24px",
+        {
+        "lineHeight": "32px", "fontWeight": "600"
+        }
+
+        ],
+        "body-lg": ["18px",
+        {
+        "lineHeight": "28px", "fontWeight": "400"
+        }
+
+        ],
+        "label-sm": ["12px",
+        {
+        "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"
+        }
+
+        ],
+        "headline-lg-mobile": ["28px",
+        {
+        "lineHeight": "34px", "fontWeight": "600"
+        }
+
+        ]
+        }
+        }
+        }
+        }
+
+        </script><style>body {
+            background-color: #fcf9f8;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .glass-header {
+            background: rgba(252, 249, 248, 0.7);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body class="text-on-surface">
+    <!-- Top Navigation (Shell Implementation) -->
+    <header
+        class="fixed top-0 left-0 right-0 z-50 glass-header flex justify-between items-center w-full px-margin-mobile h-16 px-6">
+        <button aria-label="Go back"
+            class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-primary">arrow_back</span>
+        </button>
+        <h1 class="font-headline-md text-headline-md-mobile text-on-surface">Aoklevart</h1>
+        <div class="flex gap-2">
+            <button
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-primary">share</span>
+            </button>
+            <button
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors">
+                <span class="material-symbols-outlined text-primary">favorite</span>
+            </button>
+        </div>
+    </header>
+    <main class="pb-32">
+        <!-- Hero Gallery -->
+        <section class="relative w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden group">
+            <div class="flex h-full w-full overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+                <div class="flex-shrink-0 w-full h-full snap-center relative">
+                    <img class="w-full h-full object-cover"
+                        data-alt="A breathtaking view of a modern luxury villa perched on a coastal cliffside during the golden hour. The architecture features clean lines, expansive floor-to-ceiling glass windows, and a pristine infinity pool reflecting the soft orange and pink hues of the sunset. Lush Mediterranean greenery surrounds the structure, emphasizing a serene, high-end travel destination aesthetic. The lighting is warm and cinematic, highlighting the natural textures of stone and timber."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLsq-IsavapHDv_XSGPPfU7tp1CyxV7vmiPZ-2644TaGrq7xb-2aMkVry0_v_B08xQ7v7ueEJiHqCxDbsdTVkEpIlw7fwefPHoeTQayOxSyBPRCoaTlBARQUYhli2OCiqUiKyw5ZU4ta89cfM0-3OfoC9zjT7uXvzWQk5DNfR28fj18TGLTEnYFnRLyx_dcHXFQVOQ0FZ8D1bytX5Auvd4Yzrtbg1GhvzEbblIdGIvXCOdUJmgNLNRQjbkU">
+                </div>
+                <div class="flex-shrink-0 w-full h-full snap-center relative">
+                    <img class="w-full h-full object-cover"
+                        data-alt="An interior shot of a sophisticated living space within a premium property, showcasing a minimalist editorial design. Large windows frame a panoramic ocean view while the room is filled with soft, diffused daylight. The furniture is elegant and understated, featuring earthy tones and premium natural fabrics. The atmosphere is one of profound tranquility and timeless luxury, with every detail meticulously curated to evoke a sense of calm and exclusivity."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLsiL-Neasz4hH4lXNTRZFN6efkFEYlN4dSY67Qr7REVN_9uijWhNlLecVeVXAG4pliZRQPrRvKhgqRRx-SMbdFoknH9TIedBXW2HPxGDAs3Nas7sExeKcB584jAqj9PnhAhsuyC5eXEYDMMQieYYx8HrkcD8dSsvPYnBEXvX1J9mGZjzIoPlyFolpRQO8ZOxnoh0D7-adZHXh-CC7ZdYyhAVuib83xzFgXgvojmwrZB7fRlSVP9tz56Fg">
+                </div>
+            </div>
+            <div class="absolute bottom-6 right-6 bg-primary/80 backdrop-blur-md px-4 py-1.5 rounded-full">
+                <span class="font-label-sm text-label-sm text-white">1 / 12 Photos</span>
+            </div>
+        </section>
+        <!-- Content Container -->
+        <div class="max-w-screen-xl mx-auto px-margin-mobile md:px-margin-desktop mt-8 px-6">
+            <!-- Header Info -->
+            <div
+                class="flex flex-col md:flex-row md:justify-between md:items-end gap-4 border-b border-light-border pb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="material-symbols-outlined text-secondary text-[18px]"
+                            style="font-variation-settings: 'FILL' 1;">star</span>
+                        <span class="font-label-md text-label-md text-on-surface">4.92 • 128 Reviews</span>
+                    </div>
+                    <h2
+                        class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary mb-2">
+                        The Azure Cliff Retreat</h2>
+                    <p class="font-body-lg text-body-lg text-warm-gray">Santorini, Greece • Entire Luxury Villa</p>
+                </div>
+                <div class="hidden md:flex flex-col items-end">
+                    <span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-1">Starting
+                        from</span>
+                    <p class="font-headline-lg text-headline-lg text-primary">$850 <span
+                            class="text-body-md font-normal text-warm-gray">/ night</span></p>
+                </div>
+            </div>
+            <!-- Main Layout: Bento Grid Style -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-section-gap-mobile md:gap-gutter mt-12">
+                <!-- Left Column (Main Info) -->
+                <div class="lg:col-span-8 space-y-section-gap-mobile">
+                    <!-- Description -->
+                    <section>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-4">About this space</h3>
+                        <p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed max-w-2xl">
+                            Experience the pinnacle of Mediterranean luxury. Perched on the highest point of the Oia
+                            cliffs, The Azure Cliff Retreat offers an unparalleled blend of minimalist architecture and
+                            natural beauty. This meticulously designed villa features three en-suite bedrooms, a private
+                            heated infinity pool, and expansive terraces that seem to float between the sky and the
+                            Aegean Sea.
+                        </p>
+                        <button
+                            class="mt-6 font-label-md text-label-md text-secondary border-b-2 border-secondary pb-0.5 hover:opacity-70 transition-opacity">Read
+                            more</button>
+                    </section>
+                    <!-- Amenities -->
+                    <section>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-6">World-class amenities</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-12">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary" data-icon="pool">pool</span>
+                                </div>
+                                <span class="font-body-md text-body-md text-on-surface">Private Infinity Pool</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary" data-icon="wifi">wifi</span>
+                                </div>
+                                <span class="font-body-md text-body-md text-on-surface">High-speed Fiber WiFi</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary"
+                                        data-icon="restaurant">restaurant</span>
+                                </div>
+                                <span class="font-body-md text-body-md text-on-surface">Chef's Kitchen</span>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary"
+                                        data-icon="ac_unit">ac_unit</span>
+                                </div>
+                                <span class="font-body-md text-body-md text-on-surface">Central Climate Control</span>
+                            </div>
+                        </div>
+                        <button
+                            class="mt-8 w-full md:w-auto px-8 py-3 rounded-full border border-outline text-primary font-label-md text-label-md hover:bg-surface-variant transition-all">Show
+                            all 45 amenities</button>
+                    </section>
+                    <!-- Reviews -->
+                    <section>
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-headline-md text-headline-md text-primary">Guest reviews</h3>
+                            <div class="flex items-center gap-1">
+                                <span class="font-headline-md text-headline-md text-primary">4.92</span>
+                                <span class="material-symbols-outlined text-secondary"
+                                    style="font-variation-settings: 'FILL' 1;">star</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <!-- Review Card 1 -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border border-light-border">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <img class="w-12 h-12 rounded-full object-cover"
+                                        data-alt="A portrait of a sophisticated woman with a friendly smile, photographed in a high-end studio setting. The lighting is soft and flattering, emphasizing a clean, light-mode aesthetic. She wears minimalist, high-quality attire that complements the premium travel brand's visual identity. The background is a soft, out-of-focus cream color, creating a professional and trustworthy impression."
+                                        src="https://lh3.googleusercontent.com/aida/AP1WRLswOkEPTAJ_1mRHLkIDy6hUmLJeIJ5cCUnCU3RibWdMaPyUxd_2k2QyANpCergGFZEw7Z5OQRkzEODDR3FhknRlxuwunQBjRHU1AJPrXrZigb15HccCUr1CrdzGjvdEbBL8zVhVsWyxMM5suVNk5qOI-Vt1IBnXnZi-jElnj7E44_r5LgqoiMgiijCcKKVULaISji-ov3nsDOBmm_iDqSl4lNk4RdvEuKrzW9-YODACBrUYs-EfiO_ai-Q">
+                                    <div>
+                                        <p class="font-label-md text-label-md text-on-surface">Alexandra Sterling</p>
+                                        <p class="text-xs text-warm-gray">October 2023</p>
+                                    </div>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">
+                                    "Beyond expectations. The views are hypnotic, and the service was impeccable. Every
+                                    corner of this property is a work of art. We spent most of our time by the pool
+                                    watching the ships go by."
+                                </p>
+                            </div>
+                            <!-- Review Card 2 -->
+                            <div class="p-6 bg-white rounded-xl shadow-sm border border-light-border">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <img class="w-12 h-12 rounded-full object-cover"
+                                        data-alt="A professional headshot of a refined man in his 40s, captured with premium cinematic lighting. The setting is a minimalist office with warm timber accents and soft, natural daylight. His expression is confident and relaxed, reflecting the discerning traveler profile of a luxury lifestyle brand. The image is crisp and high-resolution with a soft background bokeh."
+                                        src="https://lh3.googleusercontent.com/aida/AP1WRLtQ4O5yp7LUKMLcupqZXvv1fE7r7QFXAjZ9_mghcGAUkYCDY-9ccRPz6i8qnEpOR4wo8Gsx-sF3OFsZbjZDQLQ0NIgTmCNtOrumQJ3a8ZOEY6CTLV7TrMYN5rw354h4LmmqbxnngMgvuabzeo66mNkqJ7V_CPv6eCpg9jYerhapC7P5bOURL7uFenAv2iKuqRJXJh3WXGLAXTbRgeolvpV_5vrFgGsWqwtkkbu13ELKXQcYt0zLzQ1FgRA">
+                                    <div>
+                                        <p class="font-label-md text-label-md text-on-surface">Julian Rhodes</p>
+                                        <p class="text-xs text-warm-gray">September 2023</p>
+                                    </div>
+                                </div>
+                                <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">
+                                    "The most peaceful week of my life. The minimalist design really helps you
+                                    disconnect. The kitchen is fully equipped for gourmet cooking, which we loved."
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                    <!-- Location -->
+                    <section>
+                        <h3 class="font-headline-md text-headline-md text-primary mb-4">The Neighborhood</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant mb-6">Located in the exclusive
+                            northern tip of Oia, just a short walk from the historic castle ruins and world-famous
+                            sunset spots.</p>
+                        <div class="relative w-full h-[300px] rounded-2xl overflow-hidden bg-surface-container">
+                            <div class="absolute inset-0 bg-cover bg-center grayscale" data-location="Oia, Greece"
+                                style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLsOpsuuKMEbwapi2oqWyzdZgqydps_qQE2fhbJSJ_u5HqN1FbDq_yhEyBeocU7K6NPJ0ZeWba4NETkb4RG4cll4pKj7p35hC_MhYAp9Mpuj-awkoBOITqA7yH9pYBvv3W2D1FsA1XjvISKsLl1R0ydNvDMKG-Gfs5GYHPzF7Rqlcjull2_msOCB7FGDFh6owgcEfMuro7z6yjJMrrQBsXhqPge683d7YauzSDZ3xQPPOyt0n31HymmpOmg');">
+                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div
+                                    class="w-16 h-16 bg-primary rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                                    <span class="material-symbols-outlined text-white text-3xl">location_on</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <!-- Right Column (Sidebar Sticky) -->
+                <aside class="hidden lg:block lg:col-span-4">
+                    <div
+                        class="sticky top-24 p-8 bg-white rounded-2xl shadow-[0_20px_50px_rgba(28,28,28,0.08)] border border-light-border">
+                        <div class="flex justify-between items-end mb-8">
+                            <p class="font-headline-lg text-headline-lg text-primary">$850 <span
+                                    class="text-body-md font-normal text-warm-gray">/ night</span></p>
+                            <div class="flex items-center gap-1 mb-1">
+                                <span class="material-symbols-outlined text-secondary text-sm"
+                                    style="font-variation-settings: 'FILL' 1;">star</span>
+                                <span class="font-label-sm text-label-sm text-on-surface">4.92</span>
+                            </div>
+                        </div>
+                        <div class="space-y-4 mb-8">
+                            <div class="flex border border-outline rounded-xl overflow-hidden">
+                                <div class="flex-1 p-3 border-r border-outline">
+                                    <p class="font-label-sm text-[10px] text-warm-gray uppercase tracking-tighter">
+                                        Check-in</p>
+                                    <p class="font-body-md text-body-md">Oct 12, 2024</p>
+                                </div>
+                                <div class="flex-1 p-3">
+                                    <p class="font-label-sm text-[10px] text-warm-gray uppercase tracking-tighter">
+                                        Check-out</p>
+                                    <p class="font-body-md text-body-md">Oct 19, 2024</p>
+                                </div>
+                            </div>
+                            <div class="border border-outline rounded-xl p-3">
+                                <p class="font-label-sm text-[10px] text-warm-gray uppercase tracking-tighter">Guests
+                                </p>
+                                <p class="font-body-md text-body-md">2 Guests</p>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full bg-primary text-white py-4 rounded-xl font-label-md text-label-md uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 duration-150">
+                            Book Now
+                        </button>
+                        <p class="text-center text-xs text-warm-gray mt-4">You won't be charged yet</p>
+                        <div class="mt-8 pt-8 border-t border-light-border space-y-3">
+                            <div class="flex justify-between text-body-md">
+                                <span class="">$850 x 7 nights</span>
+                                <span class="">$5,950</span>
+                            </div>
+                            <div class="flex justify-between text-body-md">
+                                <span class="">Cleaning fee</span>
+                                <span class="">$150</span>
+                            </div>
+                            <div class="flex justify-between text-body-md">
+                                <span class="">Service fee</span>
+                                <span class="">$420</span>
+                            </div>
+                            <div class="flex justify-between font-label-md text-label-md text-primary pt-4">
+                                <span class="">Total</span>
+                                <span class="">$6,520</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+    <!-- Mobile Booking Bar (Shared Component Strategy) -->
+    <div
+        class="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-light-border p-4 px-margin-mobile flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.05)] px-6">
+        <div>
+            <p class="font-label-md text-label-md text-primary">$850 <span class="font-normal text-warm-gray">/
+                    night</span></p>
+            <p class="text-[10px] text-secondary font-bold underline">Oct 12 – 19</p>
+        </div>
+        <button
+            class="bg-primary text-white px-8 py-3.5 rounded-xl font-label-md text-label-md uppercase tracking-wider active:scale-95 transition-transform">
+            Book Now
+        </button>
+    </div>
+    <!-- Micro-interaction Scripts -->
+    <script>
+        // Simple scroll effect for the sticky header
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.classList.add('shadow-sm');
+                header.style.backgroundColor = 'rgba(252, 249, 248, 0.95)';
+            } else {
+                header.classList.remove('shadow-sm');
+                header.style.backgroundColor = 'rgba(252, 249, 248, 0.7)';
+            }
+        });
+
+        // Photo counter logic (simplified for demo)
+        const gallery = document.querySelector('.snap-x');
+        const counter = document.querySelector('.font-label-sm');
+        gallery.addEventListener('scroll', () => {
+            const scrollPos = gallery.scrollLeft;
+            const width = gallery.offsetWidth;
+            const index = Math.round(scrollPos / width) + 1;
+            counter.innerText = `${index} / 12 Photos`;
+        });
+    </script>
+
+
+</body>
+
+</html>

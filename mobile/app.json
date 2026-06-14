@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Aoklevart",
+    "slug": "aoklevart-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "aoklevart",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aoklevart.mobile"
+    },
+    "android": {
+      "package": "com.aoklevart.mobile",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      "expo-splash-screen"
+    ]
+  }
+}

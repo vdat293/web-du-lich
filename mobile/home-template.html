@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Aoklevart - Premium Travel Experiences</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#f0eded",
+                        "secondary-fixed": "#ffdf9b",
+                        "primary-fixed": "#c7e9e8",
+                        "tertiary-fixed": "#e4e2df",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e5e2e1",
+                        "warm-gray": "#6B6B6B",
+                        "outline-variant": "#c1c8c7",
+                        "on-surface": "#1b1b1b",
+                        "on-tertiary-container": "#9e9d9b",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1b1b1b",
+                        "background": "#fcf9f8",
+                        "secondary-container": "#ffdb8f",
+                        "on-secondary-container": "#795f20",
+                        "secondary": "#745b1c",
+                        "on-primary": "#ffffff",
+                        "on-primary-fixed": "#002020",
+                        "on-primary-container": "#83a4a3",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#abcdcc",
+                        "on-secondary-fixed-variant": "#5a4303",
+                        "on-primary-fixed-variant": "#2d4c4c",
+                        "surface-container-high": "#eae7e7",
+                        "on-secondary-fixed": "#251a00",
+                        "on-surface-variant": "#414848",
+                        "inverse-on-surface": "#f3f0ef",
+                        "on-tertiary-fixed": "#1b1c1a",
+                        "primary-light": "#2D5A5A",
+                        "light-border": "rgba(0,0,0,0.06)",
+                        "surface-tint": "#446464",
+                        "surface-container-highest": "#e5e2e1",
+                        "primary-container": "#1a3a3a",
+                        "primary-fixed-dim": "#abcdcc",
+                        "error": "#ba1a1a",
+                        "surface-bright": "#fcf9f8",
+                        "inverse-surface": "#313030",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#dcd9d9",
+                        "primary": "#012425",
+                        "secondary-fixed-dim": "#e4c279",
+                        "outline": "#717878",
+                        "on-tertiary-fixed-variant": "#474745",
+                        "surface": "#fcf9f8",
+                        "surface-container-low": "#f6f3f2",
+                        "tertiary": "#1f201e",
+                        "tertiary-fixed-dim": "#c8c6c4",
+                        "tertiary-container": "#353533",
+                        "accent-light": "#E8D5A3",
+                        "on-error": "#ffffff",
+                        "white": "#FFFFFF",
+                        "on-tertiary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "gutter": "16px",
+                        "margin-mobile": "20px",
+                        "section-gap-desktop": "80px",
+                        "section-gap-mobile": "40px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Playfair Display"],
+                        "display-lg": ["Playfair Display"],
+                        "label-md": ["DM Sans"],
+                        "body-md": ["DM Sans"],
+                        "display-lg-mobile": ["Playfair Display"],
+                        "headline-md": ["Playfair Display"],
+                        "body-lg": ["DM Sans"],
+                        "label-sm": ["DM Sans"],
+                        "headline-lg-mobile": ["Playfair Display"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "42px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "600" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(to bottom, rgba(1, 36, 37, 0.4), rgba(1, 36, 37, 0));
+        }
+
+        .card-reveal {
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .card-reveal:hover {
+            transform: translateY(-8px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-surface font-body-md text-on-surface selection:bg-primary-fixed selection:text-primary min-h-screen">
+    <!-- TopAppBar Shell -->
+    <header class="fixed top-0 left-0 right-0 z-[100] transition-all duration-300 bg-surface/80 backdrop-blur-md">
+        <nav class="flex justify-between items-center w-full px-margin-mobile h-16 max-w-7xl mx-auto">
+            <div class="flex items-center gap-4">
+                <button
+                    class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity active:scale-95 duration-150">menu</button>
+            </div>
+            <h1 class="font-display-lg-mobile text-display-lg-mobile text-primary tracking-tight font-bold">Aoklevart
+            </h1>
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden ring-2 ring-primary-fixed/30">
+                    <img alt="User profile"
+                        data-alt="A professional and sophisticated portrait of a high-end traveler with a serene expression. The lighting is soft and natural, reflecting an editorial fashion aesthetic. The color palette is composed of muted earthy tones like cream, taupe, and deep teal, aligning with a premium minimalist luxury design system. The background is a slightly blurred, elegant interior with high-quality textures."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLtvv_b62V5Pcozy1svrd33H8TbGzvflf9BlugTAokN-KripgR26ib3u2jziBfet2i6Skzi-22UVa02CeK5x8GUFqR3KZiTKGgW9j7Kk-JwMD_wxc5AzgHfQzPXAn7JFy7Lr-hAB_7QohT3rQoKGiEvsTXIL3-8bKWHu54u5yGq66xJqLK39Hz1G6bXw7O9QvCnlXWHA5rR_GLUFEuxEAitFKZD7ZJnzIrMsDVpeVpKLwTz0A_s7y8C3Dug" />
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="pt-16 pb-32">
+        <!-- Hero Section -->
+        <section
+            class="relative h-[751px] w-full overflow-hidden px-margin-mobile md:px-margin-desktop mb-section-gap-mobile md:mb-section-gap-desktop">
+            <div class="absolute inset-0 z-0 scale-105">
+                <img class="w-full h-full object-cover"
+                    data-alt="An expansive, high-angle view of a pristine, secluded beach with turquoise waters and white sand. The lighting is the golden hour, casting a warm, ethereal glow across the landscape. The aesthetic is airy and tranquil, emphasizing high-end luxury and peacefulness. The color palette features deep ocean teals, soft sands, and warm golds, maintaining a professional editorial travel style."
+                    src="https://lh3.googleusercontent.com/aida/AP1WRLuAXYKUAJoytF42Z0pm1p7mRShxPG2nF8SZbqC3NS97ThVdHGJRRZMoC8OtY4K51QfoFKYkwgJj_FUfu31QzK6-fQwbwudEJxT8aZGICDRdSWEe_Jw_72axrxtJFeBMolasCE-O6_zVxjx9Kd_AS3NMx5s1hQNcNanDn4QRHl6U9_sMNg3XCVDZBxGgNqcXrPt5JE8JdffyB_HSA3rgfIpE1Z5eCzT-ofwBJf0CkfGLbgvRccVb-zFRMQ" />
+                <div class="absolute inset-0 bg-black/20"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+            </div>
+            <div class="relative z-10 flex flex-col justify-center items-center h-full max-w-4xl mx-auto text-center">
+                <span class="font-label-md text-label-md text-white/90 uppercase tracking-[0.2em] mb-4">Escape the
+                    Ordinary</span>
+                <h2
+                    class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-12 drop-shadow-sm">
+                    Find your next <br class="hidden md:block" /> peaceful sanctuary.
+                </h2>
+                <!-- Search Component -->
+                <div
+                    class="w-full max-w-2xl bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-center gap-2 group focus-within:ring-4 focus-within:ring-primary/10 transition-all duration-300">
+                    <div
+                        class="flex-1 flex items-center px-6 w-full py-3 md:py-0 border-b md:border-b-0 md:border-r border-light-border">
+                        <span class="material-symbols-outlined text-warm-gray mr-3">search</span>
+                        <input
+                            class="w-full bg-transparent border-none focus:ring-0 font-body-md text-on-surface placeholder:text-warm-gray/60"
+                            placeholder="Where are you going?" type="text" />
+                    </div>
+                    <div class="flex-1 flex items-center px-6 w-full py-3 md:py-0">
+                        <span class="material-symbols-outlined text-warm-gray mr-3">calendar_month</span>
+                        <span class="text-warm-gray/60 font-body-md">Dates</span>
+                    </div>
+                    <button
+                        class="w-full md:w-auto bg-primary text-white font-label-md px-8 py-4 rounded-full hover:opacity-90 transition-all active:scale-95 flex items-center justify-center gap-2">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Featured Collections (Bento Style) -->
+        <section class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop space-y-8 mb-section-gap-mobile">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h3
+                        class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-2">
+                        Curated Escapes</h3>
+                    <p class="font-body-md text-warm-gray max-w-md">Handpicked destinations for the discerning traveler,
+                        from sun-drenched coasts to mountain retreats.</p>
+                </div>
+                <button class="hidden md:flex items-center gap-2 font-label-sm text-primary group">
+                    View All <span
+                        class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 h-[800px] md:h-[600px]">
+                <!-- Luxury Villas -->
+                <div class="md:col-span-8 group relative overflow-hidden rounded-xl shadow-lg card-reveal">
+                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        data-alt="A luxurious, minimalist villa with floor-to-ceiling glass windows overlooking a Mediterranean cliffside. The architecture is sleek and modern, utilizing white stone and wood textures. The lighting is soft morning sunlight, creating a bright and high-key atmosphere. The color palette is dominated by whites, light woods, and the deep blue of the distant sea, reflecting a premium editorial travel brand."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLvcNMBiLmuvRuw6pNY0ue2tgXXSwtzHalr6Raaz-TjmyrXazQCkzOQ30bmwBh8jjPpUWcwacj0Tad3QZnbrM_LNdKzvvBaVSSjx4XyIiI08KF2Ch5nsg4g9oeQoLUxowZCT9JVTllbBwlStqBXK2SzJrlVNmPNxO9hBnRaEuIeN4NnmBA84i89XkgQHiH4AM8O3GlHbnkK7796tI-VsvLby9U-nGqKFN4xRqsSwH_yyMHHlPWeGU49GL-8" />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80">
+                    </div>
+                    <div class="absolute bottom-0 left-0 p-8">
+                        <span
+                            class="bg-secondary-fixed text-on-secondary-fixed text-[10px] font-label-sm px-3 py-1 rounded-full uppercase mb-4 inline-block">Collection</span>
+                        <h4 class="font-headline-lg text-white mb-2">Luxury Villas</h4>
+                        <p class="text-white/80 font-body-md">Privacy and elegance in every detail.</p>
+                    </div>
+                </div>
+                <!-- Summer Escapes -->
+                <div class="md:col-span-4 group relative overflow-hidden rounded-xl shadow-lg card-reveal">
+                    <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        data-alt="A boutique coastal hotel entrance framed by blooming bougainvillea. The setting is warm and sun-drenched, with soft shadows dancing on a white-washed stone wall. The mood is idyllic and inviting, evoking a classic Mediterranean summer. The color palette is high-contrast white with vibrant pink accents and deep primary-teal shadows, perfectly aligned with a luxury travel aesthetic."
+                        src="https://lh3.googleusercontent.com/aida/AP1WRLsFrnSBu6XxtB8FZqxaFizl3-rVz_ZnyYGkkzRsOYgASrCFE8cmolEAVp9lUqGc67RPfFcpODfXtnXK7egfzLvQc8FVezUhHeHdy8MLoFGEK3-i17135r5aQQdY7ZeQe724AVlu_3DK4RXFHczUZg5AhJ9sljsUih1KzWjwWdnsAqXeoTb1Hovimt8qAVR-0DbVlLNRhHa7rYHtiMufbkAkphInoWuxXQQwoYp7qlxeJAFCaEdeSg0lQw" />
+                    <div
+                        class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80">
+                    </div>
+                    <div class="absolute bottom-0 left-0 p-8">
+                        <h4 class="font-headline-md text-white mb-2">Summer Escapes</h4>
+                        <p class="text-white/80 font-body-md">Chasing the golden sun.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Editorial Carousel: Trending Destionations -->
+        <section class="bg-surface-container-low py-section-gap-mobile md:py-section-gap-desktop">
+            <div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop overflow-hidden">
+                <h3
+                    class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-12 text-center">
+                    Trending Destinations</h3>
+                <div class="flex gap-6 overflow-x-auto pb-12 snap-x">
+                    <!-- Card 1 -->
+                    <div class="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
+                        <div class="h-[500px] rounded-xl overflow-hidden mb-6 shadow-md relative">
+                            <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                data-alt="A serene morning view of a Venetian canal, with a classic gondola gently drifting past historic terracotta buildings. The light is soft and diffused, with a hazy, romantic atmosphere. The color palette consists of warm terracottas, muted ochres, and deep canal greens, capturing the timeless elegance of Italian luxury travel within a premium design framework."
+                                src="https://lh3.googleusercontent.com/aida/AP1WRLuPnqLicNcfszaegFIsu9rNn1GXjgz2UQYwzethNQK8kaqlMRSpCutCRD7cWc9WdwTiN9Lo16GQX3EPcl9yJIgWJd2yJ9wBEi6wohkXqYQXrfiVA80HGqDLxE3xYEZN90grgRt_2BEo-aFagdF732oQzh5fvFwVA_7HOXEJ09ckdjP0Qu3LvhI7Gqq8Wug_YNqoSOugP90LQaLnWoiOXyk3lpc4PuJY2K4yDNPhqdOEF3KD-aVQca4VR70" />
+                        </div>
+                        <h5 class="font-headline-md text-primary mb-1">Venice, Italy</h5>
+                        <p class="font-body-md text-warm-gray">From $450/night</p>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
+                        <div class="h-[500px] rounded-xl overflow-hidden mb-6 shadow-md relative">
+                            <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                data-alt="A breathtaking sunset over Yosemite Valley, featuring the iconic El Capitan granite face bathed in orange light. The valley below is filled with a soft morning mist. The aesthetic is powerful and majestic yet serene. The color palette features deep forest greens, granite grays, and intense sunset oranges, adhering to the brand's sophisticated and professional visual identity."
+                                src="https://lh3.googleusercontent.com/aida/AP1WRLtqnjyhrlS6GyImOnhg5geNoPCaw1ZwMwSKgwKUgofjL565JO7BYDQtzej2xafhczBPYR26aS0WcUESWmIEpl0N2-kPXNrVZ372EM2GWPgURwZFKQgClREorX586caREiORribwN3Rn9R-oY_Hm-JYfMdR04PpBxsUg-_Rn94XpkZ4Eg5CNREDdAoVYHkJKxIbWmX3WqtHSbLM0JqyBHkhObiqfN5tQ19148KfsUXPt21Izys1fgZgqkA" />
+                        </div>
+                        <h5 class="font-headline-md text-primary mb-1">Yosemite, USA</h5>
+                        <p class="font-body-md text-warm-gray">From $320/night</p>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="min-w-[300px] md:min-w-[400px] snap-start group cursor-pointer">
+                        <div class="h-[500px] rounded-xl overflow-hidden mb-6 shadow-md relative">
+                            <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                data-alt="An ethereal view of the Taj Mahal at dawn, with the white marble monument perfectly reflected in the still water of the reflecting pool. The sky is a soft lavender and blue. The mood is tranquil and spiritual, showcasing world-class heritage with a modern editorial lens. The color palette is dominated by pristine whites, cool blues, and soft morning purples."
+                                src="https://lh3.googleusercontent.com/aida/AP1WRLtagSoTFuDuKEzpxV7QHNGokmF4jdVGBzgknDCxL8lI-Zd3SvQu0_XJKwS595QHxY9XC7z-pTW13f98taXLqKT4OE14sUmkTg4oghZHMDDRtFcXR_Hc_4y3QSjD3RYwDlJLloi-QbcffgUr41_pjYr2slpOiWt9qau6Te7uoGn5IOC8p6RhBVC4vIW3dR7hVvP4B4Uxb25MaHw6qa-CAWdN04djbWPxuvmYcInkG0rX8oHDPVVWmYgnER0" />
+                        </div>
+                        <h5 class="font-headline-md text-primary mb-1">Agra, India</h5>
+                        <p class="font-body-md text-warm-gray">From $280/night</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- BottomNavBar Shell -->
+    <nav
+        class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pt-3 pb-6 bg-surface dark:bg-surface shadow-[0_-4px_20px_rgba(28,28,28,0.08)] rounded-t-xl md:hidden">
+        <!-- Explore (Active) -->
+        <a class="flex flex-col items-center justify-center text-primary dark:text-primary-fixed relative after:content-[''] after:absolute after:-bottom-1 after:w-1 after:h-1 after:bg-secondary after:rounded-full hover:text-primary dark:hover:text-primary-fixed Active: scale-90 transition-transform"
+            href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">explore</span>
+            <span class="font-label-sm text-label-sm mt-1">Explore</span>
+        </a>
+        <!-- Saved -->
+        <a class="flex flex-col items-center justify-center text-warm-gray dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">favorite</span>
+            <span class="font-label-sm text-label-sm mt-1">Saved</span>
+        </a>
+        <!-- Trips -->
+        <a class="flex flex-col items-center justify-center text-warm-gray dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">travel_explore</span>
+            <span class="font-label-sm text-label-sm mt-1">Trips</span>
+        </a>
+        <!-- Profile -->
+        <a class="flex flex-col items-center justify-center text-warm-gray dark:text-outline hover:text-primary dark:hover:text-primary-fixed transition-colors"
+            href="#">
+            <span class="material-symbols-outlined">person</span>
+            <span class="font-label-sm text-label-sm mt-1">Profile</span>
+        </a>
+    </nav>
+    <!-- Desktop Navigation Side Anchors (Optional but good for premium feel) -->
+    <div class="hidden md:block fixed right-10 top-1/2 -translate-y-1/2 space-y-4 z-50">
+        <div class="w-2 h-2 rounded-full bg-primary ring-4 ring-primary/20 cursor-pointer"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-warm-gray/30 hover:bg-primary transition-colors cursor-pointer"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-warm-gray/30 hover:bg-primary transition-colors cursor-pointer"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-warm-gray/30 hover:bg-primary transition-colors cursor-pointer"></div>
+    </div>
+    <script>
+        // Micro-interaction for header scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 50) {
+                header.classList.add('shadow-sm');
+                header.classList.remove('bg-surface/80');
+                header.classList.add('bg-white');
+            } else {
+                header.classList.remove('shadow-sm');
+                header.classList.add('bg-surface/80');
+                header.classList.remove('bg-white');
+            }
+        });
+
+        // Simple smooth scroll behavior for snap containers
+        const carousel = document.querySelector('.snap-x');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        carousel.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - carousel.offsetLeft;
+            scrollLeft = carousel.scrollLeft;
+        });
+        carousel.addEventListener('mouseleave', () => isDown = false);
+        carousel.addEventListener('mouseup', () => isDown = false);
+        carousel.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - carousel.offsetLeft;
+            const walk = (x - startX) * 2;
+            carousel.scrollLeft = scrollLeft - walk;
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,330 @@
+import { useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { propertyService } from '../api/services';
+import { useFavorites } from '../context/FavoritesContext';
+import type { RootStackParamList } from '../navigation/types';
+import { colors, fonts, shadow } from '../theme';
+import type { Amenity, Room } from '../types';
+import { countNights, formatCurrency, getDefaultDates } from '../utils/date';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Details'>;
+
+const fallbackImage =
+  'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=90';
+const MAX_DESCRIPTION_CHARS = 380;
+
+function amenityIcon(amenity: Amenity): keyof typeof Ionicons.glyphMap {
+  const name = amenity.name.toLowerCase();
+  if (name.includes('wifi')) return 'wifi';
+  if (name.includes('hồ') || name.includes('pool')) return 'water';
+  if (name.includes('điều hòa') || name.includes('air')) return 'snow';
+  if (name.includes('bếp') || name.includes('kitchen')) return 'restaurant';
+  if (name.includes('xe')) return 'car';
+  return 'sparkles-outline';
+}
+
+export function DetailsScreen({ navigation, route }: Props) {
+  const { property } = route.params;
+  const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const defaults = useMemo(getDefaultDates, []);
+  const [currentImage, setCurrentImage] = useState(0);
+  const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(property.rooms[0]);
+  const [checkIn, setCheckIn] = useState(defaults.checkIn);
+  const [checkOut, setCheckOut] = useState(defaults.checkOut);
+  const [guests, setGuests] = useState(Math.min(2, property.maxGuests || 2));
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
+  const [showDescription, setShowDescription] = useState(false);
+
+  const images = [property.images.main, ...property.images.gallery].filter(Boolean);
+  if (!images.length) images.push(fallbackImage);
+
+  const nights = countNights(checkIn, checkOut);
+  const subtotal = selectedRoom ? selectedRoom.price * nights : 0;
+  const serviceFee = Math.round(subtotal * 0.08);
+  const total = subtotal + serviceFee;
+  const fullDescription = property.description || 'Một không gian nghỉ dưỡng được chăm chút để bạn tận hưởng trọn vẹn từng khoảnh khắc của chuyến đi.';
+  const hasLongDescription = fullDescription.length > MAX_DESCRIPTION_CHARS;
+  const shortDescription = hasLongDescription
+    ? `${fullDescription.slice(0, MAX_DESCRIPTION_CHARS).trimEnd()}...`
+    : fullDescription;
+
+  async function continueToPayment() {
+    if (!selectedRoom) {
+      setError('Chỗ nghỉ này chưa có hạng phòng để đặt.');
+      return;
+    }
+    if (!nights) {
+      setError('Ngày trả phòng phải sau ngày nhận phòng.');
+      return;
+    }
+    setChecking(true);
+    setError('');
+    try {
+      await propertyService.checkAvailability({
+        room_type_id: selectedRoom.id,
+        check_in: checkIn,
+        check_out: checkOut,
+        number_of_rooms: 1,
+      });
+      navigation.navigate('Payment', {
+        draft: {
+          property,
+          room: selectedRoom,
+          checkIn,
+          checkOut,
+          guests,
+          nights,
+          subtotal,
+          serviceFee,
+          total,
+        },
+      });
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Không thể kiểm tra phòng trống.');
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  return (
+    <View style={styles.screen}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 150 + insets.bottom }}>
+        <View style={styles.gallery}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => setCurrentImage(Math.round(event.nativeEvent.contentOffset.x / width))}
+          >
+            {images.map((image, index) => (
+              <Image key={`${image}-${index}`} source={{ uri: image }} style={{ width, height: 390 }} resizeMode="cover" />
+            ))}
+          </ScrollView>
+          <SafeAreaView style={styles.overlayHeader} edges={['top']}>
+            <Pressable style={styles.circleButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={22} color={colors.primary} />
+            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable style={styles.circleButton} onPress={() => void Share.share({ message: `${property.name} - ${property.location}` })}>
+                <Ionicons name="share-outline" size={21} color={colors.primary} />
+              </Pressable>
+              <Pressable style={styles.circleButton} onPress={() => toggleFavorite(property.id)}>
+                <Ionicons name={isFavorite(property.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(property.id) ? colors.error : colors.primary} />
+              </Pressable>
+            </View>
+          </SafeAreaView>
+          <View style={styles.imageCount}>
+            <Text style={styles.imageCountText}>{currentImage + 1} / {images.length} ảnh</Text>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <View style={styles.ratingRow}>
+            <Ionicons name="star" size={17} color={colors.secondary} />
+            <Text style={styles.ratingText}>{property.rating || 'Mới'} · {property.reviews} đánh giá</Text>
+          </View>
+          <Text style={styles.title}>{property.name}</Text>
+          <Text style={styles.location}>{property.location} · {property.type}</Text>
+
+          <View style={styles.divider} />
+          <View style={styles.hostRow}>
+            <View style={styles.hostAvatar}>
+              {property.host.avatar ? <Image source={{ uri: property.host.avatar }} style={styles.hostAvatarImage} /> : <Text style={styles.hostInitial}>{property.host.name.charAt(0)}</Text>}
+            </View>
+            <View style={styles.hostCopy}>
+              <Text style={styles.hostTitle}>Được đón tiếp bởi {property.host.name}</Text>
+              <Text style={styles.hostMeta}>{property.maxGuests} khách · {property.bedrooms} phòng ngủ · {property.bathrooms} phòng tắm</Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+          <Text style={styles.sectionTitle}>Về không gian này</Text>
+          <Text style={[styles.description, hasLongDescription && styles.descriptionCollapsed]}>{shortDescription}</Text>
+          {hasLongDescription ? (
+            <Pressable style={styles.descriptionButton} onPress={() => setShowDescription(true)}>
+              <Text style={styles.descriptionButtonText}>Hiển thị thêm</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+            </Pressable>
+          ) : null}
+
+          <Text style={styles.sectionTitle}>Tiện nghi nổi bật</Text>
+          <View style={styles.amenitiesGrid}>
+            {(property.amenities.length ? property.amenities : [
+              { id: -1, name: 'WiFi tốc độ cao' },
+              { id: -2, name: 'Điều hòa' },
+              { id: -3, name: 'Bãi đỗ xe' },
+              { id: -4, name: 'Không gian riêng tư' },
+            ]).slice(0, 6).map((amenity) => (
+              <View key={amenity.id} style={styles.amenity}>
+                <View style={styles.amenityIcon}>
+                  <Ionicons name={amenityIcon(amenity)} size={21} color={colors.primary} />
+                </View>
+                <Text style={styles.amenityText} numberOfLines={2}>{amenity.name}</Text>
+              </View>
+            ))}
+          </View>
+
+          <Text style={styles.sectionTitle}>Chọn hạng phòng</Text>
+          {property.rooms.length ? property.rooms.map((room) => {
+            const active = room.id === selectedRoom?.id;
+            return (
+              <Pressable key={room.id} style={[styles.roomCard, active && styles.roomCardActive]} onPress={() => setSelectedRoom(room)}>
+                <View style={styles.radioOuter}>{active ? <View style={styles.radioInner} /> : null}</View>
+                <View style={styles.roomInfo}>
+                  <Text style={styles.roomName}>{room.name}</Text>
+                  <Text style={styles.roomMeta}>{room.bed_type || 'Giường tiêu chuẩn'} · tối đa {room.max_adults + room.max_children} khách</Text>
+                </View>
+                <Text style={styles.roomPrice}>{formatCurrency(room.price)}</Text>
+              </Pressable>
+            );
+          }) : <Text style={styles.description}>Liên hệ chỗ nghỉ để biết tình trạng phòng.</Text>}
+
+          <View style={styles.bookingCard}>
+            <Text style={styles.bookingTitle}>Lịch trình của bạn</Text>
+            <View style={styles.dateRow}>
+              <View style={styles.dateField}>
+                <Text style={styles.fieldLabel}>NHẬN PHÒNG</Text>
+                <TextInput value={checkIn} onChangeText={setCheckIn} placeholder="YYYY-MM-DD" style={styles.dateInput} />
+              </View>
+              <View style={styles.dateField}>
+                <Text style={styles.fieldLabel}>TRẢ PHÒNG</Text>
+                <TextInput value={checkOut} onChangeText={setCheckOut} placeholder="YYYY-MM-DD" style={styles.dateInput} />
+              </View>
+            </View>
+            <View style={styles.guestRow}>
+              <View>
+                <Text style={styles.fieldLabel}>KHÁCH</Text>
+                <Text style={styles.guestValue}>{guests} khách</Text>
+              </View>
+              <View style={styles.stepper}>
+                <Pressable style={styles.stepButton} onPress={() => setGuests((value) => Math.max(1, value - 1))}><Ionicons name="remove" size={18} color={colors.primary} /></Pressable>
+                <Pressable style={styles.stepButton} onPress={() => setGuests((value) => Math.min(property.maxGuests || 10, value + 1))}><Ionicons name="add" size={18} color={colors.primary} /></Pressable>
+              </View>
+            </View>
+            {nights > 0 && selectedRoom ? (
+              <View style={styles.priceDetails}>
+                <View style={styles.priceLine}><Text style={styles.priceLabel}>{formatCurrency(selectedRoom.price)} × {nights} đêm</Text><Text style={styles.priceValue}>{formatCurrency(subtotal)}</Text></View>
+                <View style={styles.priceLine}><Text style={styles.priceLabel}>Phí dịch vụ</Text><Text style={styles.priceValue}>{formatCurrency(serviceFee)}</Text></View>
+                <View style={[styles.priceLine, styles.totalLine]}><Text style={styles.totalLabel}>Tổng cộng</Text><Text style={styles.totalValue}>{formatCurrency(total)}</Text></View>
+              </View>
+            ) : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+          </View>
+        </View>
+      </ScrollView>
+
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View>
+          <Text style={styles.bottomPrice}>{selectedRoom ? formatCurrency(selectedRoom.price) : property.price}</Text>
+          <Text style={styles.bottomMeta}>mỗi đêm · {nights || 0} đêm</Text>
+        </View>
+        <Pressable disabled={checking || !selectedRoom} style={[styles.reserveButton, (!selectedRoom || checking) && styles.disabledButton]} onPress={() => void continueToPayment()}>
+          {checking ? <ActivityIndicator color={colors.white} /> : <Text style={styles.reserveText}>Đặt ngay</Text>}
+        </Pressable>
+      </View>
+
+      <Modal visible={showDescription} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowDescription(false)}>
+        <SafeAreaView style={styles.descriptionModal}>
+          <View style={styles.descriptionModalHeader}>
+            <Text style={styles.descriptionModalTitle}>Về không gian này</Text>
+            <Pressable style={styles.modalCloseButton} onPress={() => setShowDescription(false)}>
+              <Ionicons name="close" size={22} color={colors.primary} />
+            </Pressable>
+          </View>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.descriptionModalContent}>
+            <Text style={styles.descriptionModalText}>{fullDescription}</Text>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.surface },
+  gallery: { height: 390, backgroundColor: colors.surfaceContainer },
+  overlayHeader: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 6 },
+  headerActions: { flexDirection: 'row', gap: 9 },
+  circleButton: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(252,249,248,0.92)' },
+  imageCount: { position: 'absolute', right: 18, bottom: 18, borderRadius: 999, backgroundColor: 'rgba(1,36,37,0.78)', paddingHorizontal: 12, paddingVertical: 7 },
+  imageCountText: { color: colors.white, fontFamily: fonts.medium, fontSize: 11 },
+  content: { paddingHorizontal: 20, paddingTop: 24 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  ratingText: { color: colors.text, fontFamily: fonts.medium, fontSize: 13 },
+  title: { color: colors.primary, fontFamily: fonts.display, fontSize: 34, lineHeight: 41, marginTop: 9 },
+  location: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 15, lineHeight: 22, marginTop: 7 },
+  divider: { height: 1, backgroundColor: colors.border, marginVertical: 25 },
+  hostRow: { flexDirection: 'row', alignItems: 'center' },
+  hostAvatar: { width: 52, height: 52, borderRadius: 26, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondaryFixed },
+  hostAvatarImage: { width: 52, height: 52 },
+  hostInitial: { color: colors.primary, fontFamily: fonts.display, fontSize: 21 },
+  hostCopy: { flex: 1, paddingLeft: 14 },
+  hostTitle: { color: colors.primary, fontFamily: fonts.bold, fontSize: 14 },
+  hostMeta: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  sectionTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 25, marginTop: 12, marginBottom: 14 },
+  description: { color: colors.textSoft, fontFamily: fonts.body, fontSize: 15, lineHeight: 24, marginBottom: 24 },
+  descriptionCollapsed: { marginBottom: 8 },
+  descriptionButton: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 24, paddingVertical: 6 },
+  descriptionButtonText: { color: colors.primary, fontFamily: fonts.bold, fontSize: 14, textDecorationLine: 'underline' },
+  descriptionModal: { flex: 1, backgroundColor: colors.surface },
+  descriptionModalHeader: { minHeight: 68, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, borderBottomWidth: 1, borderBottomColor: colors.border },
+  descriptionModalTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 25 },
+  modalCloseButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
+  descriptionModalContent: { paddingHorizontal: 22, paddingTop: 24, paddingBottom: 40 },
+  descriptionModalText: { color: colors.textSoft, fontFamily: fonts.body, fontSize: 16, lineHeight: 27 },
+  amenitiesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 24 },
+  amenity: { width: '48%', flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  amenityIcon: { width: 44, height: 44, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
+  amenityText: { flex: 1, marginLeft: 10, color: colors.text, fontFamily: fonts.body, fontSize: 12, lineHeight: 17 },
+  roomCard: { minHeight: 82, flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 16, backgroundColor: colors.white, padding: 14, marginBottom: 11 },
+  roomCardActive: { borderColor: colors.primary, backgroundColor: '#f7fbfa' },
+  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  radioInner: { width: 11, height: 11, borderRadius: 6, backgroundColor: colors.primary },
+  roomInfo: { flex: 1, paddingHorizontal: 12 },
+  roomName: { color: colors.primary, fontFamily: fonts.bold, fontSize: 14 },
+  roomMeta: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 11, marginTop: 4 },
+  roomPrice: { color: colors.primary, fontFamily: fonts.heading, fontSize: 14 },
+  bookingCard: { marginTop: 26, padding: 20, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, ...shadow },
+  bookingTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 24, marginBottom: 18 },
+  dateRow: { flexDirection: 'row', gap: 10 },
+  dateField: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 12, paddingTop: 10 },
+  fieldLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 9, letterSpacing: 0.8 },
+  dateInput: { height: 36, color: colors.text, fontFamily: fonts.medium, fontSize: 13, paddingVertical: 0 },
+  guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 11, marginTop: 10 },
+  guestValue: { color: colors.text, fontFamily: fonts.medium, fontSize: 13, marginTop: 3 },
+  stepper: { flexDirection: 'row', gap: 8 },
+  stepButton: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
+  priceDetails: { marginTop: 18 },
+  priceLine: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 11 },
+  priceLabel: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 13 },
+  priceValue: { color: colors.text, fontFamily: fonts.medium, fontSize: 13 },
+  totalLine: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 14, marginTop: 3 },
+  totalLabel: { color: colors.primary, fontFamily: fonts.heading, fontSize: 18 },
+  totalValue: { color: colors.primary, fontFamily: fonts.heading, fontSize: 18 },
+  error: { color: colors.error, fontFamily: fonts.body, fontSize: 12, lineHeight: 18, marginTop: 8 },
+  bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, minHeight: 88, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 12, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.border },
+  bottomPrice: { color: colors.primary, fontFamily: fonts.heading, fontSize: 19 },
+  bottomMeta: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 11, marginTop: 2 },
+  reserveButton: { minWidth: 140, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary, paddingHorizontal: 22 },
+  disabledButton: { opacity: 0.55 },
+  reserveText: { color: colors.white, fontFamily: fonts.bold, fontSize: 14 },
+});

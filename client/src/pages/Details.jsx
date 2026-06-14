@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { FullPageLoader, Spinner } from '../components/Loader';
 import api from '../utils/api';
+import { assetUrl } from '../utils/media';
 
 export default function Details() {
     const { id } = useParams();
@@ -1291,7 +1292,7 @@ export default function Details() {
                                                     className={`p-3 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === 'momo' ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}>
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-9 h-9 rounded-lg overflow-hidden border border-neutral-200">
-                                                            <img src="/assets/MoMo_Logo_Primary/MOMO-Logo-App.png" alt="MoMo" className="w-full h-full object-contain" />
+                                                            <img src={assetUrl('MoMo_Logo_Primary/MOMO-Logo-App.png')} alt="MoMo" className="w-full h-full object-contain" />
                                                         </div>
                                                         <span className="font-medium text-sm text-neutral-700">Ví MoMo</span>
                                                     </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../utils/api';
+import { assetUrl } from '../utils/media';
 
 const MomoPayment = () => {
     const { bookingId } = useParams();
@@ -137,7 +138,7 @@ const MomoPayment = () => {
                 <div className="bg-white dark:bg-neutral-800 rounded-3xl shadow-xl overflow-hidden animate-fade-in-up">
                     <div className="bg-gradient-to-r from-[#a50064] to-[#c21175] p-8 text-white text-center">
                         <div className="bg-white p-2 rounded-xl w-16 h-16 mx-auto mb-4">
-                            <img src="/assets/MoMo_Logo_Primary/MOMO-Logo-App.png" alt="MoMo" className="w-full h-full object-contain" />
+                            <img src={assetUrl('MoMo_Logo_Primary/MOMO-Logo-App.png')} alt="MoMo" className="w-full h-full object-contain" />
                         </div>
                         <h1 className="text-2xl font-black mb-2 uppercase tracking-wide">Thanh toán MoMo</h1>
                         <p className="opacity-80 text-sm italic">Quét mã QR để hoàn tất đặt phòng</p>
