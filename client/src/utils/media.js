@@ -8,3 +8,9 @@ export function assetUrl(path) {
   const normalizedPath = path.replace(/^\/?assets\//, '');
   return `${MEDIA_BASE_URL}/assets/${normalizedPath}`;
 }
+
+export function resolveMediaUrl(value) {
+  if (!value || /^(https?:|data:|blob:)/i.test(value)) return value || '';
+  if (/^\/?assets\//i.test(value)) return assetUrl(value);
+  return `/${value.replace(/^\/+/, '')}`;
+}

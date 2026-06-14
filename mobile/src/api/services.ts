@@ -1,8 +1,21 @@
 import { apiRequest } from './client';
 import type { Booking, Property, User } from '../types';
+import { resolveMediaUrl } from '../utils/media';
+
+function normalizeProperty(property: Property): Property {
+  return {
+    ...property,
+    host: { ...property.host, avatar: resolveMediaUrl(property.host.avatar) },
+    images: {
+      main: resolveMediaUrl(property.images.main),
+      gallery: property.images.gallery.map(resolveMediaUrl),
+    },
+    mapImage: resolveMediaUrl(property.mapImage),
+  };
+}
 
 export const propertyService = {
-  list: () => apiRequest<Property[]>('/api/properties'),
+  list: async () => (await apiRequest<Property[]>('/api/properties')).map(normalizeProperty),
   checkAvailability: (payload: {
     room_type_id: number;
     check_in: string;
@@ -24,7 +37,8 @@ export const authService = {
 };
 
 export const bookingService = {
-  list: () => apiRequest<Booking[]>('/api/user/bookings', { authenticated: true }),
+  list: async () => (await apiRequest<Booking[]>('/api/user/bookings', { authenticated: true }))
+    .map((booking) => ({ ...booking, property_image: resolveMediaUrl(booking.property_image) })),
   createForUser: (payload: Record<string, unknown>) =>
     apiRequest<{ booking_id: number; final_price: number }>('/api/user/bookings', {
       method: 'POST',
@@ -68,4 +82,3 @@ export const userService = {
       body: JSON.stringify(payload),
     }),
 };
-

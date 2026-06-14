@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import api from '../utils/api';
+import { resolveMediaUrl } from '../utils/media';
 export default function Search() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -138,8 +139,7 @@ export default function Search() {
     }, []);
 
     const resolveImageUrl = (url) => {
-        if (!url) return '';
-        return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+        return resolveMediaUrl(url);
     };
 
     const toggleFavorite = (property) => {

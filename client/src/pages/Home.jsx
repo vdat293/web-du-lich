@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import api from '../utils/api';
-import { assetUrl } from '../utils/media';
+import { assetUrl, resolveMediaUrl } from '../utils/media';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -102,8 +102,7 @@ export default function Home() {
   }, []);
 
   const resolveImageUrl = (url) => {
-    if (!url) return '';
-    return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+    return resolveMediaUrl(url);
   };
 
   const getPropertyImage = (property) => {
