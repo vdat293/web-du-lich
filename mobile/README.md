@@ -30,4 +30,4 @@ Expo thường tự lấy IP máy phát triển. Nếu API không kết nối đ
 - Tạo booking cho tài khoản hoặc khách chưa đăng nhập.
 - Xem booking trong tab Chuyến đi.
 
-Backend chạy trên `0.0.0.0:3000` và phục vụ ảnh trong `client/public/assets` qua `/api/media/*` để thiết bị mobile truy cập được.
+Backend chạy trên `0.0.0.0:3000`. API trả về URL ảnh Cloudinary tuyệt đối để thiết bị mobile tải ảnh trực tiếp từ CDN, không phụ thuộc `client/public/assets`.
