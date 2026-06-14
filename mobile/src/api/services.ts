@@ -59,3 +59,13 @@ export const paymentService = {
       body: JSON.stringify({ status: 'cancelled', note }),
     }),
 };
+
+export const userService = {
+  updateProfile: (payload: { name: string; phone?: string; avatarBase64?: string }) =>
+    apiRequest<{ message: string; user: User }>('/api/user/profile', {
+      method: 'PUT',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+};
+

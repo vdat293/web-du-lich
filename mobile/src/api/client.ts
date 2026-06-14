@@ -1,14 +1,12 @@
 import { Platform } from 'react-native';
-import Constants from 'expo-constants';
 
 import { getStoredValue } from '../storage';
 
 const configuredUrl = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
-const expoHost = Constants.expoConfig?.hostUri?.split(':')[0];
-const fallbackHost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+const defaultApiUrl = 'https://web-du-lich-4pjb.onrender.com';
 
 export const API_BASE_URL =
-  configuredUrl || `http://${expoHost || fallbackHost}:3000`;
+  configuredUrl || defaultApiUrl;
 
 export class ApiError extends Error {
   status: number;

@@ -1,14 +1,18 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { API_BASE_URL } from '../api/client';
 import { LoginForm } from '../components/LoginForm';
 import { useAuth } from '../context/AuthContext';
+import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 
 export function ProfileScreen() {
   const { user, logout } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -27,10 +31,22 @@ export function ProfileScreen() {
               <View style={styles.role}><Text style={styles.roleText}>{user.role}</Text></View>
             </View>
             <View style={styles.menuCard}>
-              <MenuItem icon="person-outline" label="Thông tin cá nhân" />
-              <MenuItem icon="notifications-outline" label="Thông báo" />
-              <MenuItem icon="shield-checkmark-outline" label="Bảo mật tài khoản" />
-              <MenuItem icon="help-circle-outline" label="Trung tâm trợ giúp" last />
+              <MenuItem 
+                icon="person-outline" 
+                label="Thông tin cá nhân" 
+                onPress={() => navigation.navigate('PersonalInfo')} 
+              />
+              <MenuItem 
+                icon="shield-checkmark-outline" 
+                label="Bảo mật tài khoản" 
+                onPress={() => navigation.navigate('Security')} 
+              />
+              <MenuItem 
+                icon="help-circle-outline" 
+                label="Trung tâm trợ giúp" 
+                onPress={() => navigation.navigate('HelpCenter')} 
+                last 
+              />
             </View>
             <Pressable style={styles.logoutButton} onPress={() => void logout()}>
               <Ionicons name="log-out-outline" size={19} color={colors.error} />
@@ -52,13 +68,37 @@ export function ProfileScreen() {
   );
 }
 
-function MenuItem({ icon, label, last }: { icon: keyof typeof Ionicons.glyphMap; label: string; last?: boolean }) {
+function MenuItem({ 
+  icon, 
+  label, 
+  onPress, 
+  badge, 
+  last 
+}: { 
+  icon: keyof typeof Ionicons.glyphMap; 
+  label: string; 
+  onPress?: () => void; 
+  badge?: number; 
+  last?: boolean 
+}) {
   return (
-    <View style={[styles.menuItem, last && styles.lastMenuItem]}>
+    <Pressable 
+      style={({ pressed }) => [
+        styles.menuItem, 
+        last && styles.lastMenuItem,
+        pressed && { backgroundColor: colors.surfaceContainer }
+      ]}
+      onPress={onPress}
+    >
       <View style={styles.menuIcon}><Ionicons name={icon} size={20} color={colors.primary} /></View>
       <Text style={styles.menuLabel}>{label}</Text>
+      {badge ? (
+        <View style={styles.badgeContainer}>
+          <Text style={styles.badgeText}>{badge}</Text>
+        </View>
+      ) : null}
       <Ionicons name="chevron-forward" size={18} color={colors.outline} />
-    </View>
+    </Pressable>
   );
 }
 
@@ -86,4 +126,7 @@ const styles = StyleSheet.create({
   logoutText: { color: colors.error, fontFamily: fonts.bold, fontSize: 13 },
   serverInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 24 },
   serverText: { maxWidth: '85%', color: colors.textMuted, fontFamily: fonts.body, fontSize: 10 },
+  badgeContainer: { backgroundColor: colors.error, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, marginRight: 8, minWidth: 20, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: colors.white, fontFamily: fonts.bold, fontSize: 10 },
 });
+

@@ -11,6 +11,11 @@ import { PaymentScreen } from '../screens/PaymentScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { TripsScreen } from '../screens/TripsScreen';
+import { PersonalInfoScreen } from '../screens/PersonalInfoScreen';
+import { SecurityScreen } from '../screens/SecurityScreen';
+import { HelpCenterScreen } from '../screens/HelpCenterScreen';
+import { NotificationsScreen } from '../screens/NotificationsScreen';
+import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -20,10 +25,14 @@ const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
   Explore: 'compass',
   Saved: 'heart',
   Trips: 'briefcase',
+  Notifications: 'notifications',
   Profile: 'person',
 };
 
 function TabNavigator() {
+  const { notifications, user } = useAuth();
+  const unreadCount = user ? notifications.filter((n) => n.unread).length : 0;
+
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
@@ -53,6 +62,15 @@ function TabNavigator() {
       <Tabs.Screen name="Explore" component={HomeScreen} options={{ title: 'Khám phá' }} />
       <Tabs.Screen name="Saved" component={FavoritesScreen} options={{ title: 'Đã lưu' }} />
       <Tabs.Screen name="Trips" component={TripsScreen} options={{ title: 'Chuyến đi' }} />
+      <Tabs.Screen 
+        name="Notifications" 
+        component={NotificationsScreen} 
+        options={{ 
+          title: 'Thông báo',
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: colors.error, color: colors.white, fontSize: 10, lineHeight: 13, height: 16, minWidth: 16 },
+        }} 
+      />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Cá nhân' }} />
     </Tabs.Navigator>
   );
@@ -71,6 +89,9 @@ export function AppNavigator() {
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="Details" component={DetailsScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+        <Stack.Screen name="Security" component={SecurityScreen} />
+        <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

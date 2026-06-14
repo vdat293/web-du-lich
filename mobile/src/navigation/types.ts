@@ -6,6 +6,7 @@ export type TabParamList = {
   Explore: undefined;
   Saved: undefined;
   Trips: undefined;
+  Notifications: undefined;
   Profile: undefined;
 };
 
@@ -14,4 +15,7 @@ export type RootStackParamList = {
   Search: { query?: string } | undefined;
   Details: { property: Property };
   Payment: { draft: BookingDraft };
+  PersonalInfo: undefined;
+  Security: undefined;
+  HelpCenter: undefined;
 };

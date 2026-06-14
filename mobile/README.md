@@ -19,7 +19,7 @@ npm start
 
 Quét QR bằng Expo Go. Điện thoại và máy tính cần cùng mạng Wi-Fi.
 
-Expo thường tự lấy IP máy phát triển. Nếu API không kết nối được, tạo `mobile/.env.local` từ `.env.example`, thay địa chỉ bằng IPv4 LAN của máy rồi khởi động lại Expo.
+Mobile mặc định sử dụng backend Render tại `https://web-du-lich-4pjb.onrender.com`. Có thể ghi đè `EXPO_PUBLIC_API_URL` trong `mobile/.env` khi cần dùng backend khác.
 
 ## Luồng đã nối backend
 
@@ -30,4 +30,4 @@ Expo thường tự lấy IP máy phát triển. Nếu API không kết nối đ
 - Tạo booking cho tài khoản hoặc khách chưa đăng nhập.
 - Xem booking trong tab Chuyến đi.
 
-Backend chạy trên `0.0.0.0:3000`. API trả về URL ảnh Cloudinary tuyệt đối để thiết bị mobile tải ảnh trực tiếp từ CDN, không phụ thuộc `client/public/assets`.
+API trả về URL ảnh Cloudinary tuyệt đối để thiết bị mobile tải ảnh trực tiếp từ CDN, không phụ thuộc `client/public/assets`.
