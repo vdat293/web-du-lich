@@ -136,7 +136,7 @@ function TabNavigator() {
           const iconName = focused ? icons[route.name] : (`${icons[route.name]}-outline` as keyof typeof Ionicons.glyphMap);
           return <TabBarIcon name={iconName} color={color} focused={focused} size={size} />;
         },
-        tabBarButton: (props) => (
+        tabBarButton: ({ ref: _ref, ...props }) => (
           <Pressable
             {...props}
             android_ripple={{ color: colors.primary + '12', borderless: true, foreground: false }}

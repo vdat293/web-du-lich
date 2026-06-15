@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { readJsonStorage } from '../utils/storage';
+import { BRAND_LOGO_URL } from '../utils/media';
 
 export default function ATM() {
     const navigate = useNavigate();
@@ -221,9 +222,7 @@ export default function ATM() {
             {/* Navigation / Header */}
             <header className="h-20 border-b border-white/5 bg-white/5 backdrop-blur-xl flex items-center justify-between px-10 sticky top-0 z-50">
                 <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 bg-blue-500 rounded-lg transform rotate-45 flex items-center justify-center">
-                        <span className="text-white font-bold transform -rotate-45 text-sm uppercase">A</span>
-                    </div>
+                    <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-9 h-9 rounded-lg object-cover" />
                     <h2 className="text-lg font-bold tracking-tight">System Console <span className="text-blue-500">/ Credit Card Management</span></h2>
                 </div>
 

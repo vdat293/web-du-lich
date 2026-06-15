@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
+import { BrandLogo } from '../components/BrandLogo';
 import { PropertyCard } from '../components/PropertyCard';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -95,7 +96,7 @@ export function HomeScreen() {
                 <Pressable style={styles.headerButton}>
                   <Ionicons name="menu" size={24} color={colors.white} />
                 </Pressable>
-                <Text style={styles.brand}>Aoklevart</Text>
+                <BrandLogo size={34} nameColor={colors.white} nameSize={21} />
                 <View style={styles.avatar}>
                   {user?.avatar ? (
                     <ImageBackground source={{ uri: user.avatar }} style={styles.avatarImage} />
@@ -201,7 +202,6 @@ const styles = StyleSheet.create({
   safeHeader: { width: '100%' },
   header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
   headerButton: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(1,36,37,0.28)' },
-  brand: { color: colors.white, fontFamily: fonts.display, fontSize: 26 },
   avatar: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondaryFixed, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)' },
   avatarImage: { width: 36, height: 36 },
   avatarText: { color: colors.primary, fontFamily: fonts.bold },

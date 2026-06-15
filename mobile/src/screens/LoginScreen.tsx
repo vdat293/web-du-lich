@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
+import { BrandWordmark } from '../components/BrandLogo';
 import { LoginForm } from '../components/LoginForm';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
@@ -82,12 +83,7 @@ export function LoginScreen({ navigation }: Props) {
             { opacity: brandFade, transform: [{ translateY: brandSlide }] },
           ]}
         >
-          <View style={styles.logoOuter}>
-            <View style={styles.logoWrap}>
-              <Text style={styles.logoText}>A</Text>
-            </View>
-          </View>
-          <Text style={styles.brandTitle}>Aoklevart</Text>
+          <BrandWordmark />
           <View style={styles.divider} />
           <Text style={styles.brandSubtitle}>{t('profile.welcomeBack')}</Text>
           <Text style={styles.brandDesc}>{t('profile.loginHint')}</Text>
@@ -100,12 +96,6 @@ export function LoginScreen({ navigation }: Props) {
             { opacity: formFade, transform: [{ translateY: formSlide }] },
           ]}
         >
-          <View style={styles.formHeader}>
-            <View style={styles.formHeaderIcon}>
-              <Ionicons name="shield-checkmark-outline" size={16} color={colors.primary} />
-            </View>
-            <Text style={styles.formHeaderText}>{t('profile.loginSecure', { defaultValue: 'Đăng nhập an toàn' })}</Text>
-          </View>
           <LoginForm onSuccess={() => navigation.goBack()} />
         </Animated.View>
 
@@ -158,44 +148,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  logoOuter: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainer,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  logoWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    transform: [{ rotate: '45deg' }],
-  },
-  logoText: {
-    color: colors.accent,
-    fontFamily: fonts.display,
-    fontSize: 26,
-    transform: [{ rotate: '-45deg' }],
-  },
-  brandTitle: {
-    fontFamily: fonts.display,
-    fontSize: 28,
-    color: colors.primary,
-    marginBottom: 12,
-    letterSpacing: -0.5,
-  },
   divider: {
     width: 40,
     height: 3,
     borderRadius: 2,
     backgroundColor: colors.accent,
+    marginTop: 4,
     marginBottom: 14,
   },
   brandSubtitle: {
@@ -223,29 +181,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 16,
     elevation: 3,
-  },
-  formHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 18,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  formHeaderIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surfaceContainer,
-  },
-  formHeaderText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: colors.textSoft,
-    letterSpacing: 0.1,
   },
   footerHint: {
     flexDirection: 'row',

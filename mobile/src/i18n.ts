@@ -133,7 +133,7 @@ const resources = {
         welcomeBack: 'Chào mừng trở lại',
         profileTitle: 'Hồ sơ của bạn',
         subtitle: 'Quản lý thông tin và những trải nghiệm sắp tới.',
-        loginHint: 'Đăng nhập để đồng bộ booking và thông tin chuyến đi.',
+        loginHint: 'Mỗi hành trình, một trải nghiệm đáng nhớ.',
         language: 'Language',
         personalInfo: 'Thông tin cá nhân',
         security: 'Bảo mật tài khoản',
@@ -141,7 +141,6 @@ const resources = {
         logout: 'Đăng xuất',
         loginTitle: 'Đăng nhập để quản lý tài khoản',
         loginMessage: 'Đăng nhập để quản lý thông tin cá nhân và bảo mật.',
-        loginSecure: 'Đăng nhập an toàn',
         privacyHint: 'Thông tin của bạn được bảo mật',
       },
       trips: {
@@ -213,8 +212,27 @@ const resources = {
         required: 'Vui lòng nhập email/số điện thoại và mật khẩu.',
         failed: 'Đăng nhập không thành công.',
         identifier: 'Email hoặc số điện thoại',
+        identifierRequired: 'Vui lòng nhập email hoặc số điện thoại.',
         password: 'Mật khẩu',
         submit: 'Đăng nhập',
+        quickTitle: 'Đăng nhập',
+        quickSubtitle: 'Nhập email hoặc số điện thoại để đăng nhập.',
+        continue: 'Tiếp tục',
+        or: 'hoặc',
+        otpTitle: 'Nhập mã xác thực',
+        otpSubtitle: 'Mã OTP 6 chữ số đã được gửi đến {{identifier}}.',
+        otpRequired: 'Vui lòng nhập đủ 6 chữ số.',
+        otpSendFailed: 'Không thể gửi mã OTP.',
+        otpVerifyFailed: 'Không thể xác thực mã OTP.',
+        verifyOtp: 'Xác nhận & Đăng nhập',
+        resendOtp: 'Gửi lại mã OTP',
+        resendAfter: 'Gửi lại sau {{seconds}}s',
+        usePassword: 'Đăng nhập bằng mật khẩu',
+        useOtp: 'Đăng nhập bằng mã OTP',
+        changeIdentifier: 'Thay đổi email / SĐT',
+        passwordTitle: 'Đăng nhập',
+        passwordSubtitle: 'Nhập mật khẩu cho {{identifier}}.',
+        passwordSubtitleEmpty: 'Nhập email hoặc số điện thoại và mật khẩu của bạn.',
       },
       propertyCard: {
         save: 'Lưu chỗ nghỉ',
@@ -383,7 +401,7 @@ const resources = {
         welcomeBack: 'Welcome back',
         profileTitle: 'Your profile',
         subtitle: 'Manage your information and upcoming experiences.',
-        loginHint: 'Log in to sync bookings and travel details.',
+        loginHint: 'Every journey, an experience to remember.',
         language: 'Language',
         personalInfo: 'Personal info',
         security: 'Account security',
@@ -391,7 +409,6 @@ const resources = {
         logout: 'Log out',
         loginTitle: 'Log in to manage account',
         loginMessage: 'Log in to manage personal info and security.',
-        loginSecure: 'Secure login',
         privacyHint: 'Your information is kept private',
       },
       trips: {
@@ -463,8 +480,27 @@ const resources = {
         required: 'Please enter email/phone and password.',
         failed: 'Login failed.',
         identifier: 'Email or phone number',
+        identifierRequired: 'Please enter an email or phone number.',
         password: 'Password',
         submit: 'Log in',
+        quickTitle: 'Login',
+        quickSubtitle: 'Enter your email or phone number to log in.',
+        continue: 'Continue',
+        or: 'or',
+        otpTitle: 'Enter verification code',
+        otpSubtitle: 'A 6-digit OTP was sent to {{identifier}}.',
+        otpRequired: 'Please enter all 6 digits.',
+        otpSendFailed: 'Unable to send the OTP.',
+        otpVerifyFailed: 'Unable to verify the OTP.',
+        verifyOtp: 'Confirm & Log in',
+        resendOtp: 'Resend OTP',
+        resendAfter: 'Resend in {{seconds}}s',
+        usePassword: 'Log in with password',
+        useOtp: 'Log in with OTP',
+        changeIdentifier: 'Change email / phone',
+        passwordTitle: 'Log in',
+        passwordSubtitle: 'Enter the password for {{identifier}}.',
+        passwordSubtitleEmpty: 'Enter your email or phone number and password.',
       },
       propertyCard: {
         save: 'Save stay',
@@ -504,7 +540,11 @@ const resources = {
   },
 } as const;
 
-if (!i18n.isInitialized) {
+if (i18n.isInitialized) {
+  for (const [language, resource] of Object.entries(resources)) {
+    i18n.addResourceBundle(language, 'translation', resource.translation, true, true);
+  }
+} else {
   void i18n.use(initReactI18next).init({
     resources,
     lng: 'vi',

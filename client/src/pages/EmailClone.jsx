@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import api from '../utils/api';
 import { readJsonStorage } from '../utils/storage';
+import { BRAND_LOGO_URL } from '../utils/media';
 
 export default function EmailClone() {
     const navigate = useNavigate();
@@ -186,7 +187,7 @@ export default function EmailClone() {
                         <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                         {isConnected ? 'CONNECTED' : 'DISCONNECTED'}
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">A</div>
+                    <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-8 h-8 rounded-full object-cover" />
                 </div>
 
                 {/* Content area with split view */}
@@ -298,9 +299,7 @@ export default function EmailClone() {
                                 <h2 className="text-xl font-normal text-gray-800 mb-6">{selectedEmail.subject}</h2>
 
                                 <div className="flex items-start gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                        A
-                                    </div>
+                                    <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="font-medium text-sm text-gray-900">Aoklevart System</span>

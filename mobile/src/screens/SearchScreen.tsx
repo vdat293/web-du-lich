@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
+import { BrandLogo } from '../components/BrandLogo';
 import { PropertyCard } from '../components/PropertyCard';
 import { EmptyState, LoadingState } from '../components/ScreenState';
 import type { RootStackParamList } from '../navigation/types';
@@ -64,7 +65,7 @@ export function SearchScreen({ navigation, route }: Props) {
         <Pressable style={styles.iconButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={23} color={colors.primary} />
         </Pressable>
-        <Text style={styles.brand}>Aoklevart</Text>
+        <BrandLogo size={34} nameSize={21} />
         <View style={styles.iconButton} />
       </View>
       <View style={styles.searchBar}>
@@ -129,7 +130,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
   iconButton: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 21 },
-  brand: { color: colors.primary, fontFamily: fonts.display, fontSize: 27 },
   searchBar: { height: 54, flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 20, borderRadius: 27, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 17 },
   searchInput: { flex: 1, height: '100%', color: colors.text, fontFamily: fonts.body, fontSize: 15 },
   filterRow: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 14, gap: 8 },

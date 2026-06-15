@@ -29,10 +29,24 @@ export const propertyService = {
 };
 
 export const authService = {
-  login: (email: string, password: string) =>
+  login: (identifier: string, password: string) =>
     apiRequest<{ token: string; user: User }>('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      // The server keeps the legacy `email` field name but accepts email or phone.
+      body: JSON.stringify({ email: identifier, password }),
+    }),
+  sendLoginOtp: (identifier: string) =>
+    apiRequest<{ success: boolean; message: string; type: 'email' | 'sms'; dev_otp?: string }>(
+      '/api/auth/send-login-otp',
+      {
+        method: 'POST',
+        body: JSON.stringify({ identifier }),
+      },
+    ),
+  loginWithOtp: (identifier: string, otp: string) =>
+    apiRequest<{ success: boolean; token: string; user: User }>('/api/auth/otp-login', {
+      method: 'POST',
+      body: JSON.stringify({ identifier, otp }),
     }),
 };
 

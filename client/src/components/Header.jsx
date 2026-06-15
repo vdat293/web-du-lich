@@ -5,6 +5,7 @@ import i18n from '../i18n';
 import api from '../utils/api';
 import LanguageSwitcher from './LanguageSwitcher';
 import { readJsonStorage } from '../utils/storage';
+import { BRAND_LOGO_URL } from '../utils/media';
 
 export default function Header() {
     const navigate = useNavigate();
@@ -436,10 +437,7 @@ export default function Header() {
                     <div className="flex items-center justify-between h-20">
                         {/* Logo */}
                         <Link to="/" className="flex items-center gap-3 group">
-                            <div className="relative w-10 h-10 flex items-center justify-center">
-                                <div className="absolute inset-0 bg-primary rounded-lg transform rotate-45 group-hover:rotate-[50deg] transition-transform duration-500"></div>
-                                <span className="relative text-white font-display font-bold text-lg">A</span>
-                            </div>
+                            <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-11 h-11 rounded-xl object-cover shadow-sm" />
                             <div className="flex flex-col">
                                 <span className="font-display text-xl font-semibold text-primary tracking-tight">Aoklevart</span>
                                 <span className="text-[10px] uppercase tracking-[0.2em] text-warm-gray font-medium -mt-0.5">Luxury Stays</span>
@@ -524,10 +522,7 @@ export default function Header() {
                     {/* Menu Header */}
                     <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-100">
                         <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5">
-                            <div className="relative w-8 h-8 flex items-center justify-center">
-                                <div className="absolute inset-0 bg-primary rounded-lg transform rotate-45"></div>
-                                <span className="relative text-white font-display font-bold text-sm">A</span>
-                            </div>
+                            <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-9 h-9 rounded-lg object-cover" />
                             <span className="font-display text-lg font-semibold text-primary tracking-tight">Aoklevart</span>
                         </Link>
                         <button onClick={() => setIsMobileMenuOpen(false)} className="w-9 h-9 flex items-center justify-center text-charcoal hover:bg-neutral-100 rounded-full transition-colors">
@@ -644,9 +639,7 @@ export default function Header() {
                             <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }}></div>
                             <div className="relative z-10">
                                 <div className="flex items-center gap-2.5 mb-10">
-                                    <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                                        <span className="text-white font-display font-bold text-sm">A</span>
-                                    </div>
+                                    <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-11 h-11 rounded-xl object-cover" />
                                     <span className="font-display text-lg font-semibold tracking-tight">Aoklevart</span>
                                 </div>
                                 <h3 className="text-[26px] font-bold leading-tight mb-4">Khám phá kỳ nghỉ<br />hoàn hảo của bạn</h3>
