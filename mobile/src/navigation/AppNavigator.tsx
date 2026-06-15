@@ -25,6 +25,7 @@ import { HelpCenterScreen } from '../screens/HelpCenterScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { AppLockScreen } from '../screens/AppLockScreen';
+import { AdminDashboardScreen } from '../screens/admin/AdminDashboardScreen';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList, TabParamList } from './types';
@@ -203,6 +204,7 @@ export function AppNavigator() {
         <Stack.Screen name="Security" component={SecurityScreen} />
         <Stack.Screen name="SetupPin" component={SetupPinScreen} />
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Unlock" component={AppLockScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack.Navigator>

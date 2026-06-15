@@ -25,6 +25,7 @@ export type RootStackParamList = {
   Security: undefined;
   SetupPin: { returnToRewards?: boolean } | undefined;
   HelpCenter: undefined;
+  AdminDashboard: undefined;
   Login: undefined;
   Unlock: undefined;
 };

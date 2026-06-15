@@ -124,6 +124,13 @@ export function ProfileScreen() {
           </View>
         </View>
         <View style={styles.menuCard}>
+          {user.role === 'admin' ? (
+            <MenuItem
+              icon="grid-outline"
+              label="Quản trị hệ thống"
+              onPress={() => navigation.navigate('AdminDashboard')}
+            />
+          ) : null}
           <MenuItem 
             icon="person-outline" 
             label={t('profile.personalInfo')} 

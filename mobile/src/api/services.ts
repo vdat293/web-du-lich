@@ -203,3 +203,98 @@ export const couponService = {
       };
     }>(`/api/coupons?code=${encodeURIComponent(code)}`, { authenticated: true }),
 };
+
+export type AdminTimeRange = 'today' | '7days' | 'month' | 'quarter' | 'year' | 'all';
+
+export type AdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: 'admin' | 'host' | 'customer';
+  phone?: string | null;
+  created_at: string;
+};
+
+export type AdminUserPayload = {
+  name: string;
+  email: string;
+  password?: string;
+  role: AdminUser['role'];
+  phone?: string;
+};
+
+export type AdminStats = {
+  totalUsers: number;
+  totalBookings: number;
+  totalProperties: number;
+  totalRevenue: number;
+  totalVolume: number;
+  monthlyVisits: number;
+  topUsers: Array<{
+    id: number;
+    name: string;
+    avatar?: string;
+    booking_count: number;
+    total_spent: number;
+  }>;
+  recentLogs: Array<{
+    id: number;
+    user_name?: string;
+    action: string;
+    created_at: string;
+  }>;
+  usersByRole: Record<string, number>;
+  bookingsByStatus: Record<string, number>;
+  recentBookings: Array<{
+    id: number;
+    property_name?: string;
+    user_name?: string;
+    check_in: string;
+    total_price: number;
+    status: string;
+  }>;
+  revenueByMonth: Array<{
+    month: string;
+    totalVolume: number;
+    revenue: number;
+    bookings: number;
+  }>;
+  dailyVisits: Array<{ date: string; visits: number }>;
+  bookingsByDay: Array<{ date: string; count: number }>;
+  propertiesByType: Array<{ name: string; value: number }>;
+};
+
+export const adminService = {
+  getStats: (timeRange: AdminTimeRange = 'all') =>
+    apiRequest<AdminStats>(`/api/admin/stats?timeRange=${timeRange}`, { authenticated: true }),
+  getUsers: (filters: { page?: number; limit?: number; search?: string; role?: string } = {}) => {
+    const params = new URLSearchParams({
+      page: String(filters.page || 1),
+      limit: String(filters.limit || 10),
+      search: filters.search || '',
+      role: filters.role || '',
+    });
+    return apiRequest<{
+      users: AdminUser[];
+      pagination: { page: number; limit: number; total: number; totalPages: number };
+    }>(`/api/admin/users?${params}`, { authenticated: true });
+  },
+  createUser: (payload: AdminUserPayload) =>
+    apiRequest<{ message: string; user: AdminUser }>('/api/admin/users', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+  updateUser: (id: number, payload: AdminUserPayload) =>
+    apiRequest<{ message: string; user: AdminUser }>(`/api/admin/users/${id}`, {
+      method: 'PUT',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+  deleteUser: (id: number) =>
+    apiRequest<{ message: string }>(`/api/admin/users/${id}`, {
+      method: 'DELETE',
+      authenticated: true,
+    }),
+};
