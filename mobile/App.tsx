@@ -19,12 +19,23 @@ import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
+import { useAuth } from './src/context/AuthContext';
 import i18n from './src/i18n';
 import './src/i18n';
 
 void SplashScreen.preventAutoHideAsync();
 
 const STORAGE_KEY = 'aoklevart_language';
+
+function AppContent() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <View style={{ flex: 1, backgroundColor: colors.surface }} />;
+  }
+
+  return <AppNavigator />;
+}
 
 export default function App() {
   const [dmLoaded] = useDmSans({
@@ -61,7 +72,7 @@ export default function App() {
     <AuthProvider>
       <FavoritesProvider>
         <StatusBar style="dark" />
-        <AppNavigator />
+        <AppContent />
       </FavoritesProvider>
     </AuthProvider>
   );

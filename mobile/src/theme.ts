@@ -28,9 +28,15 @@ export const fonts = {
 } as const;
 
 export const shadow = {
-  shadowColor: '#012425',
-  shadowOffset: { width: 0, height: 8 },
-  shadowOpacity: 0.12,
-  shadowRadius: 18,
-  elevation: 6,
+  ...Platform.select({
+    web: { boxShadow: '0 8px 18px rgba(1, 36, 37, 0.12)' },
+    default: {
+      shadowColor: '#012425',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 18,
+      elevation: 6,
+    },
+  }),
 } as const;
+import { Platform } from 'react-native';

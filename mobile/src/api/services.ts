@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { Booking, Property, User } from '../types';
+import type { Booking, Property, Reward, RewardRedemption, User } from '../types';
 import { resolveMediaUrl } from '../utils/media';
 
 function normalizeProperty(property: Property): Property {
@@ -109,10 +109,46 @@ export const paymentService = {
 };
 
 export const userService = {
+  getProfile: () =>
+    apiRequest<{ user: User }>('/api/user/profile', {
+      authenticated: true,
+    }),
   updateProfile: (payload: { name: string; phone?: string; avatarBase64?: string }) =>
     apiRequest<{ message: string; user: User }>('/api/user/profile', {
       method: 'PUT',
       authenticated: true,
       body: JSON.stringify(payload),
-    }),
+  }),
+};
+
+export const rewardService = {
+  list: () =>
+    apiRequest<{
+      loyalty_points: number;
+      rewards: Reward[];
+      redemptions: RewardRedemption[];
+    }>('/api/user/rewards', { authenticated: true }),
+  redeem: (rewardKey: string) =>
+    apiRequest<{ message: string; loyalty_points: number; coupon_code: string }>(
+      '/api/user/rewards',
+      {
+        method: 'POST',
+        authenticated: true,
+        body: JSON.stringify({ reward_key: rewardKey }),
+      },
+    ),
+};
+
+export const couponService = {
+  validate: (code: string) =>
+    apiRequest<{
+      valid: boolean;
+      message?: string;
+      coupon?: {
+        code: string;
+        discount_type: 'fixed' | 'percent';
+        discount_value: number;
+        min_order_amount?: number | null;
+      };
+    }>(`/api/coupons?code=${encodeURIComponent(code)}`, { authenticated: true }),
 };

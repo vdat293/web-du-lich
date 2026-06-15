@@ -93,9 +93,6 @@ export function HomeScreen() {
             />
             <SafeAreaView style={styles.safeHeader} edges={['top']}>
               <View style={styles.header}>
-                <Pressable style={styles.headerButton}>
-                  <Ionicons name="menu" size={24} color={colors.white} />
-                </Pressable>
                 <BrandLogo size={34} nameColor={colors.white} nameSize={21} />
                 <View style={styles.avatar}>
                   {user?.avatar ? (
@@ -200,8 +197,7 @@ const styles = StyleSheet.create({
   hero: { height: 700, paddingHorizontal: 14, paddingTop: 10 },
   heroImage: { flex: 1, overflow: 'hidden', borderRadius: 24, justifyContent: 'space-between' },
   safeHeader: { width: '100%' },
-  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
-  headerButton: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(1,36,37,0.28)' },
+  header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18 },
   avatar: { width: 36, height: 36, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.secondaryFixed, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)' },
   avatarImage: { width: 36, height: 36 },
   avatarText: { color: colors.primary, fontFamily: fonts.bold },

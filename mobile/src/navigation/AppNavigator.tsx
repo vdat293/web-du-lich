@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, View, StyleSheet, Pressable } from 'react-native';
+import { Animated, Easing, Platform, View, StyleSheet, Pressable } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import {
   BottomTabBar,
@@ -15,6 +15,7 @@ import { FavoritesScreen } from '../screens/FavoritesScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { RewardsScreen } from '../screens/RewardsScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { TripsScreen } from '../screens/TripsScreen';
 import { PersonalInfoScreen } from '../screens/PersonalInfoScreen';
@@ -22,6 +23,7 @@ import { SecurityScreen } from '../screens/SecurityScreen';
 import { HelpCenterScreen } from '../screens/HelpCenterScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { AppLockScreen } from '../screens/AppLockScreen';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList, TabParamList } from './types';
@@ -35,6 +37,7 @@ const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
   Explore: 'compass',
   Saved: 'heart',
   Trips: 'briefcase',
+  Rewards: 'gift',
   Notifications: 'notifications',
   Profile: 'person',
 };
@@ -84,7 +87,7 @@ function AnimatedTabBar(props: BottomTabBarProps) {
       toValue: props.state.index,
       duration: TAB_TRANSITION_DURATION,
       easing: tabTransitionEasing,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
     });
 
     animation.start();
@@ -99,10 +102,10 @@ function AnimatedTabBar(props: BottomTabBarProps) {
       <BottomTabBar {...props} />
       {barWidth > 0 ? (
         <Animated.View
-          pointerEvents="none"
           style={[
             tabIconStyles.indicator,
             {
+              pointerEvents: 'none',
               left: tabWidth / 2 - 12,
               transform: [{ translateX: Animated.multiply(progress, tabWidth) }],
             },
@@ -138,10 +141,15 @@ function TabNavigator() {
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           backgroundColor: colors.surface,
-          shadowColor: colors.primary,
-          shadowOpacity: 0.1,
-          shadowRadius: 18,
-          elevation: 12,
+          ...Platform.select({
+            web: { boxShadow: '0 -8px 18px rgba(1, 36, 37, 0.1)' },
+            default: {
+              shadowColor: colors.primary,
+              shadowOpacity: 0.1,
+              shadowRadius: 18,
+              elevation: 12,
+            },
+          }),
         },
         tabBarIcon: ({ color, focused, size }) => {
           const iconName = focused ? icons[route.name] : (`${icons[route.name]}-outline` as keyof typeof Ionicons.glyphMap);
@@ -162,6 +170,7 @@ function TabNavigator() {
       <Tabs.Screen name="Explore" component={HomeScreen} options={{ title: tt('nav.explore') }} />
       <Tabs.Screen name="Saved" component={FavoritesScreen} options={{ title: tt('nav.saved') }} />
       <Tabs.Screen name="Trips" component={TripsScreen} options={{ title: tt('nav.trips') }} />
+      <Tabs.Screen name="Rewards" component={RewardsScreen} options={{ title: tt('nav.rewards') }} />
       <Tabs.Screen 
         name="Notifications" 
         component={NotificationsScreen} 
@@ -193,6 +202,7 @@ export function AppNavigator() {
         <Stack.Screen name="Security" component={SecurityScreen} />
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="Unlock" component={AppLockScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

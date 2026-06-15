@@ -54,6 +54,34 @@ export type User = {
   avatar?: string;
   role: string;
   phone?: string;
+  loyalty_points?: number;
+  membership_tier?: 'classic' | 'gold' | 'platinum' | 'diamond';
+};
+
+export type Reward = {
+  key: string;
+  title: string;
+  description: string;
+  points: number;
+  discount_type: 'fixed' | 'percent';
+  discount_value: number;
+  min_order_amount: number;
+  category?: 'voucher' | 'shopping';
+  image_url?: string;
+  partner_name?: string;
+};
+
+export type RewardRedemption = {
+  id: number;
+  reward_key: string;
+  points_spent: number;
+  created_at: string;
+  code: string;
+  discount_type: 'fixed' | 'percent';
+  discount_value: number;
+  min_order_amount: number;
+  valid_until: string;
+  used_count: number;
 };
 
 export type Booking = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -46,6 +46,24 @@ export default function Profile() {
             navigate('/');
         }
     }, [navigate]);
+
+    useEffect(() => {
+        const refreshProfile = async () => {
+            if (!localStorage.getItem('token')) return;
+            try {
+                const res = await api.get('/api/user/profile');
+                setUser(res.data.user);
+                setName(res.data.user.name || '');
+                setPhone(res.data.user.phone || '');
+                localStorage.setItem('currentUser', JSON.stringify(res.data.user));
+                window.dispatchEvent(new Event('userUpdated'));
+            } catch {
+                // Giữ dữ liệu local hiện tại nếu API tạm thời không khả dụng.
+            }
+        };
+
+        refreshProfile();
+    }, []);
 
     useEffect(() => {
         const loadFavorites = () => {
@@ -247,6 +265,23 @@ export default function Profile() {
                                     <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                                     {user.role}
                                 </span>
+                                <div className="mt-4 rounded-xl bg-primary px-4 py-3 text-left text-white">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                                            Hạng thành viên
+                                        </span>
+                                        <span className="text-xs font-bold uppercase text-accent-light">
+                                            {user.membership_tier || 'classic'}
+                                        </span>
+                                    </div>
+                                    <div className="mt-1 flex items-end justify-between gap-3">
+                                        <strong className="text-xl font-display">
+                                            {(user.loyalty_points || 0).toLocaleString('vi-VN')}
+                                        </strong>
+                                        <span className="pb-0.5 text-xs text-white/60">điểm tích lũy</span>
+                                    </div>
+                                    <p className="mt-2 text-[10px] text-white/50">1 điểm cho mỗi 1.000 VND thanh toán</p>
+                                </div>
                             </div>
 
                             {/* Divider with accent */}

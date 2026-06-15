@@ -17,7 +17,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { bookingService, paymentService } from '../api/services';
+import { bookingService, couponService, paymentService } from '../api/services';
 import { BrandLogo } from '../components/BrandLogo';
 import { LoginForm } from '../components/LoginForm';
 import { useAuth } from '../context/AuthContext';
@@ -48,6 +48,14 @@ export function PaymentScreen({ navigation, route }: Props) {
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount_type: 'fixed' | 'percent';
+    discount_value: number;
+  } | null>(null);
+  const [couponMessage, setCouponMessage] = useState('');
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [transactionId, setTransactionId] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
@@ -61,6 +69,15 @@ export function PaymentScreen({ navigation, route }: Props) {
 
   const image = draft.property.images.main ||
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1000&q=85';
+  const discountAmount = appliedCoupon
+    ? Math.min(
+        draft.subtotal,
+        appliedCoupon.discount_type === 'percent'
+          ? Math.round(draft.subtotal * appliedCoupon.discount_value / 100)
+          : Number(appliedCoupon.discount_value),
+      )
+    : 0;
+  const finalTotal = Math.max(0, draft.total - discountAmount);
 
   useEffect(() => {
     if (!momoBookingId || momoStatus !== 'pending') return;
@@ -128,6 +145,7 @@ export function PaymentScreen({ navigation, route }: Props) {
       check_out: draft.checkOut,
       number_of_rooms: 1,
       total_price: draft.total,
+      coupon_code: appliedCoupon?.code,
       special_requests: specialRequests.trim() || null,
       status,
       payment_method: paymentMethod,
@@ -141,6 +159,39 @@ export function PaymentScreen({ navigation, route }: Props) {
           email: guestEmail.trim() || null,
         });
     return result.booking_id;
+  }
+
+  async function applyCoupon() {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+
+    setApplyingCoupon(true);
+    setCouponMessage('');
+    try {
+      const response = await couponService.validate(code);
+      const coupon = response.coupon;
+      if (
+        !response.valid
+        || !coupon
+        || (coupon.min_order_amount && draft.subtotal < Number(coupon.min_order_amount))
+      ) {
+        setAppliedCoupon(null);
+        setCouponMessage(t('payment.couponInvalid'));
+        return;
+      }
+      setCouponCode(code);
+      setAppliedCoupon({
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        discount_value: Number(coupon.discount_value),
+      });
+      setCouponMessage(t('payment.couponApplied', { code }));
+    } catch {
+      setAppliedCoupon(null);
+      setCouponMessage(t('payment.couponInvalid'));
+    } finally {
+      setApplyingCoupon(false);
+    }
   }
 
   async function cancelMomo(note = i18n.language === 'en' ? 'User cancelled the MoMo transaction' : 'Người dùng chủ động hủy giao dịch MoMo') {
@@ -194,7 +245,7 @@ export function PaymentScreen({ navigation, route }: Props) {
         card_holder: cardHolder.trim(),
         expiry_date: expiry.trim(),
         cvv: cvv.trim(),
-        amount: draft.total,
+        amount: finalTotal,
       });
       setTransactionId(result.transaction_id);
       setOtp('');
@@ -245,7 +296,7 @@ export function PaymentScreen({ navigation, route }: Props) {
   if (momoBookingId) {
     const minutes = Math.floor(momoSeconds / 60).toString().padStart(2, '0');
     const seconds = (momoSeconds % 60).toString().padStart(2, '0');
-    const qrData = encodeURIComponent(`MOMO_PAYMENT_${momoBookingId}_${draft.total}`);
+    const qrData = encodeURIComponent(`MOMO_PAYMENT_${momoBookingId}_${finalTotal}`);
     const isCancelled = momoStatus === 'cancelled';
     return (
       <SafeAreaView style={styles.momoScreen}>
@@ -269,7 +320,7 @@ export function PaymentScreen({ navigation, route }: Props) {
                   source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}` }}
                   style={styles.momoQr}
                 />
-                <Text style={styles.momoAmount}>{formatCurrency(draft.total)}</Text>
+                <Text style={styles.momoAmount}>{formatCurrency(finalTotal)}</Text>
                 <Text style={styles.momoTimer}>{minutes}:{seconds}</Text>
               </View>
               <View style={styles.momoHint}>
@@ -326,8 +377,9 @@ export function PaymentScreen({ navigation, route }: Props) {
             <Text style={styles.cardTitle}>{t('payment.priceDetails')}</Text>
             <PriceLine label={`${formatCurrency(draft.room.price)} × ${draft.nights} ${t('common.nights', { count: draft.nights })}`} value={formatCurrency(draft.subtotal)} />
             <PriceLine label={t('payment.serviceFee')} value={formatCurrency(draft.serviceFee)} />
+            {discountAmount > 0 ? <PriceLine label={t('payment.discount')} value={`-${formatCurrency(discountAmount)}`} /> : null}
             <View style={styles.totalDivider} />
-            <PriceLine label={t('payment.totalPayment')} value={formatCurrency(draft.total)} total />
+            <PriceLine label={t('payment.totalPayment')} value={formatCurrency(finalTotal)} total />
             <View style={styles.tripDates}>
               <Ionicons name="calendar-outline" size={18} color={colors.primary} />
               <Text style={styles.tripDateText}>{formatDate(draft.checkIn)} - {formatDate(draft.checkOut)}</Text>
@@ -345,13 +397,44 @@ export function PaymentScreen({ navigation, route }: Props) {
               <Field icon="mail-outline" placeholder={t('payment.guestEmail')} keyboardType="email-address" autoCapitalize="none" value={guestEmail} onChangeText={setGuestEmail} />
             </View>
           ) : (
-            <View style={styles.signedInCard}>
-              <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-              <View style={styles.signedInCopy}>
-                <Text style={styles.signedInTitle}>{t('payment.signedInAs', { name: user.name })}</Text>
-                <Text style={styles.signedInMeta}>{user.email}</Text>
+            <>
+              <View style={styles.signedInCard}>
+                <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+                <View style={styles.signedInCopy}>
+                  <Text style={styles.signedInTitle}>{t('payment.signedInAs', { name: user.name })}</Text>
+                  <Text style={styles.signedInMeta}>{user.email}</Text>
+                </View>
               </View>
-            </View>
+              <View style={styles.card}>
+                <Text style={styles.cardTitle}>{t('payment.coupon')}</Text>
+                <View style={styles.couponRow}>
+                  <TextInput
+                    autoCapitalize="characters"
+                    value={couponCode}
+                    onChangeText={(value) => {
+                      setCouponCode(value.toUpperCase());
+                      setAppliedCoupon(null);
+                      setCouponMessage('');
+                    }}
+                    placeholder={t('payment.couponPlaceholder')}
+                    placeholderTextColor={colors.textMuted}
+                    style={styles.couponInput}
+                  />
+                  <Pressable
+                    disabled={applyingCoupon || !couponCode.trim()}
+                    style={[styles.couponButton, (!couponCode.trim() || applyingCoupon) && styles.disabled]}
+                    onPress={() => void applyCoupon()}
+                  >
+                    {applyingCoupon
+                      ? <ActivityIndicator size="small" color={colors.white} />
+                      : <Text style={styles.couponButtonText}>{t('payment.applyCoupon')}</Text>}
+                  </Pressable>
+                </View>
+                {couponMessage ? (
+                  <Text style={appliedCoupon ? styles.couponSuccess : styles.couponError}>{couponMessage}</Text>
+                ) : null}
+              </View>
+            </>
           )}
 
           <Text style={styles.sectionTitle}>{t('payment.paymentMethod')}</Text>
@@ -508,6 +591,12 @@ const styles = StyleSheet.create({
   signedInCopy: { flex: 1, paddingLeft: 12 },
   signedInTitle: { color: colors.success, fontFamily: fonts.bold, fontSize: 13 },
   signedInMeta: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 11, marginTop: 2 },
+  couponRow: { flexDirection: 'row', gap: 9 },
+  couponInput: { flex: 1, minHeight: 48, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, color: colors.text, fontFamily: fonts.bold, fontSize: 13, paddingHorizontal: 13 },
+  couponButton: { minWidth: 82, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: colors.primary, paddingHorizontal: 12 },
+  couponButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 11 },
+  couponSuccess: { color: colors.success, fontFamily: fonts.medium, fontSize: 11, marginTop: 8 },
+  couponError: { color: colors.error, fontFamily: fonts.medium, fontSize: 11, marginTop: 8 },
   sectionTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 25, marginTop: 30, marginBottom: 14 },
   paymentOption: { minHeight: 82, flexDirection: 'row', alignItems: 'center', borderRadius: 16, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.white, padding: 15, marginBottom: 11 },
   paymentOptionActive: { borderColor: colors.primary },

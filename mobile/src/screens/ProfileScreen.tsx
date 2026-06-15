@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
 import { API_BASE_URL } from '../api/client';
+import { userService } from '../api/services';
 import { LoginForm } from '../components/LoginForm';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { AuthPlaceholder } from '../components/AuthPlaceholder';
@@ -13,10 +15,45 @@ import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 
+const TIER_LEVELS = [
+  { name: 'classic', minPoints: 0 },
+  { name: 'gold', minPoints: 10000 },
+  { name: 'platinum', minPoints: 50000 },
+  { name: 'diamond', minPoints: 100000 },
+] as const;
+
+function getLoyaltyProgress(points: number, tierName: string) {
+  const currentIndex = Math.max(0, TIER_LEVELS.findIndex((tier) => tier.name === tierName));
+  const currentTier = TIER_LEVELS[currentIndex];
+  const nextTier = TIER_LEVELS[currentIndex + 1];
+
+  if (!nextTier) return { progress: 100, nextTier: null, pointsNeeded: 0 };
+
+  const range = nextTier.minPoints - currentTier.minPoints;
+  const earnedInTier = Math.max(0, points - currentTier.minPoints);
+  return {
+    progress: Math.min(100, Math.round((earnedInTier / range) * 100)),
+    nextTier,
+    pointsNeeded: Math.max(0, nextTier.minPoints - points),
+  };
+}
+
 export function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
+  const loyaltyPoints = user?.loyalty_points || 0;
+  const membershipTier = user?.membership_tier || 'classic';
+  const loyaltyProgress = getLoyaltyProgress(loyaltyPoints, membershipTier);
+
+  useEffect(() => {
+    if (!user) return;
+    void userService.getProfile()
+      .then((response) => updateUser(response.user))
+      .catch(() => undefined);
+  // Chỉ làm mới khi tài khoản thay đổi; updateUser hiện không có identity ổn định giữa các render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   if (!user) {
     return (
@@ -51,6 +88,40 @@ export function ProfileScreen() {
           <Text style={styles.email}>{user.email}</Text>
           {user.phone ? <Text style={styles.phone}>{user.phone}</Text> : null}
           <View style={styles.role}><Text style={styles.roleText}>{user.role}</Text></View>
+          <View style={styles.loyaltyCard}>
+            <View style={styles.loyaltyTopRow}>
+              <View style={styles.loyaltyIdentity}>
+                <View style={styles.loyaltyIcon}>
+                  <Ionicons name="sparkles" size={17} color={colors.secondary} />
+                </View>
+                <View>
+                  <Text style={styles.loyaltyLabel}>HẠNG THÀNH VIÊN</Text>
+                  <Text style={styles.loyaltyTier}>{membershipTier}</Text>
+                </View>
+              </View>
+              <View style={styles.loyaltyPointsBlock}>
+                <Text style={styles.loyaltyPoints}>{loyaltyPoints.toLocaleString('vi-VN')}</Text>
+                <Text style={styles.loyaltyPointsLabel}>ĐIỂM</Text>
+              </View>
+            </View>
+
+            <View style={styles.loyaltyDivider} />
+
+            <View style={styles.loyaltyProgressHeader}>
+              <Text style={styles.loyaltyProgressText}>
+                {loyaltyProgress.nextTier
+                  ? `Còn ${loyaltyProgress.pointsNeeded.toLocaleString('vi-VN')} điểm để lên hạng`
+                  : 'Bạn đang ở hạng cao nhất'}
+              </Text>
+              <Text style={styles.loyaltyNextTier}>
+                {loyaltyProgress.nextTier?.name || 'diamond'}
+              </Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${loyaltyProgress.progress}%` }]} />
+            </View>
+            <Text style={styles.loyaltyRate}>Mỗi 1.000 VND thanh toán = 1 điểm tích lũy</Text>
+          </View>
         </View>
         <View style={styles.menuCard}>
           <MenuItem 
@@ -133,6 +204,22 @@ const styles = StyleSheet.create({
   phone: { color: 'rgba(255,255,255,0.72)', fontFamily: fonts.body, fontSize: 12, marginTop: 3 },
   role: { borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 12, paddingVertical: 5, marginTop: 13 },
   roleText: { color: colors.secondaryFixed, fontFamily: fonts.bold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 1 },
+  loyaltyCard: { width: '100%', borderRadius: 18, backgroundColor: colors.secondaryFixed, paddingHorizontal: 16, paddingVertical: 15, marginTop: 18, overflow: 'hidden' },
+  loyaltyTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  loyaltyIdentity: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  loyaltyIcon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(116,91,28,0.12)', borderWidth: 1, borderColor: 'rgba(116,91,28,0.18)' },
+  loyaltyLabel: { color: 'rgba(1,36,37,0.55)', fontFamily: fonts.bold, fontSize: 8, letterSpacing: 1.1 },
+  loyaltyTier: { color: colors.primary, fontFamily: fonts.heading, fontSize: 20, textTransform: 'uppercase', marginTop: 1 },
+  loyaltyPointsBlock: { alignItems: 'flex-end' },
+  loyaltyPoints: { color: colors.primary, fontFamily: fonts.display, fontSize: 25, lineHeight: 27 },
+  loyaltyPointsLabel: { color: 'rgba(1,36,37,0.5)', fontFamily: fonts.bold, fontSize: 8, letterSpacing: 1.2, marginTop: 1 },
+  loyaltyDivider: { height: 1, backgroundColor: 'rgba(1,36,37,0.11)', marginVertical: 13 },
+  loyaltyProgressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
+  loyaltyProgressText: { flex: 1, color: 'rgba(1,36,37,0.7)', fontFamily: fonts.medium, fontSize: 9 },
+  loyaltyNextTier: { color: colors.secondary, fontFamily: fonts.bold, fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.8 },
+  progressTrack: { height: 5, borderRadius: 99, backgroundColor: 'rgba(1,36,37,0.12)', marginTop: 8, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 99, backgroundColor: colors.secondary },
+  loyaltyRate: { color: 'rgba(1,36,37,0.45)', fontFamily: fonts.body, fontSize: 8, marginTop: 8 },
   menuCard: { overflow: 'hidden', borderRadius: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, marginTop: 18 },
   menuItem: { minHeight: 64, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 14 },
   lastMenuItem: { borderBottomWidth: 0 },

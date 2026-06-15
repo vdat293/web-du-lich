@@ -6,6 +6,7 @@ export type TabParamList = {
   Explore: undefined;
   Saved: undefined;
   Trips: undefined;
+  Rewards: undefined;
   Notifications: undefined;
   Profile: undefined;
 };
@@ -19,4 +20,5 @@ export type RootStackParamList = {
   Security: undefined;
   HelpCenter: undefined;
   Login: undefined;
+  Unlock: undefined;
 };

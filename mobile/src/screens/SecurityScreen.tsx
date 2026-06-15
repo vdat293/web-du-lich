@@ -20,10 +20,33 @@ import { colors, fonts } from '../theme';
 type Props = NativeStackScreenProps<RootStackParamList, 'Security'>;
 
 export function SecurityScreen({ navigation }: Props) {
-  const { user } = useAuth();
-  const { t, i18n } = useTranslation();
+  const {
+    biometricsEnabled,
+    setBiometricsEnabled,
+    user,
+  } = useAuth();
+  const { t } = useTranslation();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [biometricsEnabled, setBiometricsEnabled] = useState(true);
+  const [updatingBiometrics, setUpdatingBiometrics] = useState(false);
+
+  async function updateBiometrics(enabled: boolean) {
+    if (updatingBiometrics) return;
+    setUpdatingBiometrics(true);
+    try {
+      await setBiometricsEnabled(enabled);
+      Alert.alert(
+        t('security.biometric'),
+        enabled ? t('security.biometricEnabled') : t('security.biometricDisabled'),
+      );
+    } catch (reason) {
+      Alert.alert(
+        t('security.biometricUnavailableTitle'),
+        reason instanceof Error ? reason.message : t('security.biometricUnavailable'),
+      );
+    } finally {
+      setUpdatingBiometrics(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -56,7 +79,8 @@ export function SecurityScreen({ navigation }: Props) {
             </View>
             <Switch
               value={biometricsEnabled}
-              onValueChange={setBiometricsEnabled}
+              disabled={updatingBiometrics}
+              onValueChange={(enabled) => void updateBiometrics(enabled)}
               trackColor={{ false: colors.outline, true: colors.primary }}
               thumbColor={colors.white}
             />

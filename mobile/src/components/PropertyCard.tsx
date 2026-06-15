@@ -23,7 +23,7 @@ export function PropertyCard({
   wide?: boolean;
   }) {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { user } = useAuth();
+  const { locked, user } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const liked = isFavorite(property.id);
@@ -43,7 +43,7 @@ export function PropertyCard({
           onPress={(event) => {
             event.stopPropagation();
             if (!user) {
-              navigation.navigate('Login');
+              navigation.navigate(locked ? 'Unlock' : 'Login');
               return;
             }
             void toggleFavorite(property.id);

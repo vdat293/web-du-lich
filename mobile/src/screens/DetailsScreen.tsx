@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -8,11 +8,11 @@ import {
   Share,
   StyleSheet,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -23,13 +23,30 @@ import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts, shadow } from '../theme';
 import type { Amenity, Room } from '../types';
-import { countNights, formatCurrency, getDefaultDates } from '../utils/date';
+import { countNights, formatCurrency, formatDate, toDateInput } from '../utils/date';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Details'>;
 
 const fallbackImage =
   'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=90';
 const MAX_DESCRIPTION_CHARS = 380;
+type DateField = 'checkIn' | 'checkOut';
+
+function startOfToday() {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function parseDate(value: string) {
+  return value ? new Date(`${value}T00:00:00`) : startOfToday();
+}
 
 function amenityIcon(amenity: Amenity): keyof typeof Ionicons.glyphMap {
   const name = amenity.name.toLowerCase();
@@ -47,13 +64,12 @@ export function DetailsScreen({ navigation, route }: Props) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const { user } = useAuth();
-  const defaults = useMemo(getDefaultDates, []);
+  const { locked, user } = useAuth();
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(property.rooms[0]);
-  const [checkIn, setCheckIn] = useState(defaults.checkIn);
-  const [checkOut, setCheckOut] = useState(defaults.checkOut);
-  const [guests, setGuests] = useState(Math.min(2, property.maxGuests || 2));
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [activeDateField, setActiveDateField] = useState<DateField | null>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
   const [showDescription, setShowDescription] = useState(false);
@@ -62,6 +78,8 @@ export function DetailsScreen({ navigation, route }: Props) {
   if (!images.length) images.push(fallbackImage);
 
   const nights = countNights(checkIn, checkOut);
+  const canReserve = Boolean(selectedRoom && checkIn && checkOut && nights > 0);
+  const guests = selectedRoom ? selectedRoom.max_adults + selectedRoom.max_children : 0;
   const subtotal = selectedRoom ? selectedRoom.price * nights : 0;
   const serviceFee = Math.round(subtotal * 0.08);
   const total = subtotal + serviceFee;
@@ -72,9 +90,32 @@ export function DetailsScreen({ navigation, route }: Props) {
     ? `${fullDescription.slice(0, MAX_DESCRIPTION_CHARS).trimEnd()}...`
     : fullDescription;
 
+  function openDatePicker(field: DateField) {
+    setError('');
+    setActiveDateField(field);
+  }
+
+  function selectDate(event: DateTimePickerEvent, date?: Date) {
+    if (event.type === 'dismissed' || !date || !activeDateField) return;
+
+    const value = toDateInput(date);
+    if (activeDateField === 'checkIn') {
+      setCheckIn(value);
+      if (checkOut && countNights(value, checkOut) === 0) setCheckOut('');
+      setActiveDateField('checkOut');
+      return;
+    }
+    setCheckOut(value);
+    setActiveDateField(null);
+  }
+
   async function continueToPayment() {
     if (!selectedRoom) {
       setError(t('details.unavailableRoomType'));
+      return;
+    }
+    if (!checkIn || !checkOut) {
+      setError(t('details.selectDates'));
       return;
     }
     if (!nights) {
@@ -136,7 +177,7 @@ export function DetailsScreen({ navigation, route }: Props) {
                 style={styles.circleButton} 
                 onPress={() => {
                   if (!user) {
-                    navigation.navigate('Login');
+                    navigation.navigate(locked ? 'Unlock' : 'Login');
                     return;
                   }
                   void toggleFavorite(property.id);
@@ -210,24 +251,31 @@ export function DetailsScreen({ navigation, route }: Props) {
           <View style={styles.bookingCard}>
             <Text style={styles.bookingTitle}>{t('details.itinerary')}</Text>
             <View style={styles.dateRow}>
-              <View style={styles.dateField}>
+              <Pressable style={styles.dateField} onPress={() => openDatePicker('checkIn')}>
                 <Text style={styles.fieldLabel}>{t('details.checkIn')}</Text>
-                <TextInput value={checkIn} onChangeText={setCheckIn} placeholder="YYYY-MM-DD" style={styles.dateInput} />
-              </View>
-              <View style={styles.dateField}>
+                <View style={styles.dateValueRow}>
+                  <Text style={[styles.dateValue, !checkIn && styles.datePlaceholder]}>
+                    {checkIn ? formatDate(checkIn) : t('details.selectDate')}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                </View>
+              </Pressable>
+              <Pressable style={styles.dateField} onPress={() => openDatePicker('checkOut')}>
                 <Text style={styles.fieldLabel}>{t('details.checkOut')}</Text>
-                <TextInput value={checkOut} onChangeText={setCheckOut} placeholder="YYYY-MM-DD" style={styles.dateInput} />
-              </View>
+                <View style={styles.dateValueRow}>
+                  <Text style={[styles.dateValue, !checkOut && styles.datePlaceholder]}>
+                    {checkOut ? formatDate(checkOut) : t('details.selectDate')}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={18} color={colors.primary} />
+                </View>
+              </Pressable>
             </View>
             <View style={styles.guestRow}>
               <View>
                 <Text style={styles.fieldLabel}>{t('details.guests')}</Text>
                 <Text style={styles.guestValue}>{t('common.guests', { count: guests })}</Text>
               </View>
-              <View style={styles.stepper}>
-                <Pressable style={styles.stepButton} onPress={() => setGuests((value) => Math.max(1, value - 1))}><Ionicons name="remove" size={18} color={colors.primary} /></Pressable>
-                <Pressable style={styles.stepButton} onPress={() => setGuests((value) => Math.min(property.maxGuests || 10, value + 1))}><Ionicons name="add" size={18} color={colors.primary} /></Pressable>
-              </View>
+              <Ionicons name="people-outline" size={21} color={colors.primary} />
             </View>
             {nights > 0 && selectedRoom ? (
               <View style={styles.priceDetails}>
@@ -246,10 +294,36 @@ export function DetailsScreen({ navigation, route }: Props) {
           <Text style={styles.bottomPrice}>{selectedRoom ? formatCurrency(selectedRoom.price) : property.price}</Text>
           <Text style={styles.bottomMeta}>{t('common.perNight')} · {t('common.nights', { count: nights || 0 })}</Text>
         </View>
-        <Pressable disabled={checking || !selectedRoom} style={[styles.reserveButton, (!selectedRoom || checking) && styles.disabledButton]} onPress={() => void continueToPayment()}>
+        <Pressable disabled={checking || !canReserve} style={[styles.reserveButton, (!canReserve || checking) && styles.disabledButton]} onPress={() => void continueToPayment()}>
           {checking ? <ActivityIndicator color={colors.white} /> : <Text style={styles.reserveText}>{t('details.bookNow')}</Text>}
         </Pressable>
       </View>
+
+      {activeDateField ? (
+        <Modal transparent animationType="fade" onRequestClose={() => setActiveDateField(null)}>
+          <Pressable style={styles.datePickerBackdrop} onPress={() => setActiveDateField(null)}>
+            <Pressable style={styles.datePickerCard} onPress={(event) => event.stopPropagation()}>
+              <View style={styles.datePickerHeader}>
+                <Text style={styles.datePickerTitle}>
+                  {activeDateField === 'checkIn' ? t('details.selectCheckIn') : t('details.selectCheckOut')}
+                </Text>
+                <Pressable style={styles.modalCloseButton} onPress={() => setActiveDateField(null)}>
+                  <Ionicons name="close" size={22} color={colors.primary} />
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={activeDateField === 'checkOut' && checkOut ? parseDate(checkOut) : activeDateField === 'checkIn' && checkIn ? parseDate(checkIn) : activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+                mode="date"
+                display="inline"
+                minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+                onChange={selectDate}
+                locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
+                accentColor={colors.primary}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
+      ) : null}
 
       <Modal visible={showDescription} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowDescription(false)}>
         <SafeAreaView style={styles.descriptionModal}>
@@ -315,13 +389,13 @@ const styles = StyleSheet.create({
   bookingCard: { marginTop: 26, padding: 20, borderRadius: 20, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, ...shadow },
   bookingTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 24, marginBottom: 18 },
   dateRow: { flexDirection: 'row', gap: 10 },
-  dateField: { flex: 1, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 12, paddingTop: 10 },
+  dateField: { flex: 1, minHeight: 68, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
   fieldLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 9, letterSpacing: 0.8 },
-  dateInput: { height: 36, color: colors.text, fontFamily: fonts.medium, fontSize: 13, paddingVertical: 0 },
+  dateValueRow: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginTop: 5 },
+  dateValue: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 12 },
+  datePlaceholder: { color: colors.textMuted },
   guestRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 11, marginTop: 10 },
   guestValue: { color: colors.text, fontFamily: fonts.medium, fontSize: 13, marginTop: 3 },
-  stepper: { flexDirection: 'row', gap: 8 },
-  stepButton: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
   priceDetails: { marginTop: 18 },
   priceLine: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 11 },
   priceLabel: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 13 },
@@ -334,6 +408,10 @@ const styles = StyleSheet.create({
   bottomPrice: { color: colors.primary, fontFamily: fonts.heading, fontSize: 19 },
   bottomMeta: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 11, marginTop: 2 },
   reserveButton: { minWidth: 140, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary, paddingHorizontal: 22 },
-  disabledButton: { opacity: 0.55 },
+  disabledButton: { backgroundColor: colors.textMuted, opacity: 0.55 },
   reserveText: { color: colors.white, fontFamily: fonts.bold, fontSize: 14 },
+  datePickerBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(1,36,37,0.38)' },
+  datePickerCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.surface, paddingHorizontal: 18, paddingTop: 16, paddingBottom: 24 },
+  datePickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  datePickerTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 23 },
 });

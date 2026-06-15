@@ -1,4 +1,6 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Platform } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 import { authService } from '../api/services';
 import { getStoredValue, removeStoredValue, setStoredValue } from '../storage';
@@ -16,9 +18,14 @@ type AuthContextValue = {
   user: User | null;
   token: string | null;
   loading: boolean;
+  locked: boolean;
+  biometricsEnabled: boolean;
+  biometricAvailable: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   sendLoginOtp: (identifier: string) => Promise<void>;
   loginWithOtp: (identifier: string, otp: string) => Promise<void>;
+  unlockWithBiometrics: () => Promise<boolean>;
+  setBiometricsEnabled: (enabled: boolean) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedUser: User) => Promise<void>;
   notifications: NotificationItem[];
@@ -26,11 +33,26 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const TOKEN_KEY = 'aoklevart_token';
+const USER_KEY = 'aoklevart_user';
+const BIOMETRICS_KEY = 'aoklevart_biometrics_enabled';
+
+async function getBiometricAvailability() {
+  if (Platform.OS === 'web') return false;
+  const [hasHardware, isEnrolled] = await Promise.all([
+    LocalAuthentication.hasHardwareAsync(),
+    LocalAuthentication.isEnrolledAsync(),
+  ]);
+  return hasHardware && isEnrolled;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [locked, setLocked] = useState(false);
+  const [biometricsEnabled, setBiometricsEnabledState] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([
     {
       id: 1,
@@ -61,13 +83,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void Promise.all([
-      getStoredValue('aoklevart_token'),
-      getStoredValue('aoklevart_user'),
-    ]).then(([storedToken, storedUser]) => {
-      setToken(storedToken);
-      setUser(storedUser ? (JSON.parse(storedUser) as User) : null);
+      getStoredValue(TOKEN_KEY),
+      getStoredValue(USER_KEY),
+      getStoredValue(BIOMETRICS_KEY),
+      getBiometricAvailability().catch(() => false),
+    ]).then(([storedToken, storedUser, storedBiometricsEnabled, available]) => {
+      const isBiometricsEnabled = storedBiometricsEnabled === 'true';
+      const shouldLock = Platform.OS !== 'web'
+        && isBiometricsEnabled
+        && Boolean(storedToken && storedUser);
+
+      setBiometricsEnabledState(isBiometricsEnabled);
+      setBiometricAvailable(available);
+      setLocked(shouldLock);
+
+      if (!shouldLock) {
+        setToken(storedToken);
+        setUser(storedUser ? (JSON.parse(storedUser) as User) : null);
+      }
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
+  }, []);
+
+  const persistSession = useCallback(async (nextToken: string, nextUser: User) => {
+    await Promise.all([
+      setStoredValue(TOKEN_KEY, nextToken),
+      setStoredValue(USER_KEY, JSON.stringify(nextUser)),
+    ]);
+    setToken(nextToken);
+    setUser(nextUser);
+    setLocked(false);
+  }, []);
+
+  const unlockWithBiometrics = useCallback(async () => {
+    if (Platform.OS === 'web' || !biometricsEnabled) return false;
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Mở khóa Aoklevart',
+      cancelLabel: 'Hủy',
+      fallbackLabel: 'Dùng mật mã thiết bị',
+      disableDeviceFallback: false,
+    });
+
+    if (!result.success) return false;
+
+    const [storedToken, storedUser] = await Promise.all([
+      getStoredValue(TOKEN_KEY),
+      getStoredValue(USER_KEY),
+    ]);
+    if (!storedToken || !storedUser) return false;
+
+    setToken(storedToken);
+    setUser(JSON.parse(storedUser) as User);
+    setLocked(false);
+    return true;
+  }, [biometricsEnabled]);
+
+  const setBiometricsEnabled = useCallback(async (enabled: boolean) => {
+    if (enabled) {
+      const available = await getBiometricAvailability();
+      setBiometricAvailable(available);
+      if (!available) {
+        throw new Error('Thiết bị chưa thiết lập Face ID, Touch ID hoặc vân tay.');
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Bật đăng nhập sinh trắc học',
+        cancelLabel: 'Hủy',
+        fallbackLabel: 'Dùng mật mã thiết bị',
+        disableDeviceFallback: false,
+      });
+      if (!result.success) {
+        throw new Error('Không thể xác thực sinh trắc học.');
+      }
+    }
+
+    await setStoredValue(BIOMETRICS_KEY, String(enabled));
+    setBiometricsEnabledState(enabled);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -75,43 +169,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       token,
       loading,
+      locked,
+      biometricsEnabled,
+      biometricAvailable,
       login: async (identifier, password) => {
         const result = await authService.login(identifier, password);
-        await Promise.all([
-          setStoredValue('aoklevart_token', result.token),
-          setStoredValue('aoklevart_user', JSON.stringify(result.user)),
-        ]);
-        setToken(result.token);
-        setUser(result.user);
+        await persistSession(result.token, result.user);
       },
       sendLoginOtp: async (identifier) => {
         await authService.sendLoginOtp(identifier);
       },
       loginWithOtp: async (identifier, otp) => {
         const result = await authService.loginWithOtp(identifier, otp);
-        await Promise.all([
-          setStoredValue('aoklevart_token', result.token),
-          setStoredValue('aoklevart_user', JSON.stringify(result.user)),
-        ]);
-        setToken(result.token);
-        setUser(result.user);
+        await persistSession(result.token, result.user);
       },
+      unlockWithBiometrics,
+      setBiometricsEnabled,
       logout: async () => {
         await Promise.all([
-          removeStoredValue('aoklevart_token'),
-          removeStoredValue('aoklevart_user'),
+          removeStoredValue(TOKEN_KEY),
+          removeStoredValue(USER_KEY),
         ]);
         setToken(null);
         setUser(null);
+        setLocked(false);
       },
       updateUser: async (updatedUser) => {
-        await setStoredValue('aoklevart_user', JSON.stringify(updatedUser));
+        await setStoredValue(USER_KEY, JSON.stringify(updatedUser));
         setUser(updatedUser);
       },
       notifications,
       markAllNotificationsAsRead,
     }),
-    [loading, token, user, notifications],
+    [
+      biometricAvailable,
+      biometricsEnabled,
+      loading,
+      locked,
+      notifications,
+      persistSession,
+      setBiometricsEnabled,
+      token,
+      unlockWithBiometrics,
+      user,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

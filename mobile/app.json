@@ -27,6 +27,12 @@
       "expo-font",
       "expo-secure-store",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Cho phép Aoklevart sử dụng Face ID để mở khóa phiên đăng nhập."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/logo-aoklevart-icon.png",
@@ -34,7 +40,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#FAF8F5"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }
