@@ -8,6 +8,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 export default function Admin() {
     console.log("Admin component mounting...");
@@ -84,7 +85,7 @@ export default function Admin() {
             });
         }, 5000);
 
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const user = readJsonStorage('currentUser');
         if (!user || user.role !== 'admin') {
             console.log("User not admin or missing, redirecting...", user);
             navigate('/');
@@ -1738,4 +1739,3 @@ function PropertyModal({ property, onSave, onClose }) {
         </div>
     );
 }
-

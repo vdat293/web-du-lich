@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -20,6 +21,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Security'>;
 
 export function SecurityScreen({ navigation }: Props) {
   const { user } = useAuth();
+  const { t, i18n } = useTranslation();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [biometricsEnabled, setBiometricsEnabled] = useState(true);
 
@@ -29,30 +31,28 @@ export function SecurityScreen({ navigation }: Props) {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
-        <Text style={styles.headerTitle}>Bảo mật tài khoản</Text>
+        <Text style={styles.headerTitle}>{t('security.header')}</Text>
         <View style={styles.placeholderButton} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.securityScoreCard}>
           <View style={styles.scoreHeader}>
-            <Text style={styles.securityTitle}>Độ bảo mật tài khoản</Text>
+            <Text style={styles.securityTitle}>{t('security.score')}</Text>
             <View style={styles.safeBadge}>
-              <Text style={styles.safeBadgeText}>AN TOÀN</Text>
+              <Text style={styles.safeBadgeText}>{t('security.safe')}</Text>
             </View>
           </View>
-          <Text style={styles.securityDesc}>
-            Tài khoản của bạn đã được bảo vệ tối đa với các phương thức xác thực chuẩn.
-          </Text>
+          <Text style={styles.securityDesc}>{t('security.description')}</Text>
         </View>
 
         <View style={styles.settingSection}>
-          <Text style={styles.sectionHeader}>Phương thức đăng nhập</Text>
+          <Text style={styles.sectionHeader}>{t('security.signInMethods')}</Text>
           
           <View style={styles.settingRow}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Đăng nhập sinh trắc học</Text>
-              <Text style={styles.settingSublabel}>Sử dụng FaceID/Vân tay để đăng nhập nhanh</Text>
+              <Text style={styles.settingLabel}>{t('security.biometric')}</Text>
+              <Text style={styles.settingSublabel}>{t('security.biometricHint')}</Text>
             </View>
             <Switch
               value={biometricsEnabled}
@@ -64,8 +64,8 @@ export function SecurityScreen({ navigation }: Props) {
 
           <View style={styles.settingRow}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Xác thực 2 yếu tố (2FA)</Text>
-              <Text style={styles.settingSublabel}>Yêu cầu OTP gửi về điện thoại khi đăng nhập</Text>
+              <Text style={styles.settingLabel}>{t('security.twoFactor')}</Text>
+              <Text style={styles.settingSublabel}>{t('security.twoFactorHint')}</Text>
             </View>
             <Switch
               value={twoFactorEnabled}
@@ -77,27 +77,27 @@ export function SecurityScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.settingSection}>
-          <Text style={styles.sectionHeader}>Thông tin đăng nhập</Text>
+          <Text style={styles.sectionHeader}>{t('security.loginInfo')}</Text>
           
           <Pressable 
             style={styles.actionRow} 
-            onPress={() => Alert.alert('Đổi mật khẩu', 'Một email hướng dẫn đổi mật khẩu đã được gửi đến email đăng ký của bạn.')}
+            onPress={() => Alert.alert(t('security.alertTitle'), t('security.alertMessage'))}
           >
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Thay đổi mật khẩu</Text>
-              <Text style={styles.settingSublabel}>Đã cập nhật cách đây 30 ngày</Text>
+              <Text style={styles.settingLabel}>{t('security.changePassword')}</Text>
+              <Text style={styles.settingSublabel}>{t('security.passwordHint')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.outline} />
           </Pressable>
           
           <View style={[styles.actionRow, { borderBottomWidth: 0 }]}>
             <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>Email đăng ký</Text>
+              <Text style={styles.settingLabel}>{t('security.registeredEmail')}</Text>
               <Text style={styles.settingSublabel}>{user?.email}</Text>
             </View>
             <View style={styles.verifiedBadge}>
               <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-              <Text style={styles.verifiedText}>Đã xác minh</Text>
+              <Text style={styles.verifiedText}>{t('security.verified')}</Text>
             </View>
           </View>
         </View>

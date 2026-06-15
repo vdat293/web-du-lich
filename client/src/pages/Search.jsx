@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
+import { useTranslation } from 'react-i18next';
 import api from '../utils/api';
 import { resolveMediaUrl } from '../utils/media';
 export default function Search() {
+    const { t, i18n } = useTranslation();
+    const language = i18n.language === 'en' ? 'en' : 'vi';
     const location = useLocation();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
@@ -25,7 +28,7 @@ export default function Search() {
                 const res = await api.get('/api/properties');
                 setProperties(res.data);
             } catch (error) {
-                console.error('Error fetching properties:', error);
+                console.error(language === 'vi' ? 'Lỗi khi tải danh sách chỗ ở:' : 'Error fetching properties:', error);
             } finally {
                 setLoading(false);
             }
@@ -147,7 +150,7 @@ export default function Search() {
         const currentUser = localStorage.getItem('currentUser');
         if (!currentUser) {
             window.dispatchEvent(new CustomEvent('openLoginModal', {
-                detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
+                detail: { message: language === 'vi' ? 'Đăng nhập để lưu chỗ ở yêu thích của bạn' : 'Log in to save this stay to favorites' }
             }));
             return;
         }
@@ -196,14 +199,14 @@ export default function Search() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleSearchClick()}
-                                        placeholder="Tìm kiếm địa điểm..."
+                                        placeholder={t('search.placeholder')}
                                         className="w-full bg-transparent text-neutral-700 dark:text-neutral-200 placeholder-neutral-400 text-sm font-medium border-none focus:ring-0"
                                     />
                                 </div>
                                 <button
                                     onClick={handleSearchClick}
                                     className="px-6 h-12 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-all">
-                                    Tìm kiếm
+                                    {t('search.title')}
                                 </button>
                             </div>
                         </div>
@@ -214,15 +217,15 @@ export default function Search() {
                         <div className="lg:col-span-1">
                             <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-lg p-6 sticky top-28 border border-neutral-200 dark:border-neutral-700">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-xl font-bold text-neutral-700 dark:text-white">Bộ lọc</h3>
+                                    <h3 className="text-xl font-bold text-neutral-700 dark:text-white">{t('search.filter')}</h3>
                                     <button onClick={handleResetFilters} className="text-sm text-primary font-bold hover:underline">
-                                        Đặt lại
+                                        {t('search.reset')}
                                     </button>
                                 </div>
 
                                 {/* Price Range */}
                                 <div className="mb-8">
-                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">Khoảng giá</h4>
+                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">{t('searchPage.priceRange')}</h4>
                                     <div className="px-2">
                                         <input
                                             type="range"
@@ -244,13 +247,13 @@ export default function Search() {
 
                                 {/* Property Type */}
                                 <div className="mb-8">
-                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">Loại hình chỗ ở</h4>
+                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">{t('searchPage.propertyType')}</h4>
                                     <div className="space-y-3">
                                         {[
-                                            { id: 'all', label: 'Tất cả' },
-                                            { id: 'hotel', label: 'Khách sạn' },
-                                            { id: 'apartment', label: 'Căn hộ' },
-                                            { id: 'villa', label: 'Biệt thự' },
+                                            { id: 'all', label: t('searchPage.all') },
+                                            { id: 'hotel', label: t('searchPage.hotel') },
+                                            { id: 'apartment', label: t('searchPage.apartment') },
+                                            { id: 'villa', label: t('searchPage.villa') },
                                         ].map(type => (
                                             <label key={type.id} className="flex items-center gap-3 cursor-pointer group">
                                                 <div className="relative flex items-center">
@@ -276,12 +279,12 @@ export default function Search() {
 
                                 {/* Amenities */}
                                 <div className="mb-8">
-                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">Tiện ích</h4>
+                                    <h4 className="text-sm font-bold text-neutral-700 dark:text-white mb-4">{t('searchPage.amenities')}</h4>
                                     <div className="space-y-3">
                                         {[
                                             { id: 'wifi', label: 'Wi-Fi' },
-                                            { id: 'pool', label: 'Bể bơi' },
-                                            { id: 'parking', label: 'Chỗ đỗ xe' },
+                                            { id: 'pool', label: language === 'vi' ? 'Bể bơi' : 'Swimming Pool' },
+                                            { id: 'parking', label: language === 'vi' ? 'Chỗ đỗ xe' : 'Parking' },
                                         ].map(amenity => (
                                             <label key={amenity.id} className="flex items-center gap-3 cursor-pointer group">
                                                 <div className="relative flex items-center">
@@ -305,9 +308,9 @@ export default function Search() {
                         {/* Results Column */}
                         <div className="lg:col-span-3">
                             <div className="mb-8">
-                                <h1 className="text-3xl md:text-4xl font-bold text-neutral-700 dark:text-white mb-2">Kết quả tìm kiếm</h1>
+                                <h1 className="text-3xl md:text-4xl font-bold text-neutral-700 dark:text-white mb-2">{t('searchPage.searchResults')}</h1>
                                 <p className="text-neutral-500 dark:text-neutral-400">
-                                    {loading || isSearching ? 'Đang tìm kiếm...' : `Tìm thấy ${filteredProperties.length} chỗ ở`}
+                                    {loading || isSearching ? t('searchPage.loadingResults') : t('searchPage.found', { count: filteredProperties.length })}
                                 </p>
                             </div>
 
@@ -322,12 +325,12 @@ export default function Search() {
                                     <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 rounded-full">
                                         <span className="material-symbols-outlined text-neutral-400 text-4xl">search_off</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-2">Không tìm thấy kết quả</h3>
-                                    <p className="text-neutral-500 dark:text-neutral-400">Rất tiếc, chúng tôi không tìm thấy chỗ ở nào phù hợp với yêu cầu của bạn.</p>
+                                    <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-2">{t('searchPage.noResultsTitle')}</h3>
+                                    <p className="text-neutral-500 dark:text-neutral-400">{t('searchPage.noResultsBody')}</p>
                                     <button
                                         onClick={handleResetFilters}
                                         className="mt-6 px-6 py-2.5 border border-neutral-300 dark:border-neutral-600 rounded-xl text-sm font-bold text-neutral-700 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors">
-                                        Xóa bộ lọc
+                                        {t('searchPage.clearFilters')}
                                     </button>
                                 </div>
                             ) : (
@@ -367,7 +370,7 @@ export default function Search() {
                                                             favorite
                                                         </span>
                                                         <span className="text-xs font-semibold">
-                                                            {favoriteIds.includes(property.id) ? 'Đã lưu' : 'Lưu'}
+                                                            {favoriteIds.includes(property.id) ? t('searchPage.saved') : t('searchPage.save')}
                                                         </span>
                                                     </button>
                                                 </div>
@@ -382,7 +385,7 @@ export default function Search() {
                                                     <div className="mt-auto flex items-center justify-between pt-4 border-t border-neutral-100 dark:border-neutral-700">
                                                         <div className="flex flex-col">
                                                             <span className="text-lg font-bold text-primary dark:text-white">{property.price}</span>
-                                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">/ đêm</span>
+                                                            <span className="text-xs text-neutral-500 dark:text-neutral-400">{t('searchPage.perNight')}</span>
                                                         </div>
                                                     </div>
                                                 </Link>

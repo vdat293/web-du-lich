@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import OtpModal from '../components/OtpModal';
 import api from '../utils/api';
 import { assetUrl, resolveMediaUrl } from '../utils/media';
 
 export default function Payment() {
+    const { t } = useTranslation();
+    const language = i18n.language === 'en' ? 'en' : 'vi';
     const location = useLocation();
     const navigate = useNavigate();
     const searchParams = new URLSearchParams(location.search);
@@ -71,7 +75,7 @@ export default function Payment() {
                     const p = res.data.find(p => p.id === propertyId);
                     if (p) setProperty(p);
                 } catch (error) {
-                    console.error('Lỗi khi tải thông tin chỗ ở:', error);
+                    console.error(language === 'vi' ? 'Lỗi khi tải thông tin chỗ ở:' : 'Error loading property info:', error);
                 }
             }
             setLoading(false);
@@ -104,7 +108,7 @@ export default function Payment() {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center font-display bg-background-light text-neutral-700">
-                <p>Đang tải thông tin...</p>
+                <p>{t('payment.loading')}</p>
             </div>
         );
     }
@@ -112,11 +116,11 @@ export default function Payment() {
     if (!property) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center font-display bg-background-light text-neutral-700">
-                <h2 className="text-2xl font-bold text-red-600">Không tìm thấy thông tin đặt phòng</h2>
+                <h2 className="text-2xl font-bold text-red-600">{t('payment.notFound')}</h2>
                 <button
                     onClick={() => navigate('/')}
                     className="mt-6 inline-block px-6 py-3 bg-primary text-white rounded-lg font-bold">
-                    Quay lại trang chủ
+                    {t('payment.backHome')}
                 </button>
             </div>
         );
@@ -159,15 +163,15 @@ export default function Payment() {
     const handleApplyDiscount = () => {
         const code = discountCode.trim().toUpperCase();
         if (!code) {
-            setDiscountMessage({ text: 'Vui lòng nhập mã giảm giá', type: 'error' });
+            setDiscountMessage({ text: language === 'vi' ? 'Vui lòng nhập mã giảm giá' : 'Please enter a discount code', type: 'error' });
             return;
         }
         if (discountCodes[code]) {
             setAppliedDiscount({ code, ...discountCodes[code] });
-            setDiscountMessage({ text: `Áp dụng mã "${code}" thành công!`, type: 'success' });
+            setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${code}" thành công!` : `Code "${code}" applied successfully!`, type: 'success' });
             setDiscountCode('');
         } else {
-            setDiscountMessage({ text: 'Mã giảm giá không hợp lệ hoặc đã hết hạn', type: 'error' });
+            setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá không hợp lệ hoặc đã hết hạn' : 'Invalid or expired discount code', type: 'error' });
             setAppliedDiscount(null);
         }
     };
@@ -210,7 +214,7 @@ export default function Payment() {
     const handleCardSubmit = async () => {
         setCardError('');
         if (!cardNumber.trim() || !cardHolder.trim() || !cardExpiry.trim() || !cardCvv.trim()) {
-            setCardError('Vui lòng nhập đầy đủ thông tin thẻ');
+            setCardError(language === 'vi' ? 'Vui lòng nhập đầy đủ thông tin thẻ' : 'Please fill in all card details');
             return;
         }
         setIsProcessing(true);
@@ -234,7 +238,7 @@ export default function Payment() {
             }
         } catch (err) {
             setIsProcessing(false);
-            setCardError('Lỗi kết nối máy chủ');
+            setCardError(language === 'vi' ? 'Lỗi kết nối máy chủ' : 'Server connection error');
         }
     };
 
@@ -414,7 +418,7 @@ export default function Payment() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
                     <div className="flex flex-col gap-8">
                         <div>
-                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Chuyến đi của bạn</h2>
+                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Chuyến đi của bạn' : 'Your trip'}</h2>
                             <div className="flex flex-col gap-4">
                                 <div className="flex justify-between items-center">
                                     <div>
@@ -424,7 +428,7 @@ export default function Payment() {
                                         </p>
                                     </div>
                                     <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomTypeId=${roomTypeIdParam || ''}`)}
-                                        className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">Sửa</button>
+                                        className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">{language === 'vi' ? 'Sửa' : 'Edit'}</button>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <div>
@@ -432,7 +436,7 @@ export default function Payment() {
                                         <p className="text-neutral-500 dark:text-neutral-200">{roomTypeText}</p>
                                     </div>
                                     <button onClick={() => navigate(`/details/${propertyId}?checkIn=${checkInParam || ''}&checkOut=${checkOutParam || ''}&roomTypeId=${roomTypeIdParam || ''}`)}
-                                        className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">Sửa</button>
+                                        className="font-bold underline text-neutral-700 dark:text-white hover:text-primary">{language === 'vi' ? 'Sửa' : 'Edit'}</button>
                                 </div>
                             </div>
                         </div>
@@ -440,7 +444,7 @@ export default function Payment() {
                         <div className="border-t border-neutral-200 dark:border-neutral-700"></div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Chọn phương thức thanh toán</h2>
+                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Chọn phương thức thanh toán' : 'Choose a payment method'}</h2>
                             <div className="flex flex-col gap-4">
                                 <div onClick={() => setPaymentMethod('card')}
                                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'card' ? 'border-neutral-700 dark:border-white' : 'border-neutral-200 dark:border-neutral-700'}`}>
@@ -449,7 +453,7 @@ export default function Payment() {
                                             <div className="w-12 h-8 rounded-md bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
                                                 <span className="material-symbols-outlined text-neutral-700 dark:text-white">credit_card</span>
                                             </div>
-                                            <p className="font-bold text-neutral-700 dark:text-white">Thẻ tín dụng/ghi nợ</p>
+                                            <p className="font-bold text-neutral-700 dark:text-white">{language === 'vi' ? 'Thẻ tín dụng/ghi nợ' : 'Credit/debit card'}</p>
                                         </div>
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'card' ? 'border-primary' : 'border-neutral-500 dark:border-neutral-200'}`}>
                                             {paymentMethod === 'card' && <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>}
@@ -464,7 +468,7 @@ export default function Payment() {
                                             <div className="w-12 h-8 rounded-md bg-white flex items-center justify-center overflow-hidden border border-neutral-200 dark:border-neutral-700">
                                                 <img src={assetUrl('MoMo_Logo_Primary/MOMO-Logo-App.png')} alt="MoMo Logo" className="w-full h-full object-contain" />
                                             </div>
-                                            <p className="font-bold text-neutral-700 dark:text-white">Ví MoMo</p>
+                                            <p className="font-bold text-neutral-700 dark:text-white">MoMo</p>
                                         </div>
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'momo' ? 'border-primary' : 'border-neutral-500 dark:border-neutral-200'}`}>
                                             {paymentMethod === 'momo' && <div className="w-2.5 h-2.5 bg-primary rounded-full"></div>}
@@ -479,11 +483,11 @@ export default function Payment() {
                         {/* Guest Info Form - chỉ hiện khi chưa login */}
                         {!isLoggedIn && (
                             <div>
-                                <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Thông tin khách hàng</h2>
+                                <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Thông tin khách hàng' : 'Guest information'}</h2>
                                 <p className="text-neutral-500 dark:text-neutral-200 text-sm mb-4">Bạn chưa đăng nhập. Vui lòng nhập thông tin để đặt phòng.</p>
                                 <div className="flex flex-col gap-4">
                                     <div>
-                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Họ và tên</label>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">{language === 'vi' ? 'Họ và tên' : 'Full name'}</label>
                                         <input
                                             type="text"
                                             value={guestName}
@@ -503,7 +507,7 @@ export default function Payment() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">Số điện thoại</label>
+                                        <label className="block text-sm font-bold text-neutral-700 dark:text-white mb-1.5">{language === 'vi' ? 'Số điện thoại' : 'Phone number'}</label>
                                         <input
                                             type="tel"
                                             value={guestPhone}
@@ -519,7 +523,7 @@ export default function Payment() {
                         {!isLoggedIn && <div className="border-t border-neutral-200 dark:border-neutral-700"></div>}
 
                         <div>
-                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Thông tin cần thiết cho chuyến đi</h2>
+                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Thông tin cần thiết cho chuyến đi' : 'Trip details'}</h2>
                             <div>
                                 <p className="font-bold text-neutral-700 dark:text-white mb-1">Tin nhắn cho chủ nhà</p>
                                 <p className="text-neutral-500 dark:text-neutral-200 text-sm">Cho chủ nhà biết lý do bạn đi du lịch và bạn sẽ đi cùng ai.</p>
@@ -535,7 +539,7 @@ export default function Payment() {
                         <div className="border-t border-neutral-200 dark:border-neutral-700"></div>
 
                         <div>
-                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">Chính sách hủy</h2>
+                            <h2 className="text-2xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Chính sách hủy' : 'Cancellation policy'}</h2>
                             <p className="text-neutral-500 dark:text-neutral-200 leading-relaxed">
                                 Miễn phí hủy trước 14:00 ngày 14/08. Hủy trước 14:00 ngày 15/08 để được hoàn lại 50%. <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Tìm hiểu thêm</a>
                             </p>
@@ -545,7 +549,9 @@ export default function Payment() {
 
                         <div>
                             <p className="text-sm text-neutral-500 dark:text-neutral-200">
-                                Bằng việc chọn nút bên dưới, tôi đồng ý với <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Quy tắc nhà</a>, <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Chính sách hủy</a> và <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Điều khoản dịch vụ</a>.
+                                {language === 'vi'
+                                  ? <>Bằng việc chọn nút bên dưới, tôi đồng ý với <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Quy tắc nhà</a>, <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Chính sách hủy</a> và <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Điều khoản dịch vụ</a>.</>
+                                  : <>By selecting the button below, I agree to the <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">House Rules</a>, <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Cancellation Policy</a>, and <a className="font-bold underline text-neutral-700 dark:text-white hover:text-primary" href="#">Terms of Service</a>.</>}
                             </p>
                             {paymentError && (
                                 <p className="mt-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
@@ -576,7 +582,7 @@ export default function Payment() {
                             </div>
 
                             <div className="pb-5 border-b border-neutral-200 dark:border-neutral-700">
-                                <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Chi tiết giá</h3>
+                                <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Chi tiết giá' : 'Price details'}</h3>
                                 <div className="flex flex-col gap-3 text-neutral-500 dark:text-neutral-200">
                                     <div className="flex justify-between">
                                         <span>{pricePerNight.toLocaleString('vi-VN')}₫ x {nights} đêm</span>
@@ -596,7 +602,7 @@ export default function Payment() {
                             </div>
 
                             <div className="pb-5 border-b border-neutral-200 dark:border-neutral-700">
-                                <h3 className="text-lg font-bold text-neutral-700 dark:text-white mb-3">Mã giảm giá</h3>
+                                <h3 className="text-lg font-bold text-neutral-700 dark:text-white mb-3">{language === 'vi' ? 'Mã giảm giá' : 'Discount code'}</h3>
                                 <div className="flex gap-2">
                                     <input type="text"
                                         value={discountCode}
@@ -604,10 +610,10 @@ export default function Payment() {
                                         onKeyPress={(e) => e.key === 'Enter' && handleApplyDiscount()}
                                         disabled={!!appliedDiscount}
                                         className="flex-1 px-4 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary uppercase"
-                                        placeholder="Nhập mã giảm giá" />
+                                        placeholder={language === 'vi' ? 'Nhập mã giảm giá' : 'Enter discount code'} />
                                     <button onClick={handleApplyDiscount} disabled={!!appliedDiscount}
                                         className={`px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors ${appliedDiscount ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        {appliedDiscount ? 'Đã áp dụng' : 'Áp dụng'}
+                                        {appliedDiscount ? (language === 'vi' ? 'Đã áp dụng' : 'Applied') : t('payment.apply')}
                                     </button>
                                 </div>
                                 {discountMessage.text && (
@@ -635,7 +641,7 @@ export default function Payment() {
                             <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin"></div>
                         </div>
                         <div className="text-center">
-                            <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-2">Đang xử lý thanh toán</h3>
+                            <h3 className="text-xl font-bold text-neutral-700 dark:text-white mb-2">{language === 'vi' ? 'Đang xử lý thanh toán' : 'Processing payment'}</h3>
                             <p className="text-neutral-500 dark:text-neutral-300">Vui lòng không tắt trình duyệt...</p>
                         </div>
                     </div>
