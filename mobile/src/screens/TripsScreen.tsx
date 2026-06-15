@@ -48,22 +48,19 @@ export function TripsScreen() {
     void load();
   }, [load]);
 
-  if (!user) {
-    return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
+  return (
+    <SafeAreaView style={styles.screen} edges={['top']}>
+      <View style={styles.header}>
+        <Text style={styles.eyebrow}>{t('trips.eyebrow')}</Text>
+        <Text style={styles.title}>{t('trips.title')}</Text>
+      </View>
+      {!user ? (
         <AuthPlaceholder
           icon="briefcase-outline"
           title={t('nav.trips')}
           message={t('trips.loginMessage')}
         />
-      </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}><Text style={styles.eyebrow}>{t('trips.eyebrow')}</Text><Text style={styles.title}>{t('trips.title')}</Text></View>
-      {loading ? <LoadingState label={t('trips.loading')} /> : (
+      ) : loading ? <LoadingState label={t('trips.loading')} /> : (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}

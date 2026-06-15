@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,35 +17,9 @@ export function AuthPlaceholder({ icon, title, message }: AuthPlaceholderProps) 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
 
-  // Entrance animation
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.innerContainer,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
-      >
+      <View style={styles.innerContainer}>
         {/* Decorative ring behind icon */}
         <View style={styles.iconOuter}>
           <View style={styles.iconRing}>
@@ -70,7 +43,7 @@ export function AuthPlaceholder({ icon, title, message }: AuthPlaceholderProps) 
         </Pressable>
 
         <Text style={styles.message}>{message}</Text>
-      </Animated.View>
+      </View>
     </View>
   );
 }

@@ -28,6 +28,8 @@ import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
+const TAB_TRANSITION_DURATION = 260;
+const tabTransitionEasing = Easing.bezier(0.22, 1, 0.36, 1);
 
 const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
   Explore: 'compass',
@@ -78,12 +80,15 @@ function AnimatedTabBar(props: BottomTabBarProps) {
   const tabWidth = barWidth / props.state.routes.length;
 
   useEffect(() => {
-    Animated.timing(progress, {
+    const animation = Animated.timing(progress, {
       toValue: props.state.index,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
+      duration: TAB_TRANSITION_DURATION,
+      easing: tabTransitionEasing,
       useNativeDriver: true,
-    }).start();
+    });
+
+    animation.start();
+    return () => animation.stop();
   }, [progress, props.state.index]);
 
   return (
@@ -115,17 +120,13 @@ function TabNavigator() {
 
   return (
     <Tabs.Navigator
+      detachInactiveScreens={false}
       tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,
-        animation: 'shift',
-        transitionSpec: {
-          animation: 'timing',
-          config: {
-            duration: 280,
-            easing: Easing.out(Easing.cubic),
-          },
-        },
+        animation: 'none',
+        lazy: false,
+        sceneStyle: { backgroundColor: colors.surface },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11, paddingBottom: 2 },
