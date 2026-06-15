@@ -16,6 +16,7 @@ import { SecurityScreen } from '../screens/SecurityScreen';
 import { HelpCenterScreen } from '../screens/HelpCenterScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,6 +32,7 @@ const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
 
 function TabNavigator() {
   const { notifications, user } = useAuth();
+  const { t: tt } = useTranslation();
   const unreadCount = user ? notifications.filter((n) => n.unread).length : 0;
 
   return (
@@ -59,19 +61,19 @@ function TabNavigator() {
         ),
       })}
     >
-      <Tabs.Screen name="Explore" component={HomeScreen} options={{ title: 'Khám phá' }} />
-      <Tabs.Screen name="Saved" component={FavoritesScreen} options={{ title: 'Đã lưu' }} />
-      <Tabs.Screen name="Trips" component={TripsScreen} options={{ title: 'Chuyến đi' }} />
+      <Tabs.Screen name="Explore" component={HomeScreen} options={{ title: tt('nav.explore') }} />
+      <Tabs.Screen name="Saved" component={FavoritesScreen} options={{ title: tt('nav.saved') }} />
+      <Tabs.Screen name="Trips" component={TripsScreen} options={{ title: tt('nav.trips') }} />
       <Tabs.Screen 
         name="Notifications" 
         component={NotificationsScreen} 
         options={{ 
-          title: 'Thông báo',
+          title: tt('nav.notifications'),
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.error, color: colors.white, fontSize: 10, lineHeight: 13, height: 16, minWidth: 16 },
         }} 
       />
-      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Cá nhân' }} />
+      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: tt('nav.profile') }} />
     </Tabs.Navigator>
   );
 }

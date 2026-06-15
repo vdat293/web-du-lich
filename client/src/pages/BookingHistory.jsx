@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import Header from '../components/Header';
+import { useTranslation } from 'react-i18next';
 import api from '../utils/api';
 
 const STATUS_MAP = {
@@ -218,6 +219,8 @@ function HostBookingCard({ booking }) {
 }
 
 export default function BookingHistory() {
+    const { t, i18n } = useTranslation();
+    const language = i18n.language === 'en' ? 'en' : 'vi';
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [activeTab, setActiveTab] = useState('user');
@@ -272,7 +275,7 @@ export default function BookingHistory() {
                     setHostBookings(res.data);
                 }
             } catch (err) {
-                setError(err.response?.data?.message || 'Lỗi kết nối máy chủ');
+                setError(err.response?.data?.message || (language === 'vi' ? 'Lỗi kết nối máy chủ' : 'Server connection error'));
             } finally {
                 setLoading(false);
             }
@@ -319,7 +322,7 @@ export default function BookingHistory() {
     const handleSubmitReview = async (e) => {
         e.preventDefault();
         if (reviewForm.rating === 0) {
-            alert('Vui lòng chọn số sao đánh giá');
+            alert(language === 'vi' ? 'Vui lòng chọn số sao đánh giá' : 'Please select a star rating');
             return;
         }
 
@@ -334,7 +337,7 @@ export default function BookingHistory() {
             setShowSuccessModal(true);
             setReviewModalOpen(false);
         } catch (error) {
-            alert(error.response?.data?.message || 'Lỗi kết nối, vui lòng thử lại sau');
+            alert(error.response?.data?.message || (language === 'vi' ? 'Lỗi kết nối, vui lòng thử lại sau' : 'Connection error, please try again later'));
         } finally {
             setIsSubmittingReview(false);
         }
@@ -356,10 +359,10 @@ export default function BookingHistory() {
                         className="flex items-center gap-1 text-sm text-neutral-500 hover:text-primary transition-colors mb-4"
                     >
                         <span className="material-symbols-outlined !text-lg">arrow_back</span>
-                        Quay lại hồ sơ
+                        {t('bookingHistory.backToProfile')}
                     </button>
-                    <h1 className="text-3xl font-bold text-charcoal">Lịch sử đặt phòng</h1>
-                    <p className="text-neutral-500 mt-1">Xem tất cả giao dịch đặt phòng của bạn</p>
+                    <h1 className="text-3xl font-bold text-charcoal">{t('bookingHistory.title')}</h1>
+                    <p className="text-neutral-500 mt-1">{t('bookingHistory.subtitle')}</p>
                 </div>
 
                 {/* Tabs */}
@@ -372,7 +375,7 @@ export default function BookingHistory() {
                                 : 'text-neutral-500 hover:text-charcoal'
                         }`}
                     >
-                        Phòng tôi đã đặt
+                        {t('bookingHistory.myBookings')}
                     </button>
                     {isHost && (
                         <button
@@ -383,7 +386,7 @@ export default function BookingHistory() {
                                     : 'text-neutral-500 hover:text-charcoal'
                             }`}
                         >
-                            Phòng của tôi được đặt
+                            {t('bookingHistory.myHostBookings')}
                         </button>
                     )}
                 </div>
@@ -402,21 +405,21 @@ export default function BookingHistory() {
                         <span className="material-symbols-outlined !text-6xl mb-3">calendar_month</span>
                         <p className="text-lg font-medium">
                             {activeTab === 'user'
-                                ? 'Bạn chưa có lịch sử đặt phòng nào'
-                                : 'Chưa có ai đặt phòng của bạn'}
+                                ? t('bookingHistory.emptyUser')
+                                : t('bookingHistory.emptyHost')}
                         </p>
                         {activeTab === 'user' && (
                             <button
                                 onClick={() => navigate('/')}
                                 className="mt-4 px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
                             >
-                                Khám phá chỗ ở
+                                {t('bookingHistory.exploreStays')}
                             </button>
                         )}
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <p className="text-sm text-neutral-400">{currentList.length} kết quả</p>
+                        <p className="text-sm text-neutral-400">{t('bookingHistory.results', { count: currentList.length })}</p>
                         {currentList.map((booking) =>
                             activeTab === 'user' ? (
                                 <UserBookingCard key={booking.id} booking={booking} onReviewClick={handleOpenReviewModal} />
@@ -433,7 +436,7 @@ export default function BookingHistory() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                     <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
-                            <h3 className="text-lg font-bold text-charcoal">Đánh giá trải nghiệm</h3>
+                            <h3 className="text-lg font-bold text-charcoal">{t('bookingHistory.reviewExperience')}</h3>
                             <button
                                 onClick={() => setReviewModalOpen(false)}
                                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-neutral-100 text-neutral-500 transition-colors"
@@ -446,7 +449,7 @@ export default function BookingHistory() {
                             <div className="bg-neutral-50 p-4 rounded-xl border border-neutral-100 flex gap-4">
                                 <div className="w-16 h-16 rounded-lg bg-neutral-200 overflow-hidden flex-shrink-0">
                                     {selectedBookingForReview.property_image ? (
-                                        <img src={selectedBookingForReview.property_image} alt="Chỗ ở" className="w-full h-full object-cover" />
+                                        <img src={selectedBookingForReview.property_image} alt={t('bookingHistory.stay')} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-neutral-400">
                                             <span className="material-symbols-outlined">image</span>
@@ -455,13 +458,13 @@ export default function BookingHistory() {
                                 </div>
                                 <div className="overflow-hidden">
                                     <p className="font-bold text-charcoal truncate">{selectedBookingForReview.property_name}</p>
-                                    <p className="text-xs text-neutral-500 mt-1">Phòng: {selectedBookingForReview.room_type_name}</p>
-                                    <p className="text-xs text-neutral-500">Từ {formatDate(selectedBookingForReview.check_in)} đến {formatDate(selectedBookingForReview.check_out)}</p>
+                                    <p className="text-xs text-neutral-500 mt-1">{t('bookingHistory.room')}: {selectedBookingForReview.room_type_name}</p>
+                                    <p className="text-xs text-neutral-500">{t('bookingHistory.fromTo', { from: formatDate(selectedBookingForReview.check_in), to: formatDate(selectedBookingForReview.check_out) })}</p>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-charcoal mb-2 text-center">Bạn đánh giá chỗ ở này mấy sao?</label>
+                                <label className="block text-sm font-bold text-charcoal mb-2 text-center">{t('bookingHistory.starsQuestion')}</label>
                                 <div className="flex items-center justify-center gap-2">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <button
@@ -480,13 +483,13 @@ export default function BookingHistory() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-charcoal mb-2">Chia sẻ thêm về trải nghiệm của bạn (không bắt buộc)</label>
+                                <label className="block text-sm font-bold text-charcoal mb-2">{t('bookingHistory.commentLabel')}</label>
                                 <textarea
                                     value={reviewForm.comment}
                                     onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
                                     rows="4"
                                     className="w-full px-4 py-3 rounded-xl border border-neutral-200 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all resize-none"
-                                    placeholder="Chỗ ở có sạch sẽ không? Chủ nhà có nhiệt tình không?..."
+                                    placeholder={t('bookingHistory.commentPlaceholder')}
                                 ></textarea>
                             </div>
 
@@ -495,7 +498,7 @@ export default function BookingHistory() {
                                 disabled={isSubmittingReview || reviewForm.rating === 0}
                                 className="w-full py-3.5 rounded-xl bg-primary text-white font-bold disabled:bg-neutral-300 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                             >
-                                {isSubmittingReview ? 'Đang gửi...' : 'Gửi đánh giá'}
+                                        {isSubmittingReview ? t('bookingHistory.submitting') : t('bookingHistory.submitReview')}
                             </button>
                         </form>
                     </div>
@@ -509,15 +512,15 @@ export default function BookingHistory() {
                         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
                             <span className="material-symbols-outlined !text-5xl">check_circle</span>
                         </div>
-                        <h3 className="text-2xl font-bold text-charcoal mb-2">Tuyệt vời!</h3>
+                        <h3 className="text-2xl font-bold text-charcoal mb-2">{t('bookingHistory.great')}</h3>
                         <p className="text-neutral-500 mb-8">
-                            Đánh giá của bạn đã được gửi thành công. Cảm ơn bạn đã chia sẻ trải nghiệm!
+                            {t('bookingHistory.reviewSent')}
                         </p>
                         <button
                             onClick={() => setShowSuccessModal(false)}
                             className="w-full py-3.5 rounded-2xl bg-charcoal text-white font-bold hover:bg-charcoal/90 transition-all shadow-lg shadow-charcoal/20 active:scale-[0.98]"
                         >
-                            Đóng
+                            {t('bookingHistory.close')}
                         </button>
                     </div>
                 </div>

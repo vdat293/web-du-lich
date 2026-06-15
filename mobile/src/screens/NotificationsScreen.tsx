@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../context/AuthContext';
 import type { TabParamList } from '../navigation/types';
@@ -17,12 +18,13 @@ type Props = BottomTabScreenProps<TabParamList, 'Notifications'>;
 
 export function NotificationsScreen({ navigation }: Props) {
   const { user, notifications, markAllNotificationsAsRead } = useAuth();
+  const { t } = useTranslation();
   const hasUnread = notifications.some((n) => n.unread);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Thông báo & Ưu đãi</Text>
+        <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
       </View>
 
       {user ? (
@@ -42,21 +44,21 @@ export function NotificationsScreen({ navigation }: Props) {
               {hasUnread && (
                 <Pressable style={styles.markReadButton} onPress={markAllNotificationsAsRead}>
                   <Ionicons name="checkmark-done" size={16} color={colors.primary} />
-                  <Text style={styles.markReadText}>Đánh dấu tất cả đã đọc</Text>
+                  <Text style={styles.markReadText}>{t('notifications.markAllRead')}</Text>
                 </Pressable>
               )}
             </>
           ) : (
             <View style={styles.emptyContainer}>
               <Ionicons name="notifications-off-outline" size={48} color={colors.outline} />
-              <Text style={styles.emptyText}>Không có thông báo nào</Text>
+              <Text style={styles.emptyText}>{t('notifications.none')}</Text>
             </View>
           )}
         </ScrollView>
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="lock-closed-outline" size={48} color={colors.outline} />
-          <Text style={styles.emptyText}>Đăng nhập để xem thông báo & ưu đãi của bạn</Text>
+          <Text style={styles.emptyText}>{t('notifications.login')}</Text>
         </View>
       )}
     </SafeAreaView>

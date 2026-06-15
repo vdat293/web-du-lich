@@ -1,5 +1,6 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useFavorites } from '../context/FavoritesContext';
 import { colors, fonts, shadow } from '../theme';
@@ -16,8 +17,9 @@ export function PropertyCard({
   property: Property;
   onPress: () => void;
   wide?: boolean;
-}) {
+  }) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { t } = useTranslation();
   const liked = isFavorite(property.id);
 
   return (
@@ -29,7 +31,7 @@ export function PropertyCard({
           resizeMode="cover"
         />
         <Pressable
-          accessibilityLabel={liked ? 'Bỏ lưu' : 'Lưu chỗ nghỉ'}
+          accessibilityLabel={liked ? t('propertyCard.unsave') : t('propertyCard.save')}
           hitSlop={10}
           style={styles.favorite}
           onPress={(event) => {
@@ -45,7 +47,7 @@ export function PropertyCard({
         </Pressable>
         {property.isHot ? (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>NỔI BẬT</Text>
+            <Text style={styles.badgeText}>{t('propertyCard.featured')}</Text>
           </View>
         ) : null}
       </View>
@@ -63,12 +65,12 @@ export function PropertyCard({
         </View>
         <View style={styles.ratingRow}>
           <Ionicons name="star" size={15} color={colors.secondary} />
-          <Text style={styles.rating}>{property.rating || 'Mới'}</Text>
+          <Text style={styles.rating}>{property.rating || t('propertyCard.new')}</Text>
         </View>
       </View>
       <View style={styles.priceRow}>
         <Text style={styles.price}>{property.price}</Text>
-        <Text style={styles.night}> / đêm</Text>
+        <Text style={styles.night}> {t('propertyCard.perNight')}</Text>
       </View>
     </Pressable>
   );

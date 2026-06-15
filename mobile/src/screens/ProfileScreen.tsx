@@ -3,9 +3,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 
 import { API_BASE_URL } from '../api/client';
 import { LoginForm } from '../components/LoginForm';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
@@ -13,13 +15,18 @@ import { colors, fonts } from '../theme';
 export function ProfileScreen() {
   const { user, logout } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={styles.eyebrow}>TÀI KHOẢN AOKLEVART</Text>
-        <Text style={styles.title}>{user ? 'Hồ sơ của bạn' : 'Chào mừng trở lại'}</Text>
-        <Text style={styles.subtitle}>{user ? 'Quản lý thông tin và những trải nghiệm sắp tới.' : 'Đăng nhập để đồng bộ booking và thông tin chuyến đi.'}</Text>
+        <Text style={styles.eyebrow}>{t('profile.account')}</Text>
+        <Text style={styles.title}>{user ? t('profile.profileTitle') : t('profile.welcomeBack')}</Text>
+        <Text style={styles.subtitle}>{user ? t('profile.subtitle') : t('profile.loginHint')}</Text>
+        <View style={styles.languageRow}>
+          <Text style={styles.languageLabel}>{t('profile.language')}</Text>
+          <LanguageSwitcher />
+        </View>
 
         {user ? (
           <>
@@ -33,24 +40,24 @@ export function ProfileScreen() {
             <View style={styles.menuCard}>
               <MenuItem 
                 icon="person-outline" 
-                label="Thông tin cá nhân" 
+                label={t('profile.personalInfo')} 
                 onPress={() => navigation.navigate('PersonalInfo')} 
               />
               <MenuItem 
                 icon="shield-checkmark-outline" 
-                label="Bảo mật tài khoản" 
+                label={t('profile.security')} 
                 onPress={() => navigation.navigate('Security')} 
               />
               <MenuItem 
                 icon="help-circle-outline" 
-                label="Trung tâm trợ giúp" 
+                label={t('profile.helpCenter')} 
                 onPress={() => navigation.navigate('HelpCenter')} 
                 last 
               />
             </View>
             <Pressable style={styles.logoutButton} onPress={() => void logout()}>
               <Ionicons name="log-out-outline" size={19} color={colors.error} />
-              <Text style={styles.logoutText}>Đăng xuất</Text>
+              <Text style={styles.logoutText}>{t('profile.logout')}</Text>
             </Pressable>
           </>
         ) : (
@@ -124,9 +131,10 @@ const styles = StyleSheet.create({
   menuLabel: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 13, paddingLeft: 12 },
   logoutButton: { height: 54, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 15, borderWidth: 1, borderColor: '#f2c8c5', backgroundColor: '#fff7f6', marginTop: 18 },
   logoutText: { color: colors.error, fontFamily: fonts.bold, fontSize: 13 },
+  languageRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 },
+  languageLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 11, letterSpacing: 1.1, textTransform: 'uppercase' },
   serverInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 24 },
   serverText: { maxWidth: '85%', color: colors.textMuted, fontFamily: fonts.body, fontSize: 10 },
   badgeContainer: { backgroundColor: colors.error, borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, marginRight: 8, minWidth: 20, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: colors.white, fontFamily: fonts.bold, fontSize: 10 },
 });
-

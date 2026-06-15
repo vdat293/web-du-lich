@@ -15,6 +15,7 @@ import EmailClone from './pages/EmailClone';
 import MagicLogin from './pages/MagicLogin';
 import SetupPassword from './pages/SetupPassword';
 import SmsClone from './pages/SmsClone';
+import { readJsonStorage } from './utils/storage';
 
 function RouteTracker() {
   const location = useLocation();
@@ -22,7 +23,7 @@ function RouteTracker() {
   useEffect(() => {
     const trackVisit = async () => {
       try {
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const user = readJsonStorage('currentUser');
         await api.post('/api/tracking/visit', {
           page_path: location.pathname,
           user_id: user ? user.id : null

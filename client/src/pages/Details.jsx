@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import Header from '../components/Header';
 import { FullPageLoader, Spinner } from '../components/Loader';
 import api from '../utils/api';
 import { assetUrl } from '../utils/media';
 
 export default function Details() {
+    const { t } = useTranslation();
+    const language = i18n.language === 'en' ? 'en' : 'vi';
     const { id } = useParams();
     const navigate = useNavigate();
     const bookingSidebarRef = useRef(null);
@@ -39,8 +43,12 @@ export default function Details() {
     const [isShareBarOpen, setIsShareBarOpen] = useState(false);
     const mapSectionRef = useRef(null);
     const [currentUser, setCurrentUser] = useState(() => {
-        const stored = localStorage.getItem('currentUser');
-        return stored ? JSON.parse(stored) : null;
+        try {
+            const stored = localStorage.getItem('currentUser');
+            return stored ? JSON.parse(stored) : null;
+        } catch {
+            return null;
+        }
     });
 
     // Reviews state
@@ -86,7 +94,7 @@ export default function Details() {
     const handleCheckOutChange = (e) => {
         const val = e.target.value;
         if (checkIn && val <= checkIn) {
-            setDateError('Ngày trả phòng phải sau ngày nhận phòng.');
+            setDateError(language === 'vi' ? 'Ngày trả phòng phải sau ngày nhận phòng.' : 'Check-out must be after check-in.');
             return;
         }
         setDateError('');
@@ -95,7 +103,7 @@ export default function Details() {
 
     const handleBookNow = async (isMobile = false) => {
         if (!checkIn || !checkOut) {
-            setDateError('Vui lòng chọn đầy đủ ngày nhận và trả phòng.');
+            setDateError(language === 'vi' ? 'Vui lòng chọn đầy đủ ngày nhận và trả phòng.' : 'Please select both check-in and check-out dates.');
             return;
         }
 
@@ -105,7 +113,7 @@ export default function Details() {
         }
 
         if (!selectedRoomId) {
-            setDateError('Loại phòng không hợp lệ.');
+            setDateError(language === 'vi' ? 'Loại phòng không hợp lệ.' : 'Invalid room type.');
             return;
         }
 
@@ -137,7 +145,7 @@ export default function Details() {
             }
         } catch (error) {
             setIsProcessing(false);
-            setDateError('Lỗi kết nối máy chủ. Vui lòng thử lại sau.');
+            setDateError(language === 'vi' ? 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.' : 'Server connection error. Please try again later.');
         }
     };
 
@@ -148,7 +156,7 @@ export default function Details() {
                 const p = res.data.find(p => p.id.toString() === id);
                 setProperty(p || res.data[0]);
             } catch (error) {
-                console.error('Lỗi khi tải thông tin chỗ ở:', error);
+                console.error(language === 'vi' ? 'Lỗi khi tải thông tin chỗ ở:' : 'Error loading property info:', error);
             }
         };
         fetchProperties();
@@ -162,7 +170,7 @@ export default function Details() {
             setAvgRating(res.data.averageRating);
             setTotalReviews(res.data.totalReviews);
         } catch (error) {
-            console.error('Lỗi khi tải đánh giá:', error);
+            console.error(language === 'vi' ? 'Lỗi khi tải đánh giá:' : 'Error loading reviews:', error);
         }
     };
 
@@ -173,8 +181,12 @@ export default function Details() {
     // Listen for login/logout to update review section reactively
     useEffect(() => {
         const handleUserUpdated = () => {
-            const stored = localStorage.getItem('currentUser');
-            setCurrentUser(stored ? JSON.parse(stored) : null);
+            try {
+                const stored = localStorage.getItem('currentUser');
+                setCurrentUser(stored ? JSON.parse(stored) : null);
+            } catch {
+                setCurrentUser(null);
+            }
         };
         window.addEventListener('userUpdated', handleUserUpdated);
         return () => window.removeEventListener('userUpdated', handleUserUpdated);
@@ -208,14 +220,12 @@ export default function Details() {
 
         const token = localStorage.getItem('token');
         if (!token) {
-            window.dispatchEvent(new CustomEvent('openLoginModal', {
-                detail: { message: 'Đăng nhập để đánh giá chỗ ở' }
-            }));
+            window.dispatchEvent(new CustomEvent('openLoginModal', { detail: { message: language === 'vi' ? 'Đăng nhập để đánh giá chỗ ở' : 'Log in to review this stay' } }));
             return;
         }
 
         if (!reviewForm.booking_id) {
-            setReviewError('Vui lòng chọn booking để đánh giá');
+            setReviewError(language === 'vi' ? 'Vui lòng chọn booking để đánh giá' : 'Please select a booking to review.');
             return;
         }
 
@@ -227,11 +237,11 @@ export default function Details() {
                 rating: reviewForm.rating,
                 comment: reviewForm.comment
             });
-            setReviewSuccess('Đánh giá thành công!');
+            setReviewSuccess(t('details.reviewSuccess'));
             setReviewForm({ booking_id: '', rating: 5, comment: '' });
             fetchReviews();
         } catch (error) {
-            setReviewError(error.response?.data?.message || 'Có lỗi xảy ra');
+            setReviewError(error.response?.data?.message || (language === 'vi' ? 'Có lỗi xảy ra' : 'Something went wrong'));
         } finally {
             setReviewSubmitting(false);
         }
@@ -249,9 +259,7 @@ export default function Details() {
         // Check if user is logged in
         const currentUser = localStorage.getItem('currentUser');
         if (!currentUser) {
-            window.dispatchEvent(new CustomEvent('openLoginModal', {
-                detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
-            }));
+            window.dispatchEvent(new CustomEvent('openLoginModal', { detail: { message: language === 'vi' ? 'Đăng nhập để lưu chỗ ở yêu thích của bạn' : 'Log in to save this stay to favorites' } }));
             return;
         }
 
@@ -282,7 +290,7 @@ export default function Details() {
         window.dispatchEvent(new Event('favoritesUpdated'));
     };
 
-    if (!property) return <FullPageLoader message="Đang tải thông tin chỗ ở..." />;
+    if (!property) return <FullPageLoader message={language === 'vi' ? "Đang tải thông tin chỗ ở..." : "Loading property information..."} />;
 
     // Price calculations
     const priceString = property.price.replace(/\./g, '').replace(/[₫đ]/g, '');
@@ -384,7 +392,7 @@ export default function Details() {
         try {
             if (navigator.clipboard?.writeText) {
                 await navigator.clipboard.writeText(shareUrl);
-                alert('Đã sao chép liên kết chỗ ở.');
+                alert(language === 'vi' ? 'Đã sao chép liên kết chỗ ở.' : 'Stay link copied.');
             } else {
                 const tempInput = document.createElement('input');
                 tempInput.value = shareUrl;
@@ -392,11 +400,11 @@ export default function Details() {
                 tempInput.select();
                 document.execCommand('copy');
                 tempInput.remove();
-                alert('Đã sao chép liên kết chỗ ở.');
+                alert(language === 'vi' ? 'Đã sao chép liên kết chỗ ở.' : 'Stay link copied.');
             }
         } catch (error) {
-            console.error('Không thể sao chép liên kết:', error);
-            alert('Không thể sao chép liên kết.');
+            console.error(language === 'vi' ? 'Không thể sao chép liên kết:' : 'Unable to copy link:', error);
+            alert(language === 'vi' ? 'Không thể sao chép liên kết.' : 'Unable to copy link.');
         }
     };
 
@@ -409,22 +417,22 @@ export default function Details() {
                 <main className="flex h-full grow flex-col pt-20">
                     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
                         <div id="loading" className="text-center py-20 hidden">
-                            <p>Đang tải thông tin...</p>
+                            <p>{language === 'vi' ? 'Đang tải thông tin...' : 'Loading info...'}</p>
                         </div>
                         <div id="error-message" className="text-center py-20 hidden">
-                            <h2 className="text-2xl font-bold text-red-600">Không tìm thấy chỗ ở</h2>
-                            <p className="mt-4">Xin lỗi, chúng tôi không tìm thấy thông tin chỗ ở bạn yêu cầu.</p>
+                            <h2 className="text-2xl font-bold text-red-600">{language === 'vi' ? 'Không tìm thấy chỗ ở' : 'Stay not found'}</h2>
+                            <p className="mt-4">{language === 'vi' ? 'Xin lỗi, chúng tôi không tìm thấy thông tin chỗ ở bạn yêu cầu.' : 'Sorry, we could not find the stay information you requested.'}</p>
                             <a href="/"
-                                className="mt-6 inline-block px-6 py-3 bg-primary text-white rounded-lg font-bold">Quay
-                                lại trang
-                                chủ</a>
+                                className="mt-6 inline-block px-6 py-3 bg-primary text-white rounded-lg font-bold">
+                                {language === 'vi' ? 'Quay lại trang chủ' : 'Back to home'}
+                            </a>
                         </div>
 
                         <div id="property-content" className="flex flex-col gap-6">
                             <div className="flex flex-col gap-2">
                                 <div className="flex flex-wrap gap-2">
                                     <a className="text-neutral-500 dark:text-neutral-200 text-sm font-medium leading-normal hover:text-primary"
-                                        href="/">Trang chủ</a>
+                                        href="/">{language === 'vi' ? 'Trang chủ' : 'Home'}</a>
                                     <span
                                         className="text-neutral-500 dark:text-neutral-200 text-sm font-medium leading-normal">/</span>
                                     <a className="text-neutral-500 dark:text-neutral-200 text-sm font-medium leading-normal hover:text-primary"
@@ -442,7 +450,7 @@ export default function Details() {
                                             >star</span>
                                             <span className="font-bold text-neutral-700 dark:text-white"
                                                 id="property-rating">{property.rating}</span>
-                                            <span id="property-reviews">({property.reviews} đánh giá)</span>
+                                            <span id="property-reviews">({property.reviews} {language === 'vi' ? 'đánh giá' : 'reviews'})</span>
                                             <span className="font-bold">·</span>
                                             <button
                                                 type="button"
@@ -463,7 +471,7 @@ export default function Details() {
                                             onClick={handleShare}
                                             className="flex items-center gap-2 px-3 py-2 text-neutral-700 dark:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-700">
                                             <span className="material-symbols-outlined !text-xl">ios_share</span>
-                                            <span className="text-sm font-medium">Chia sẻ</span>
+                                            <span className="text-sm font-medium">{language === 'vi' ? 'Chia sẻ' : 'Share'}</span>
                                         </button>
                                         <button
                                             type="button"
@@ -477,7 +485,7 @@ export default function Details() {
                                                 favorite
                                             </span>
                                             <span className="text-sm font-medium">
-                                                {isFavorite ? 'Đã lưu' : 'Lưu'}
+                                                {isFavorite ? (language === 'vi' ? 'Đã lưu' : 'Saved') : (language === 'vi' ? 'Lưu' : 'Save')}
                                             </span>
                                         </button>
                                     </div>
@@ -545,7 +553,7 @@ export default function Details() {
                                         className="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white text-charcoal gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-300 shadow-sm hover:shadow-md"
                                     >
                                         <span className="material-symbols-outlined !text-xl">collections</span>
-                                        <span>Xem tất cả ảnh</span>
+                                        <span>{language === 'vi' ? 'Xem tất cả ảnh' : 'View all photos'}</span>
                                     </button>
                                 </div>
                             </div>
@@ -554,20 +562,20 @@ export default function Details() {
                                     <div className="flex flex-col gap-4 pb-8 border-b border-neutral-200 dark:border-neutral-700">
                                         <div className="flex justify-between items-center">
                                             <div>
-                                                <h2 className="text-xl font-bold text-neutral-700 dark:text-white" id="host-info">Toàn bộ {property.type}. Chủ nhà {property.host?.name || "Minh"}</h2>
-                                                <p className="text-neutral-500 dark:text-neutral-200">{property.maxGuests} khách · {property.bedrooms} phòng ngủ · {property.bathrooms} phòng tắm</p>
+                                                <h2 className="text-xl font-bold text-neutral-700 dark:text-white" id="host-info">{language === 'vi' ? 'Toàn bộ' : 'Entire'} {property.type}. {language === 'vi' ? 'Chủ nhà' : 'Host'} {property.host?.name || "Minh"}</h2>
+                                                <p className="text-neutral-500 dark:text-neutral-200">{property.maxGuests} {language === 'vi' ? 'khách' : 'guests'} · {property.bedrooms} {language === 'vi' ? 'phòng ngủ' : 'bedrooms'} · {property.bathrooms} {language === 'vi' ? 'phòng tắm' : 'bathrooms'}</p>
                                             </div>
                                             <img id="host-avatar" className="w-14 h-14 rounded-full object-cover" src={property.host?.avatar || "https://placekitten.com/200/200"} />
                                         </div>
                                         <div className="flex items-center gap-2 mt-2" id="superhost-badge">
                                             <span
                                                 className="inline-flex items-center justify-center rounded-full bg-accent-gold/10 px-3 py-1 text-xs font-bold text-accent-gold">
-                                                Chủ nhà siêu cấp
+                                                {language === 'vi' ? 'Chủ nhà siêu cấp' : 'Superhost'}
                                             </span>
                                             <div className="flex items-center gap-1 text-neutral-500 dark:text-neutral-200 text-sm">
                                                 <span className="material-symbols-outlined text-accent-gold !text-base"
                                                 >workspace_premium</span>
-                                                <span>Đánh giá xuất sắc</span>
+                                                <span>{language === 'vi' ? 'Đánh giá xuất sắc' : 'Excellent rating'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -585,13 +593,13 @@ export default function Details() {
                                                 className="mt-4 inline-flex items-center gap-1 font-bold text-neutral-700 dark:text-white hover:text-primary cursor-pointer transition-colors"
                                                 id="description-toggle-btn"
                                             >
-                                                <span className="underline select-none">Hiển thị thêm</span>
+                                                <span className="underline select-none">{language === 'vi' ? 'Hiển thị thêm' : 'Show more'}</span>
                                                 <span className="material-symbols-outlined !text-xl hover:translate-x-1 transition-transform duration-200">chevron_right</span>
                                             </button>
                                         )}
                                     </div>
                                     <div className="pb-8 border-b border-neutral-200 dark:border-neutral-700">
-                                        <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Tiện ích chính</h2>
+                                        <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Tiện ích chính' : 'Highlights'}</h2>
                                         <div className="grid grid-cols-2 gap-4" id="amenities-list">
                                             {mainAmenities.length > 0 ? (
                                                 mainAmenities.map((amenity, index) => (
@@ -604,7 +612,7 @@ export default function Details() {
                                                 ))
                                             ) : (
                                                 <p className="text-neutral-500 dark:text-neutral-300 text-sm">
-                                                    Chưa có thông tin tiện ích.
+                                                    {language === 'vi' ? 'Chưa có thông tin tiện ích.' : 'No amenity information yet.'}
                                                 </p>
                                             )}
                                         </div>
@@ -615,7 +623,7 @@ export default function Details() {
                                                 onClick={() => setIsAmenitiesModalOpen(true)}
                                                 className="mt-6 flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 bg-transparent text-neutral-700 dark:text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] border border-neutral-700 dark:border-white hover:bg-neutral-100 dark:hover:bg-neutral-700"
                                             >
-                                                <span>Hiển thị tất cả tiện nghi</span>
+                                                <span>{language === 'vi' ? 'Hiển thị tất cả tiện nghi' : 'Show all amenities'}</span>
                                             </button>
                                         )}
                                     </div>
@@ -623,7 +631,7 @@ export default function Details() {
                                         <div className="flex items-center gap-2 mb-6">
                                             <span className="material-symbols-outlined text-accent-gold !text-2xl">star</span>
                                             <h2 className="text-xl font-bold text-neutral-700 dark:text-white" id="reviews-summary">
-                                                {avgRating > 0 ? `${avgRating} · ${totalReviews} đánh giá` : 'Chưa có đánh giá'}
+                                                {avgRating > 0 ? `${avgRating} · ${totalReviews} ${language === 'vi' ? 'đánh giá' : 'reviews'}` : (language === 'vi' ? 'Chưa có đánh giá' : 'No reviews yet')}
                                             </h2>
                                         </div>
 
@@ -641,7 +649,7 @@ export default function Details() {
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <span className="font-bold text-neutral-700 dark:text-white text-sm">{review.user_name}</span>
                                                                 <span className="text-xs text-neutral-400">
-                                                                    {new Date(review.created_at).toLocaleDateString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                    {new Date(review.created_at).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                                                 </span>
                                                             </div>
                                                             <div className="flex items-center gap-0.5 mb-2">
@@ -664,12 +672,12 @@ export default function Details() {
                                                 ))}
                                             </div>
                                         ) : (
-                                            <p className="text-neutral-500 dark:text-neutral-300 text-sm mb-8">Chưa có đánh giá nào cho chỗ ở này.</p>
+                                            <p className="text-neutral-500 dark:text-neutral-300 text-sm mb-8">{language === 'vi' ? 'Chưa có đánh giá nào cho chỗ ở này.' : 'No reviews for this stay yet.'}</p>
                                         )}
 
                                     </div>
                                     <div ref={mapSectionRef}>
-                                        <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">Vị trí chỗ ở</h2>
+                                        <h2 className="text-xl font-bold text-neutral-700 dark:text-white mb-4">{language === 'vi' ? 'Vị trí chỗ ở' : 'Location'}</h2>
                                         <div id="map-embed" className="w-full h-96 rounded-xl overflow-hidden bg-neutral-200">
                                             {property.mapEmbed ? (
                                                 <iframe
@@ -683,11 +691,11 @@ export default function Details() {
                                                 ></iframe>
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center text-neutral-500">
-                                                    Không có bản đồ
+                                                    {language === 'vi' ? 'Không có bản đồ' : 'No map available'}
                                                 </div>
                                             )}
                                         </div>
-                                        <p className="mt-4 font-bold text-neutral-700 dark:text-white" id="map-location-text">Vị trí
+                                        <p className="mt-4 font-bold text-neutral-700 dark:text-white" id="map-location-text">{language === 'vi' ? 'Vị trí' : 'Location'}
                                         </p>
                                     </div>
                                 </div>
@@ -697,15 +705,14 @@ export default function Details() {
                                             className="rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-lg p-6 flex flex-col gap-5">
                                             <div className="flex items-baseline gap-1">
                                                 <span id="price-display" className="text-2xl font-bold text-neutral-700 dark:text-white">{property.price}</span>
-                                                <span className="text-neutral-500 dark:text-neutral-200">/
-                                                    đêm</span>
+                                                <span className="text-neutral-500 dark:text-neutral-200">{language === 'vi' ? '/ đêm' : '/ night'}</span>
                                             </div>
                                             <div
                                                 className="grid grid-cols-2 gap-px border border-neutral-500 dark:border-neutral-200 rounded-lg overflow-hidden">
                                                 <div className="p-3 bg-background-light dark:bg-background-dark">
                                                     <label
                                                         className="block text-xs font-bold uppercase text-neutral-700 dark:text-white"
-                                                        htmlFor="check-in">Nhận phòng</label>
+                                                        htmlFor="check-in">{language === 'vi' ? 'Nhận phòng' : 'Check-in'}</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
                                                         id="check-in" type="date" value={checkIn} min={today} onChange={handleCheckInChange} />
@@ -713,7 +720,7 @@ export default function Details() {
                                                 <div className="p-3 bg-background-light dark:bg-background-dark">
                                                     <label
                                                         className="block text-xs font-bold uppercase text-neutral-700 dark:text-white"
-                                                        htmlFor="check-out">Trả phòng</label>
+                                                        htmlFor="check-out">{language === 'vi' ? 'Trả phòng' : 'Check-out'}</label>
                                                     <input
                                                         className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
                                                         id="check-out" type="date" value={checkOut} min={checkIn || today} onChange={handleCheckOutChange} />
@@ -722,7 +729,7 @@ export default function Details() {
                                             <div className="p-3 border border-neutral-500 dark:border-neutral-200 rounded-lg">
                                                 <label
                                                     className="block text-xs font-bold uppercase text-neutral-700 dark:text-white"
-                                                    htmlFor="room-type">Loại phòng</label>
+                                                    htmlFor="room-type">{t('details.roomType')}</label>
                                                 <select
                                                     className="w-full border-0 p-0 text-sm bg-transparent focus:ring-0 text-neutral-500 dark:text-neutral-200"
                                                     id="room-type" value={roomType || ''} onChange={(e) => setRoomType(e.target.value)}>
@@ -731,13 +738,13 @@ export default function Details() {
                                                             {r.name} — {Number(r.price).toLocaleString('vi-VN')}₫
                                                         </option>
                                                     ))}
-                                                    {rooms.length === 0 && <option value="">Không có phòng</option>}
+                                                    {rooms.length === 0 && <option value="">{language === 'vi' ? 'Không có phòng' : 'No rooms available'}</option>}
                                                 </select>
                                             </div>
                                             {selectedRoom && (
                                                 <div className="text-xs text-neutral-500 dark:text-neutral-300 flex flex-wrap gap-3 mt-1">
                                                     {selectedRoom.bed_type && <span>🛏️ {selectedRoom.bed_type}</span>}
-                                                    <span>👥 Tối đa {selectedRoom.max_adults} người lớn{selectedRoom.max_children > 0 ? `, ${selectedRoom.max_children} trẻ em` : ''}</span>
+                                                    <span>👥 {language === 'vi' ? 'Tối đa' : 'Up to'} {selectedRoom.max_adults} {language === 'vi' ? 'người lớn' : 'adults'}{selectedRoom.max_children > 0 ? `, ${selectedRoom.max_children} ${language === 'vi' ? 'trẻ em' : 'children'}` : ''}</span>
                                                 </div>
                                             )}
                                             {dateError && (
@@ -748,7 +755,7 @@ export default function Details() {
                                                     disabled
                                                     className="flex w-full items-center justify-center rounded-lg h-12 px-6 bg-neutral-300 text-white text-base font-bold cursor-not-allowed"
                                                 >
-                                                    <span>Chọn ngày để đặt</span>
+                                                    <span>{language === 'vi' ? 'Chọn ngày để đặt' : 'Choose dates to book'}</span>
                                                 </button>
                                             ) : (
                                                 <button
@@ -758,30 +765,29 @@ export default function Details() {
                                                     {isProcessing ? (
                                                         <div className="flex items-center gap-2">
                                                             <Spinner size="sm" color="white" />
-                                                            <span>Đang xử lý...</span>
+                                                            <span>{language === 'vi' ? 'Đang xử lý...' : 'Processing...'}</span>
                                                         </div>
                                                     ) : (
-                                                        <span>Đặt ngay</span>
+                                                        <span>{t('details.bookNow')}</span>
                                                     )}
                                                 </button>
                                             )}
                                             <p className="text-center text-sm text-neutral-500 dark:text-neutral-200">
-                                                Bạn chưa bị
-                                                trừ tiền</p>
+                                                {language === 'vi' ? 'Bạn chưa bị trừ tiền' : 'You will not be charged yet'}</p>
                                             <div
                                                 className="flex flex-col gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                                                 <div className="flex justify-between text-neutral-500 dark:text-neutral-200">
-                                                    <span id="price-calculation">{pricePerNight.toLocaleString('vi-VN')}₫ x {nights} đêm</span>
+                                                    <span id="price-calculation">{pricePerNight.toLocaleString('vi-VN')}₫ x {nights} {language === 'vi' ? 'đêm' : 'nights'}</span>
                                                     <span id="price-total-base">{totalBase.toLocaleString('vi-VN')}₫</span>
                                                 </div>
                                                 <div className="flex justify-between text-neutral-500 dark:text-neutral-200">
-                                                    <span>Phí dịch vụ 10%</span>
+                                                    <span>{t('details.serviceFee')} 10%</span>
                                                     <span id="service-fee">{serviceFee.toLocaleString('vi-VN')}₫</span>
                                                 </div>
                                             </div>
                                             <div
                                                 className="flex justify-between font-bold text-neutral-700 dark:text-white pt-4 border-t border-neutral-200 dark:border-neutral-700">
-                                                <span>Tổng cộng</span>
+                                                <span>{t('details.total')}</span>
                                                 <span id="total-price">{total.toLocaleString('vi-VN')}₫</span>
                                             </div>
                                         </div>
@@ -799,19 +805,19 @@ export default function Details() {
                             <div className="flex flex-col">
                                 <div className="flex items-baseline gap-1">
                                     <span className="text-lg font-bold text-neutral-800">{property.price}</span>
-                                    <span className="text-sm text-neutral-500">/ đêm</span>
+                                    <span className="text-sm text-neutral-500">{language === 'vi' ? '/ đêm' : '/ night'}</span>
                                 </div>
                                 {checkIn && checkOut ? (
-                                    <span className="text-xs text-neutral-400">{nights} đêm · Tổng {total.toLocaleString('vi-VN')}₫</span>
+                                    <span className="text-xs text-neutral-400">{nights} {language === 'vi' ? 'đêm' : 'nights'} · {t('details.total')} {total.toLocaleString('vi-VN')}₫</span>
                                 ) : (
-                                    <span className="text-xs text-neutral-400">Chọn ngày để xem giá</span>
+                                    <span className="text-xs text-neutral-400">{language === 'vi' ? 'Chọn ngày để xem giá' : 'Select dates to view price'}</span>
                                 )}
                             </div>
                             <button
                                 onClick={() => handleBookNow(true)}
                                 className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white text-sm font-bold rounded-xl hover:bg-primary/90 active:scale-[0.97] transition-all shadow-lg shadow-primary/25"
                             >
-                                <span>{(!checkIn || !checkOut) ? 'Chọn ngay' : 'Đặt ngay'}</span>
+                                <span>{(!checkIn || !checkOut) ? (language === 'vi' ? 'Chọn ngay' : 'Choose now') : t('details.bookNow')}</span>
                                 <span className="material-symbols-outlined !text-lg">arrow_forward</span>
                             </button>
                         </div>
@@ -830,10 +836,9 @@ export default function Details() {
                                     <span className="font-display text-xl font-semibold">Aoklevart</span>
                                 </div>
                                 <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-xs">
-                                    Nền tảng đặt phòng nghỉ dưỡng hàng đầu Việt Nam, kết nối bạn với những trải nghiệm lưu trú
-                                    độc
-                                    đáo và đáng
-                                    nhớ.
+                                    {language === 'vi' 
+                                        ? 'Nền tảng đặt phòng nghỉ dưỡng hàng đầu Việt Nam, kết nối bạn với những trải nghiệm lưu trú độc đáo và đáng nhớ.' 
+                                        : 'Vietnam’s leading stay booking platform, connecting you with unique and memorable stays.'}
                                 </p>
                                 <div className="flex items-center gap-4">
                                     <a href="#"
@@ -855,17 +860,14 @@ export default function Details() {
 
                             {/*  Links Columns  */}
                             <div>
-                                <h4 className="font-semibold text-white mb-5">Về Aoklevart</h4>
+                                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Về Aoklevart' : 'About Aoklevart'}</h4>
                                 <ul className="space-y-3">
                                     <li><a href="about.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Giới
-                                        thiệu</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Giới thiệu' : 'About Us'}</a></li>
                                     <li><a href="careers.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Tuyển
-                                        dụng</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Tuyển dụng' : 'Careers'}</a></li>
                                     <li><a href="#"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Báo
-                                        chí</a>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Báo chí' : 'Press'}</a>
                                     </li>
                                     <li><a href="#"
                                         className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Blog</a>
@@ -874,38 +876,27 @@ export default function Details() {
                             </div>
 
                             <div>
-                                <h4 className="font-semibold text-white mb-5">Hỗ trợ</h4>
+                                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Hỗ trợ' : 'Support'}</h4>
                                 <ul className="space-y-3">
                                     <li><a href="support.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Trung
-                                        tâm
-                                        trợ giúp</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Trung tâm trợ giúp' : 'Help Center'}</a></li>
                                     <li><a href="support.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Câu
-                                        hỏi
-                                        thường gặp</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Câu hỏi thường gặp' : 'FAQs'}</a></li>
                                     <li><a href="support.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Liên
-                                        hệ</a>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Liên hệ' : 'Contact'}</a>
                                     </li>
                                     <li><a href="support.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Chính
-                                        sách
-                                        hủy phòng</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Chính sách hủy phòng' : 'Cancellation Policy'}</a></li>
                                 </ul>
                             </div>
 
                             <div>
-                                <h4 className="font-semibold text-white mb-5">Pháp lý</h4>
+                                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Pháp lý' : 'Legal'}</h4>
                                 <ul className="space-y-3">
                                     <li><a href="terms.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Điều
-                                        khoản
-                                        dịch vụ</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Điều khoản dịch vụ' : 'Terms of Service'}</a></li>
                                     <li><a href="terms.html"
-                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Chính
-                                        sách
-                                        bảo mật</a></li>
+                                        className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Chính sách bảo mật' : 'Privacy Policy'}</a></li>
                                     <li><a href="terms.html"
                                         className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Cookie</a>
                                     </li>
@@ -918,7 +909,7 @@ export default function Details() {
                             className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
                             <p className="text-white/40 text-sm">© 2024 Aoklevart. Nhóm 8386.</p>
                             <div className="flex items-center gap-6">
-                                <span className="text-white/40 text-sm">Ngôn ngữ: Tiếng Việt</span>
+                                <span className="text-white/40 text-sm">{language === 'vi' ? 'Ngôn ngữ: Tiếng Việt' : 'Language: English'}</span>
                                 <span className="text-white/40 text-sm">VND (₫)</span>
                             </div>
                         </div>
@@ -1014,7 +1005,7 @@ export default function Details() {
                     <div
                         className="bg-white dark:bg-background-dark w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-700">
-                            <h2 className="text-xl font-bold text-neutral-700 dark:text-white">Tiện nghi</h2>
+                            <h2 className="text-xl font-bold text-neutral-700 dark:text-white">{language === 'vi' ? 'Tiện nghi' : 'Amenities'}</h2>
                             <button
                                 id="close-amenities-btn"
                                 type="button"
@@ -1044,7 +1035,7 @@ export default function Details() {
                                     ))
                                 ) : (
                                     <p className="text-neutral-500 dark:text-neutral-300 text-sm">
-                                        Chưa có thông tin tiện nghi.
+                                        {language === 'vi' ? 'Chưa có thông tin tiện nghi.' : 'No amenities information.'}
                                     </p>
                                 )}
                             </div>
@@ -1098,13 +1089,13 @@ export default function Details() {
 
                 const handleApplyDiscount = () => {
                     const code = discountCode.trim().toUpperCase();
-                    if (!code) { setDiscountMessage({ text: 'Vui lòng nhập mã giảm giá', type: 'error' }); return; }
+                    if (!code) { setDiscountMessage({ text: language === 'vi' ? 'Vui lòng nhập mã giảm giá' : 'Please enter a discount code', type: 'error' }); return; }
                     if (discountCodes[code]) {
                         setAppliedDiscount({ code, ...discountCodes[code] });
-                        setDiscountMessage({ text: `Áp dụng mã "${code}" thành công!`, type: 'success' });
+                        setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${code}" thành công!` : `Promo code "${code}" applied successfully!`, type: 'success' });
                         setDiscountCode('');
                     } else {
-                        setDiscountMessage({ text: 'Mã giảm giá không hợp lệ', type: 'error' });
+                        setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá không hợp lệ' : 'Invalid discount code', type: 'error' });
                         setAppliedDiscount(null);
                     }
                 };
@@ -1114,7 +1105,7 @@ export default function Details() {
                 };
 
                 const handleConfirmPayment = async () => {
-                    if (!datesSelected) { setPaymentError('Vui lòng chọn ngày nhận và trả phòng.'); return; }
+                    if (!datesSelected) { setPaymentError(language === 'vi' ? 'Vui lòng chọn ngày nhận và trả phòng.' : 'Please select check-in and check-out dates.'); return; }
                     setIsProcessing(true);
                     setPaymentError('');
                     const roomTypeId = getRoomTypeId();
@@ -1129,13 +1120,13 @@ export default function Details() {
                             });
                             setIsProcessing(false);
                             setBookingId(res.data.booking_id); setIsSuccess(true);
-                        } catch (err) { setIsProcessing(false); setPaymentError(err.response?.data?.message || 'Lỗi kết nối máy chủ.'); }
+                        } catch (err) { setIsProcessing(false); setPaymentError(err.response?.data?.message || (language === 'vi' ? 'Lỗi kết nối máy chủ.' : 'Server connection error.')); }
                     } else {
                         if (!guestName.trim() || !guestEmail.trim() || !guestPhone.trim()) {
-                            setIsProcessing(false); setPaymentError('Vui lòng nhập đầy đủ thông tin.'); return;
+                            setIsProcessing(false); setPaymentError(language === 'vi' ? 'Vui lòng nhập đầy đủ thông tin.' : 'Please fill in all details.'); return;
                         }
                         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
-                            setIsProcessing(false); setPaymentError('Email không hợp lệ.'); return;
+                            setIsProcessing(false); setPaymentError(language === 'vi' ? 'Email không hợp lệ.' : 'Invalid email address.'); return;
                         }
                         try {
                             const res = await api.post('/api/guest/bookings', {
@@ -1149,7 +1140,7 @@ export default function Details() {
                             setIsProcessing(false);
                             if (res.data.status === 'confirmed') { setBookingId(res.data.booking_id); setIsSuccess(true); }
                             else if (res.data.status === 'pending') { navigate(`/booking-alert?email=${encodeURIComponent(guestEmail.trim())}`); }
-                        } catch (err) { setIsProcessing(false); setPaymentError(err.response?.data?.message || 'Lỗi kết nối máy chủ.'); }
+                        } catch (err) { setIsProcessing(false); setPaymentError(err.response?.data?.message || (language === 'vi' ? 'Lỗi kết nối máy chủ.' : 'Server connection error.')); }
                     }
                 };
 
@@ -1165,7 +1156,7 @@ export default function Details() {
                                         <div className="absolute inset-0 border-4 border-neutral-200 rounded-full" />
                                         <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
                                     </div>
-                                    <p className="font-bold text-neutral-700">Đang xử lý...</p>
+                                    <p className="font-bold text-neutral-700">{language === 'vi' ? 'Đang xử lý...' : 'Processing...'}</p>
                                 </div>
                             </div>
                         )}
@@ -1178,11 +1169,11 @@ export default function Details() {
                                         <span className="material-symbols-outlined text-green-600 !text-5xl">check_circle</span>
                                     </div>
                                     <div className="text-center">
-                                        <h3 className="text-xl font-bold text-neutral-700 mb-1">Đặt phòng thành công!</h3>
-                                        <p className="text-neutral-500 text-sm">Mã đặt phòng: <span className="font-bold text-primary">#{bookingId}</span></p>
+                                        <h3 className="text-xl font-bold text-neutral-700 mb-1">{language === 'vi' ? 'Đặt phòng thành công!' : 'Booking successful!'}</h3>
+                                        <p className="text-neutral-500 text-sm">{language === 'vi' ? 'Mã đặt phòng:' : 'Booking code:'} <span className="font-bold text-primary">#{bookingId}</span></p>
                                     </div>
-                                    <button onClick={() => navigate('/bookings')} className="w-full py-3 bg-primary text-white rounded-xl font-bold">Xem lịch sử</button>
-                                    <button onClick={() => { setIsMobilePaymentOpen(false); setIsSuccess(false); }} className="w-full py-3 border border-neutral-300 text-neutral-700 rounded-xl font-bold">Tiếp tục xem</button>
+                                    <button onClick={() => navigate('/bookings')} className="w-full py-3 bg-primary text-white rounded-xl font-bold">{language === 'vi' ? 'Xem lịch sử' : 'View history'}</button>
+                                    <button onClick={() => { setIsMobilePaymentOpen(false); setIsSuccess(false); }} className="w-full py-3 border border-neutral-300 text-neutral-700 rounded-xl font-bold">{language === 'vi' ? 'Tiếp tục xem' : 'Continue browsing'}</button>
                                 </div>
                             </div>
                         )}
@@ -1192,7 +1183,7 @@ export default function Details() {
                             <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl shadow-2xl flex flex-col overflow-hidden" style={{ animation: 'mPaySlideUp 0.3s ease-out' }}>
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 flex-shrink-0">
-                                    <h2 className="text-lg font-bold text-neutral-800">Đặt phòng</h2>
+                                    <h2 className="text-lg font-bold text-neutral-800">{language === 'vi' ? 'Đặt phòng' : 'Book room'}</h2>
                                     <button onClick={() => { if (!isProcessing) setIsMobilePaymentOpen(false); }} className="w-9 h-9 flex items-center justify-center rounded-full bg-neutral-100 active:bg-neutral-200">
                                         <span className="material-symbols-outlined !text-xl text-neutral-600">close</span>
                                     </button>
@@ -1210,23 +1201,23 @@ export default function Details() {
                                                 <div className="flex items-center gap-1 mt-1">
                                                     <span className="material-symbols-outlined text-accent-gold !text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                                                     <span className="text-xs font-bold text-neutral-700">{property.rating}</span>
-                                                    <span className="text-xs text-neutral-400">({property.reviews} đánh giá)</span>
+                                                    <span className="text-xs text-neutral-400">({property.reviews} {language === 'vi' ? 'đánh giá' : 'reviews'})</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Date pickers */}
                                         <div>
-                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">Chọn ngày</h3>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">{language === 'vi' ? 'Chọn ngày' : 'Select dates'}</h3>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">Nhận phòng</label>
+                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">{language === 'vi' ? 'Nhận phòng' : 'Check-in'}</label>
                                                     <input type="date" value={mobileCheckIn} min={today}
                                                         onChange={(e) => { setMobileCheckIn(e.target.value); if (mobileCheckOut && e.target.value >= mobileCheckOut) setMobileCheckOut(''); }}
                                                         className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent" />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">Trả phòng</label>
+                                                    <label className="block text-xs font-medium text-neutral-500 mb-1">{language === 'vi' ? 'Trả phòng' : 'Check-out'}</label>
                                                     <input type="date" value={mobileCheckOut} min={mobileCheckIn || today}
                                                         onChange={(e) => setMobileCheckOut(e.target.value)}
                                                         className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent" />
@@ -1236,7 +1227,7 @@ export default function Details() {
 
                                         {/* Room type */}
                                         <div>
-                                            <label className="block text-sm font-bold text-neutral-700 mb-2">Loại phòng</label>
+                                            <label className="block text-sm font-bold text-neutral-700 mb-2">{language === 'vi' ? 'Loại phòng' : 'Room type'}</label>
                                             <select value={mobileRoomType || ''} onChange={(e) => setMobileRoomType(e.target.value)}
                                                 className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm text-neutral-700 focus:ring-2 focus:ring-primary focus:border-transparent">
                                                 {mRooms.map(r => (
@@ -1244,12 +1235,12 @@ export default function Details() {
                                                         {r.name} — {Number(r.price).toLocaleString('vi-VN')}₫
                                                     </option>
                                                 ))}
-                                                {mRooms.length === 0 && <option value="">Không có phòng</option>}
+                                                {mRooms.length === 0 && <option value="">{language === 'vi' ? 'Không có phòng' : 'No rooms available'}</option>}
                                             </select>
                                             {mSelectedRoom && (
                                                 <div className="text-xs text-neutral-400 flex flex-wrap gap-2 mt-1">
                                                     {mSelectedRoom.bed_type && <span>🛏️ {mSelectedRoom.bed_type}</span>}
-                                                    <span>👥 {mSelectedRoom.max_adults} người lớn</span>
+                                                    <span>👥 {mSelectedRoom.max_adults} {language === 'vi' ? 'người lớn' : 'adults'}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -1257,16 +1248,16 @@ export default function Details() {
                                         {/* Guest info (not logged in) */}
                                         {!isLoggedIn && (
                                             <div>
-                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">Thông tin khách</h3>
+                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">{language === 'vi' ? 'Thông tin khách' : 'Guest details'}</h3>
                                                 <div className="flex flex-col gap-3">
                                                     <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
-                                                        placeholder="Họ và tên"
+                                                        placeholder={language === 'vi' ? "Họ và tên" : "Full name"}
                                                         className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
                                                     <input type="email" value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)}
                                                         placeholder="Email"
                                                         className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
                                                     <input type="tel" value={guestPhone} onChange={(e) => setGuestPhone(e.target.value)}
-                                                        placeholder="Số điện thoại"
+                                                        placeholder={language === 'vi' ? "Số điện thoại" : "Phone number"}
                                                         className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
                                                 </div>
                                             </div>
@@ -1274,7 +1265,7 @@ export default function Details() {
 
                                         {/* Payment method */}
                                         <div>
-                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">Phương thức thanh toán</h3>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-3">{language === 'vi' ? 'Phương thức thanh toán' : 'Payment method'}</h3>
                                             <div className="flex flex-col gap-2">
                                                 <div onClick={() => setPaymentMethod('card')}
                                                     className={`p-3 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-neutral-200'}`}>
@@ -1282,7 +1273,7 @@ export default function Details() {
                                                         <div className="w-9 h-9 rounded-lg bg-neutral-100 flex items-center justify-center">
                                                             <span className="material-symbols-outlined text-neutral-600 !text-lg">credit_card</span>
                                                         </div>
-                                                        <span className="font-medium text-sm text-neutral-700">Thẻ tín dụng/ghi nợ</span>
+                                                        <span className="font-medium text-sm text-neutral-700">{language === 'vi' ? 'Thẻ tín dụng/ghi nợ' : 'Credit/Debit card'}</span>
                                                     </div>
                                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'card' ? 'border-primary' : 'border-neutral-300'}`}>
                                                         {paymentMethod === 'card' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
@@ -1294,7 +1285,7 @@ export default function Details() {
                                                         <div className="w-9 h-9 rounded-lg overflow-hidden border border-neutral-200">
                                                             <img src={assetUrl('MoMo_Logo_Primary/MOMO-Logo-App.png')} alt="MoMo" className="w-full h-full object-contain" />
                                                         </div>
-                                                        <span className="font-medium text-sm text-neutral-700">Ví MoMo</span>
+                                                        <span className="font-medium text-sm text-neutral-700">{language === 'vi' ? 'Ví MoMo' : 'MoMo wallet'}</span>
                                                     </div>
                                                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'momo' ? 'border-primary' : 'border-neutral-300'}`}>
                                                         {paymentMethod === 'momo' && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
@@ -1305,16 +1296,16 @@ export default function Details() {
 
                                         {/* Discount code */}
                                         <div>
-                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">Mã giảm giá</h3>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">{language === 'vi' ? 'Mã giảm giá' : 'Discount code'}</h3>
                                             <div className="flex gap-2">
                                                 <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && handleApplyDiscount()}
                                                     disabled={!!appliedDiscount}
                                                     className="flex-1 px-3 py-2.5 rounded-lg border border-neutral-200 text-sm uppercase placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent"
-                                                    placeholder="Nhập mã" />
+                                                    placeholder={language === 'vi' ? "Nhập mã" : "Enter code"} />
                                                 <button onClick={handleApplyDiscount} disabled={!!appliedDiscount}
                                                     className={`px-4 py-2.5 bg-primary text-white font-bold text-sm rounded-lg ${appliedDiscount ? 'opacity-50' : ''}`}>
-                                                    {appliedDiscount ? 'Đã dùng' : 'Áp dụng'}
+                                                    {appliedDiscount ? (language === 'vi' ? 'Đã dùng' : 'Used') : (language === 'vi' ? 'Áp dụng' : 'Apply')}
                                                 </button>
                                             </div>
                                             {discountMessage.text && (
@@ -1325,25 +1316,25 @@ export default function Details() {
                                         {/* Price breakdown */}
                                         {datesSelected && (
                                             <div className="bg-neutral-50 rounded-xl p-4">
-                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">Chi tiết giá</h3>
+                                                <h3 className="text-sm font-bold text-neutral-700 mb-3">{language === 'vi' ? 'Chi tiết giá' : 'Price details'}</h3>
                                                 <div className="flex flex-col gap-2 text-sm">
                                                     <div className="flex justify-between text-neutral-500">
-                                                        <span>{mPricePerNight.toLocaleString('vi-VN')}₫ × {mNights} đêm</span>
+                                                        <span>{mPricePerNight.toLocaleString('vi-VN')}₫ × {mNights} {language === 'vi' ? 'đêm' : 'nights'}</span>
                                                         <span>{mTotalBase.toLocaleString('vi-VN')}₫</span>
                                                     </div>
                                                     <div className="flex justify-between text-neutral-500">
-                                                        <span>Phí dịch vụ 10%</span>
+                                                        <span>{language === 'vi' ? 'Phí dịch vụ' : 'Service fee'} 10%</span>
                                                         <span>{mServiceFee.toLocaleString('vi-VN')}₫</span>
                                                     </div>
                                                     {appliedDiscount && (
                                                         <div className="flex justify-between text-green-600">
-                                                            <span>Giảm giá ({appliedDiscount.code})</span>
+                                                            <span>{language === 'vi' ? 'Giảm giá' : 'Discount'} ({appliedDiscount.code})</span>
                                                             <span>-{mDiscountAmount.toLocaleString('vi-VN')}₫</span>
                                                         </div>
                                                     )}
                                                     <div className="border-t border-neutral-200 pt-2 mt-1">
                                                         <div className="flex justify-between font-bold text-neutral-700">
-                                                            <span>Tổng cộng</span>
+                                                            <span>{language === 'vi' ? 'Tổng cộng' : 'Total'}</span>
                                                             <span className="text-primary">{mFinalTotal.toLocaleString('vi-VN')}₫</span>
                                                         </div>
                                                     </div>
@@ -1353,9 +1344,9 @@ export default function Details() {
 
                                         {/* Special requests */}
                                         <div>
-                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">Yêu cầu đặc biệt</h3>
+                                            <h3 className="text-sm font-bold text-neutral-700 mb-2">{language === 'vi' ? 'Yêu cầu đặc biệt' : 'Special requests'}</h3>
                                             <textarea value={specialRequests} onChange={(e) => setSpecialRequests(e.target.value)}
-                                                placeholder="Nhắn gửi chủ nhà..." rows="2"
+                                                placeholder={language === 'vi' ? "Nhắn gửi chủ nhà..." : "Message the host..."} rows="2"
                                                 className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent" />
                                         </div>
 
@@ -1372,7 +1363,7 @@ export default function Details() {
                                 <div className="px-5 py-4 border-t border-neutral-100 bg-white flex-shrink-0">
                                     {datesSelected && (
                                         <div className="flex justify-between items-center mb-3">
-                                            <span className="text-sm text-neutral-500">{mNights} đêm · {mRoomTypeText}</span>
+                                            <span className="text-sm text-neutral-500">{mNights} {language === 'vi' ? 'đêm' : 'nights'} · {mRoomTypeText}</span>
                                             <span className="text-lg font-bold text-primary">{mFinalTotal.toLocaleString('vi-VN')}₫</span>
                                         </div>
                                     )}
@@ -1382,7 +1373,7 @@ export default function Details() {
                                         className="flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary text-white text-base font-bold active:scale-[0.98] transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <span className="material-symbols-outlined !text-lg">lock</span>
-                                        <span>{datesSelected ? 'Xác nhận thanh toán' : 'Chọn ngày để tiếp tục'}</span>
+                                        <span>{datesSelected ? (language === 'vi' ? 'Xác nhận thanh toán' : 'Confirm payment') : (language === 'vi' ? 'Chọn ngày để tiếp tục' : 'Select dates to continue')}</span>
                                     </button>
                                 </div>
                             </div>
@@ -1396,7 +1387,7 @@ export default function Details() {
                 <div role="dialog" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6 animate-fade-in flex-col">
                     <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slide-up sm:animate-scale-up">
                         <div className="flex items-center border-b border-neutral-100 dark:border-neutral-800 px-6 py-4 shrink-0 justify-between">
-                            <h3 className="text-xl font-bold text-neutral-800 dark:text-white">Về chỗ ở này</h3>
+                            <h3 className="text-xl font-bold text-neutral-800 dark:text-white">{language === 'vi' ? 'Về chỗ ở này' : 'About this stay'}</h3>
                             <button
                                 type="button"
                                 onClick={() => setIsDescriptionModalOpen(false)}

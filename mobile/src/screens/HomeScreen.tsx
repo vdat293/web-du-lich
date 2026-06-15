@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
 import { PropertyCard } from '../components/PropertyCard';
@@ -26,15 +27,15 @@ const heroImage =
 
 const collections = [
   {
-    title: 'Biệt thự sang trọng',
-    subtitle: 'Riêng tư và thanh lịch trong từng chi tiết.',
+    titleKey: 'home.collectionLuxuryTitle',
+    subtitleKey: 'home.collectionLuxurySubtitle',
     query: 'villa',
     image:
       'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85',
   },
   {
-    title: 'Kỳ nghỉ mùa hè',
-    subtitle: 'Theo dấu nắng vàng bên bờ biển.',
+    titleKey: 'home.collectionSummerTitle',
+    subtitleKey: 'home.collectionSummerSubtitle',
     query: 'biển',
     image:
       'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1000&q=85',
@@ -43,20 +44,20 @@ const collections = [
 
 const destinations = [
   {
-    title: 'Đà Nẵng',
-    subtitle: 'Biển xanh và nhịp sống hiện đại',
+    titleKey: 'home.destinationDaNang',
+    subtitleKey: 'home.destinationDaNangSubtitle',
     image:
       'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=900&q=85',
   },
   {
-    title: 'Đà Lạt',
-    subtitle: 'Những sáng bình yên giữa rừng thông',
+    titleKey: 'home.destinationDaLat',
+    subtitleKey: 'home.destinationDaLatSubtitle',
     image:
       'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=85',
   },
   {
-    title: 'Phú Quốc',
-    subtitle: 'Hoàng hôn trên đảo ngọc',
+    titleKey: 'home.destinationPhuQuoc',
+    subtitleKey: 'home.destinationPhuQuocSubtitle',
     image:
       'https://images.unsplash.com/photo-1520454974749-611b7248ffdb?auto=format&fit=crop&w=900&q=85',
   },
@@ -65,6 +66,7 @@ const destinations = [
 export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
 
@@ -104,8 +106,8 @@ export function HomeScreen() {
               </View>
             </SafeAreaView>
             <View style={styles.heroCopy}>
-              <Text style={styles.eyebrow}>THOÁT KHỎI NHỮNG ĐIỀU BÌNH THƯỜNG</Text>
-              <Text style={styles.heroTitle}>Tìm một chốn bình yên cho hành trình tiếp theo.</Text>
+              <Text style={styles.eyebrow}>{t('home.heroEyebrow')}</Text>
+              <Text style={styles.heroTitle}>{t('home.heroTitle')}</Text>
             </View>
             <View style={styles.searchBox}>
               <Ionicons name="search" size={21} color={colors.textMuted} />
@@ -113,7 +115,7 @@ export function HomeScreen() {
                 value={query}
                 onChangeText={setQuery}
                 onSubmitEditing={() => search()}
-                placeholder="Bạn muốn đi đâu?"
+                placeholder={t('home.searchPlaceholder')}
                 placeholderTextColor={colors.textMuted}
                 returnKeyType="search"
                 style={styles.searchInput}
@@ -126,12 +128,10 @@ export function HomeScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Kỳ nghỉ tuyển chọn</Text>
-          <Text style={styles.sectionBody}>
-            Những điểm đến dành cho người yêu sự tinh tế, từ bờ biển đầy nắng đến miền núi yên tĩnh.
-          </Text>
+          <Text style={styles.sectionTitle}>{t('home.curatedTitle')}</Text>
+          <Text style={styles.sectionBody}>{t('home.curatedBody')}</Text>
           {collections.map((collection, index) => (
-            <Pressable key={collection.title} onPress={() => search(collection.query)}>
+            <Pressable key={collection.titleKey} onPress={() => search(collection.query)}>
               <ImageBackground
                 source={{ uri: collection.image }}
                 style={[styles.collectionCard, index === 1 && styles.collectionCardSmall]}
@@ -142,9 +142,9 @@ export function HomeScreen() {
                   style={[StyleSheet.absoluteFill, styles.roundedImage]}
                 />
                 <View style={styles.collectionCopy}>
-                  {index === 0 ? <Text style={styles.collectionBadge}>BỘ SƯU TẬP</Text> : null}
-                  <Text style={styles.collectionTitle}>{collection.title}</Text>
-                  <Text style={styles.collectionSubtitle}>{collection.subtitle}</Text>
+                  {index === 0 ? <Text style={styles.collectionBadge}>{t('home.collectionBadge')}</Text> : null}
+                  <Text style={styles.collectionTitle}>{t(collection.titleKey)}</Text>
+                  <Text style={styles.collectionSubtitle}>{t(collection.subtitleKey)}</Text>
                 </View>
               </ImageBackground>
             </Pressable>
@@ -154,9 +154,9 @@ export function HomeScreen() {
         {properties.length ? (
           <View style={styles.featuredSection}>
             <View style={styles.sectionHeadingRow}>
-              <Text style={styles.sectionTitle}>Được yêu thích</Text>
+              <Text style={styles.sectionTitle}>{t('home.featuredTitle')}</Text>
               <Pressable onPress={() => search('')}>
-                <Text style={styles.viewAll}>Xem tất cả</Text>
+                <Text style={styles.viewAll}>{t('home.viewAll')}</Text>
               </Pressable>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -173,15 +173,15 @@ export function HomeScreen() {
         ) : null}
 
         <View style={styles.destinationSection}>
-          <Text style={[styles.sectionTitle, styles.centerText]}>Điểm đến thịnh hành</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationList}>
-            {destinations.map((destination) => (
-              <Pressable key={destination.title} style={styles.destinationCard} onPress={() => search(destination.title)}>
+          <Text style={[styles.sectionTitle, styles.centerText]}>{t('home.trendingTitle')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destinationList}>
+              {destinations.map((destination) => (
+              <Pressable key={destination.titleKey} style={styles.destinationCard} onPress={() => search(t(destination.titleKey))}>
                 <ImageBackground source={{ uri: destination.image }} style={styles.destinationImage} imageStyle={styles.roundedImage}>
                   <LinearGradient colors={['transparent', 'rgba(1,36,37,0.72)']} style={[StyleSheet.absoluteFill, styles.roundedImage]} />
                   <View style={styles.destinationCopy}>
-                    <Text style={styles.destinationTitle}>{destination.title}</Text>
-                    <Text style={styles.destinationSubtitle}>{destination.subtitle}</Text>
+                    <Text style={styles.destinationTitle}>{t(destination.titleKey)}</Text>
+                    <Text style={styles.destinationSubtitle}>{t(destination.subtitleKey)}</Text>
                   </View>
                 </ImageBackground>
               </Pressable>

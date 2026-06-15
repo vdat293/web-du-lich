@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
 import { PropertyCard } from '../components/PropertyCard';
@@ -22,6 +23,7 @@ import type { Property } from '../types';
 type Props = NativeStackScreenProps<RootStackParamList, 'Search'>;
 
 export function SearchScreen({ navigation, route }: Props) {
+  const { t } = useTranslation();
   const initialQuery = route.params?.query || '';
   const [query, setQuery] = useState(initialQuery);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -35,7 +37,7 @@ export function SearchScreen({ navigation, route }: Props) {
     try {
       setProperties(await propertyService.list());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể tải danh sách chỗ nghỉ.');
+      setError(reason instanceof Error ? reason.message : t('search.offline'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -71,7 +73,7 @@ export function SearchScreen({ navigation, route }: Props) {
           autoFocus={!initialQuery}
           value={query}
           onChangeText={setQuery}
-          placeholder="Tên chỗ nghỉ hoặc điểm đến"
+          placeholder={t('search.placeholder')}
           placeholderTextColor={colors.textMuted}
           style={styles.searchInput}
         />
@@ -84,22 +86,22 @@ export function SearchScreen({ navigation, route }: Props) {
       <View style={styles.filterRow}>
         <View style={styles.filterPill}>
           <Ionicons name="calendar-outline" size={16} color={colors.primary} />
-          <Text style={styles.filterText}>Ngày linh hoạt</Text>
+          <Text style={styles.filterText}>{t('search.flexibleDates')}</Text>
         </View>
         <View style={styles.filterPill}>
           <Ionicons name="people-outline" size={16} color={colors.primary} />
-          <Text style={styles.filterText}>2 khách</Text>
+          <Text style={styles.filterText}>{t('search.guestsShort')}</Text>
         </View>
         <View style={[styles.filterPill, styles.filterPrimary]}>
           <Ionicons name="options-outline" size={16} color={colors.white} />
-          <Text style={styles.filterPrimaryText}>Bộ lọc</Text>
+          <Text style={styles.filterPrimaryText}>{t('search.filters')}</Text>
         </View>
       </View>
 
       {loading ? (
-        <LoadingState label="Đang tìm những chỗ nghỉ phù hợp..." />
+        <LoadingState label={t('search.loading')} />
       ) : error ? (
-        <EmptyState icon="cloud-offline-outline" title="Không kết nối được" message={error} actionLabel="Thử lại" onAction={() => void load()} />
+        <EmptyState icon="cloud-offline-outline" title={t('search.offlineTitle')} message={error} actionLabel={t('search.retry')} onAction={() => void load()} />
       ) : (
         <FlatList
           data={results}
@@ -109,11 +111,11 @@ export function SearchScreen({ navigation, route }: Props) {
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <View style={styles.resultHeader}>
-              <Text style={styles.resultEyebrow}>KHÁM PHÁ AOKLEVART</Text>
-              <Text style={styles.resultTitle}>{results.length} chỗ nghỉ đặc biệt</Text>
+              <Text style={styles.resultEyebrow}>{t('search.explore')}</Text>
+              <Text style={styles.resultTitle}>{t('search.results', { count: results.length })}</Text>
             </View>
           }
-          ListEmptyComponent={<EmptyState icon="search-outline" title="Chưa tìm thấy" message="Hãy thử một điểm đến hoặc từ khóa khác." />}
+          ListEmptyComponent={<EmptyState icon="search-outline" title={t('search.emptyTitle')} message={t('search.emptyBody')} />}
           renderItem={({ item }) => (
             <PropertyCard property={item} onPress={() => navigation.navigate('Details', { property: item })} />
           )}
