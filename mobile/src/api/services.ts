@@ -25,6 +25,26 @@ export const propertyService = {
     apiRequest<{ success: boolean }>('/api/check-availability', {
       method: 'POST',
       body: JSON.stringify(payload),
+  }),
+};
+
+export const wishlistService = {
+  listIds: async () => {
+    const items = await apiRequest<Array<{ property_id: number | string }>>('/api/user/wishlist', {
+      authenticated: true,
+    });
+    return items.map((item) => Number(item.property_id));
+  },
+  add: (propertyId: number) =>
+    apiRequest<{ message: string }>('/api/user/wishlist', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify({ property_id: propertyId }),
+    }),
+  remove: (propertyId: number) =>
+    apiRequest<{ message: string }>(`/api/user/wishlist?property_id=${propertyId}`, {
+      method: 'DELETE',
+      authenticated: true,
     }),
 };
 

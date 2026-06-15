@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
+import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { PropertyCard } from '../components/PropertyCard';
 import { EmptyState, LoadingState } from '../components/ScreenState';
 import { useFavorites } from '../context/FavoritesContext';
@@ -23,6 +24,11 @@ export function FavoritesScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    if (!user) {
+      setProperties([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       setProperties(await propertyService.list());
@@ -31,7 +37,7 @@ export function FavoritesScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     void load();
@@ -48,7 +54,13 @@ export function FavoritesScreen() {
         <Text style={styles.eyebrow}>{t('favorites.eyebrow')}</Text>
         <Text style={styles.title}>{t('favorites.title')}</Text>
       </View>
-      {loading ? <LoadingState /> : (
+      {!user ? (
+        <AuthPlaceholder
+          icon="heart-outline"
+          title={t('favorites.loginTitle')}
+          message={t('favorites.loginMessage')}
+        />
+      ) : loading ? <LoadingState /> : (
         <FlatList
           data={favorites}
           keyExtractor={(item) => String(item.id)}
