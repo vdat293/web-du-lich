@@ -18,4 +18,5 @@ export type RootStackParamList = {
   PersonalInfo: undefined;
   Security: undefined;
   HelpCenter: undefined;
+  Login: undefined;
 };

@@ -11,6 +11,7 @@ import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../context/AuthContext';
+import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import type { TabParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 
@@ -56,10 +57,11 @@ export function NotificationsScreen({ navigation }: Props) {
           )}
         </ScrollView>
       ) : (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="lock-closed-outline" size={48} color={colors.outline} />
-          <Text style={styles.emptyText}>{t('notifications.login')}</Text>
-        </View>
+        <AuthPlaceholder
+          icon="notifications-outline"
+          title={t('notifications.title')}
+          message={t('notifications.login')}
+        />
       )}
     </SafeAreaView>
   );

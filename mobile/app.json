@@ -3,6 +3,7 @@
     "name": "Aoklevart",
     "slug": "aoklevart-mobile",
     "version": "1.0.0",
+    "icon": "./assets/logo-aoklevart-icon.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "aoklevart",
@@ -12,15 +13,28 @@
     },
     "android": {
       "package": "com.aoklevart.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo-aoklevart-icon.png",
+        "backgroundColor": "#FAF8F5"
+      },
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/logo-aoklevart-icon.png"
     },
     "plugins": [
       "expo-font",
       "expo-secure-store",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo-aoklevart-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#FAF8F5"
+        }
+      ]
     ]
   }
 }

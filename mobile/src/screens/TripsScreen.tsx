@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { bookingService } from '../api/services';
 import { EmptyState, LoadingState } from '../components/ScreenState';
+import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { useAuth } from '../context/AuthContext';
 import { colors, fonts } from '../theme';
 import type { Booking } from '../types';
@@ -50,8 +51,11 @@ export function TripsScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.header}><Text style={styles.eyebrow}>{t('trips.eyebrow')}</Text><Text style={styles.title}>{t('trips.title')}</Text></View>
-        <EmptyState icon="briefcase-outline" title={t('trips.loginTitle')} message={t('trips.loginMessage')} />
+        <AuthPlaceholder
+          icon="briefcase-outline"
+          title={t('nav.trips')}
+          message={t('trips.loginMessage')}
+        />
       </SafeAreaView>
     );
   }

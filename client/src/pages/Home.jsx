@@ -5,7 +5,7 @@ import i18n from '../i18n';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import api from '../utils/api';
-import { assetUrl } from '../utils/media';
+import { assetUrl, BRAND_LOGO_URL, resolveMediaUrl } from '../utils/media';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -106,8 +106,7 @@ export default function Home() {
   }, []);
 
   const resolveImageUrl = (url) => {
-    if (!url) return '';
-    return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+    return resolveMediaUrl(url);
   };
 
   const getPropertyImage = (property) => {
@@ -758,10 +757,7 @@ export default function Home() {
               {/* Brand Column */}
               <div className="col-span-2">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="relative w-10 h-10 flex items-center justify-center">
-                    <div className="absolute inset-0 bg-accent rounded-lg transform rotate-45"></div>
-                    <span className="relative text-charcoal font-display font-bold text-lg">A</span>
-                  </div>
+                  <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-12 h-12 rounded-xl object-cover" />
                   <span className="font-display text-xl font-semibold">Aoklevart</span>
                 </div>
                 <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-xs">

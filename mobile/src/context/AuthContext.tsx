@@ -16,7 +16,9 @@ type AuthContextValue = {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  sendLoginOtp: (identifier: string) => Promise<void>;
+  loginWithOtp: (identifier: string, otp: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updatedUser: User) => Promise<void>;
   notifications: NotificationItem[];
@@ -73,8 +75,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       token,
       loading,
-      login: async (email, password) => {
-        const result = await authService.login(email, password);
+      login: async (identifier, password) => {
+        const result = await authService.login(identifier, password);
+        await Promise.all([
+          setStoredValue('aoklevart_token', result.token),
+          setStoredValue('aoklevart_user', JSON.stringify(result.user)),
+        ]);
+        setToken(result.token);
+        setUser(result.user);
+      },
+      sendLoginOtp: async (identifier) => {
+        await authService.sendLoginOtp(identifier);
+      },
+      loginWithOtp: async (identifier, otp) => {
+        const result = await authService.loginWithOtp(identifier, otp);
         await Promise.all([
           setStoredValue('aoklevart_token', result.token),
           setStoredValue('aoklevart_user', JSON.stringify(result.user)),

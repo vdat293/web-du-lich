@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { bookingService, paymentService } from '../api/services';
+import { BrandLogo } from '../components/BrandLogo';
 import { LoginForm } from '../components/LoginForm';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -300,7 +301,7 @@ export function PaymentScreen({ navigation, route }: Props) {
           <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={23} color={colors.primary} />
           </Pressable>
-          <Text style={styles.brand}>Aoklevart</Text>
+          <BrandLogo size={34} nameSize={21} />
           <Ionicons name="lock-closed" size={19} color={colors.primary} />
         </View>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -430,7 +431,7 @@ export function PaymentScreen({ navigation, route }: Props) {
         <View style={styles.modalBackdropBottom}>
           <View style={styles.loginSheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.modalTitle}>Aoklevart</Text>
+            <BrandLogo size={48} nameSize={24} />
             <Text style={styles.modalMessage}>{t('payment.login')}</Text>
             <LoginForm onSuccess={() => setShowLogin(false)} />
             <Pressable style={styles.linkButton} onPress={() => setShowLogin(false)}><Text style={styles.linkText}>{t('payment.backToExplore')}</Text></Pressable>
@@ -475,7 +476,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20 },
   backButton: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  brand: { color: colors.primary, fontFamily: fonts.display, fontSize: 27 },
   content: { paddingHorizontal: 20, paddingBottom: 50 },
   steps: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', marginVertical: 22 },
   step: { alignItems: 'center', width: 72 },

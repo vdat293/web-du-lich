@@ -9,6 +9,7 @@ import { propertyService } from '../api/services';
 import { PropertyCard } from '../components/PropertyCard';
 import { EmptyState, LoadingState } from '../components/ScreenState';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 import type { Property } from '../types';
@@ -16,6 +17,7 @@ import type { Property } from '../types';
 export function FavoritesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { favoriteIds } = useFavorites();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);

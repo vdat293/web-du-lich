@@ -4,6 +4,7 @@ import db from '../../../../../lib/db';
 import { sendVirtualSMS } from '../../../../../lib/sms';
 import { sendVirtualEmail } from '../../../../../lib/email';
 import { logActivity } from '../../../../../lib/logger';
+import { BRAND_LOGO_URL } from '../../../../../lib/brand';
 
 
 export async function GET(req, { params }) {
@@ -147,7 +148,7 @@ export async function PUT(req, { params }) {
                             const emailContent = `
                                 <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
                                     <div style="background-color: #0f172a; padding: 30px; text-align: center;">
-                                        <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 1px;">Aoklevart</h1>
+                                        <img src="${BRAND_LOGO_URL}" alt="Aoklevart" width="72" height="72" style="display: block; margin: 0 auto; border-radius: 16px;" />
                                         <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Luxury Stays</p>
                                     </div>
                                     <div style="padding: 40px 30px;">

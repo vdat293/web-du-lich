@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import { useTranslation } from 'react-i18next';
 import api from '../utils/api';
+import { resolveMediaUrl } from '../utils/media';
 export default function Search() {
     const { t, i18n } = useTranslation();
     const language = i18n.language === 'en' ? 'en' : 'vi';
@@ -141,8 +142,7 @@ export default function Search() {
     }, []);
 
     const resolveImageUrl = (url) => {
-        if (!url) return '';
-        return url.startsWith('http') ? url : '/' + url.replace(/^\//, '');
+        return resolveMediaUrl(url);
     };
 
     const toggleFavorite = (property) => {

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import OtpModal from '../components/OtpModal';
 import api from '../utils/api';
-import { assetUrl } from '../utils/media';
+import { assetUrl, resolveMediaUrl } from '../utils/media';
 
 export default function Payment() {
     const { t } = useTranslation();
@@ -568,7 +568,7 @@ export default function Payment() {
                     <div className="lg:sticky top-12 self-start">
                         <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 p-6 flex flex-col gap-5">
                             <div className="flex gap-4 pb-5 border-b border-neutral-200 dark:border-neutral-700">
-                                <div className="w-28 h-24 rounded-lg bg-cover bg-center" style={{ backgroundImage: `url('/${property.images.main}')` }}>
+                                <div className="w-28 h-24 rounded-lg bg-cover bg-center" style={{ backgroundImage: `url(${resolveMediaUrl(property.images.main)})` }}>
                                 </div>
                                 <div className="flex-1">
                                     <p className="text-sm text-neutral-500 dark:text-neutral-200">Biệt thự nghỉ dưỡng</p>

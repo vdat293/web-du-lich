@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const observerOptions = {
     root: null,
-    rootMargin: '0px',
-    threshold: 0.3 // Trigger when 30% of the section is visible
+    rootMargin: '-25% 0px -55% 0px', // Target the reading sweet spot (upper half of viewport)
+    threshold: 0
   };
 
   const observer = new IntersectionObserver((entries) => {

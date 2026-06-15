@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts, shadow } from '../theme';
 import type { Amenity, Room } from '../types';
@@ -46,6 +47,7 @@ export function DetailsScreen({ navigation, route }: Props) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { user } = useAuth();
   const defaults = useMemo(getDefaultDates, []);
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(property.rooms[0]);
@@ -130,7 +132,12 @@ export function DetailsScreen({ navigation, route }: Props) {
               <Pressable style={styles.circleButton} onPress={() => void Share.share({ message: `${property.name} - ${property.location}` })}>
                 <Ionicons name="share-outline" size={21} color={colors.primary} />
               </Pressable>
-              <Pressable style={styles.circleButton} onPress={() => toggleFavorite(property.id)}>
+              <Pressable 
+                style={styles.circleButton} 
+                onPress={() => {
+                  toggleFavorite(property.id);
+                }}
+              >
                 <Ionicons name={isFavorite(property.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(property.id) ? colors.error : colors.primary} />
               </Pressable>
             </View>

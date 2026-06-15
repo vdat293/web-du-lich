@@ -23,8 +23,8 @@ export const fonts = {
   body: 'DMSans_400Regular',
   medium: 'DMSans_500Medium',
   bold: 'DMSans_700Bold',
-  heading: 'PlayfairDisplay_600SemiBold',
-  display: 'PlayfairDisplay_700Bold',
+  heading: 'DMSans_700Bold',
+  display: 'DMSans_700Bold',
 } as const;
 
 export const shadow = {
