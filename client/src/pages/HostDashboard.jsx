@@ -7,6 +7,7 @@ import {
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 export default function HostDashboard() {
     const navigate = useNavigate();
@@ -161,7 +162,7 @@ export default function HostDashboard() {
     };
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const user = readJsonStorage('currentUser');
         if (!user || user.role !== 'host') {
             navigate('/');
             return;

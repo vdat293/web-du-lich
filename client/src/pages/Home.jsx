@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import Header from '../components/Header';
 import { SkeletonCard } from '../components/Loader';
 import api from '../utils/api';
 import { assetUrl } from '../utils/media';
 
 export default function Home() {
+  const { t } = useTranslation();
+  const language = i18n.language === 'en' ? 'en' : 'vi';
   const navigate = useNavigate();
   const trackRef = useRef(null);
   const containerRef = useRef(null);
@@ -82,7 +86,7 @@ export default function Home() {
         setProperties(res.data);
         setFeaturedProperties(res.data.slice(0, 10));
       } catch (error) {
-        console.error('Lỗi khi tải danh sách chỗ ở:', error);
+        console.error(language === 'vi' ? 'Lỗi khi tải danh sách chỗ ở:' : 'Error loading stay list:', error);
       } finally {
         setLoading(false);
       }
@@ -116,7 +120,7 @@ export default function Home() {
     const currentUser = localStorage.getItem('currentUser');
     if (!currentUser) {
       window.dispatchEvent(new CustomEvent('openLoginModal', {
-        detail: { message: 'Đăng nhập để lưu chỗ ở yêu thích của bạn' }
+        detail: { message: language === 'vi' ? 'Đăng nhập để lưu chỗ ở yêu thích của bạn' : 'Log in to save this stay to favorites' }
       }));
       return;
     }
@@ -301,22 +305,22 @@ export default function Home() {
               <button
                 type="button"
                 className="promo-close"
-                aria-label="Đóng thông báo"
+                aria-label={language === 'vi' ? 'Đóng thông báo' : 'Close message'}
                 onClick={() => setShowPromo(false)}
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
-              <div className="promo-tag">Ưu đãi giới hạn</div>
-              <h2 className="promo-title">Ưu đãi 30% cho kì nghỉ hè sảng khoái</h2>
+              <div className="promo-tag">{language === 'vi' ? 'Ưu đãi giới hạn' : 'Limited offer'}</div>
+              <h2 className="promo-title">{language === 'vi' ? 'Ưu đãi 30% cho kì nghỉ hè sảng khoái' : '30% off for a refreshing summer getaway'}</h2>
               <p className="promo-subtitle">
-                Nhập mã <strong>WELCOME30</strong> khi thanh toán để nhận ưu đãi cho mọi điểm đến trong hôm nay.
+                {language === 'vi' ? <>Nhập mã <strong>WELCOME30</strong> khi thanh toán để nhận ưu đãi cho mọi điểm đến trong hôm nay.</> : <>Use code <strong>WELCOME30</strong> at checkout to get the offer for every destination today.</>}
               </p>
               <div className="promo-actions">
                 <button type="button" className="promo-primary" onClick={() => setShowPromo(false)}>
-                  Nhận ưu đãi
+                  {language === 'vi' ? 'Nhận ưu đãi' : 'Claim offer'}
                 </button>
                 <button type="button" className="promo-secondary" onClick={() => setShowPromo(false)}>
-                  Để sau
+                  {language === 'vi' ? 'Để sau' : 'Later'}
                 </button>
               </div>
             </div>
@@ -339,25 +343,24 @@ export default function Home() {
             <div className="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
               <p className="animate-fade-in-up text-accent-light text-sm uppercase tracking-[0.3em] font-medium mb-6"
                 style={{ animationDelay: '0.1s' }}>
-                Khám phá Việt Nam
+                {language === 'vi' ? 'Khám phá Việt Nam' : 'Discover Vietnam'}
               </p>
               <h1 className="animate-fade-in-up font-display text-5xl md:text-6xl lg:text-7xl font-semibold leading-[1.45] mb-6"
                 style={{ animationDelay: '0.2s' }}>
-                Không gian nghỉ dưỡng
+                {language === 'vi' ? 'Không gian nghỉ dưỡng' : 'Luxury stays'}
                 <span className="block pt-3 pl-4">
                   <span
                     role="button"
                     tabIndex={0}
                     className="italic text-accent-light inline-block select-none align-baseline cursor-pointer"
                   >
-                    đẳng cấp
-                  </span>{' '}dành cho bạn
+                    {language === 'vi' ? 'đẳng cấp' : 'elevated'}
+                  </span>{' '}{language === 'vi' ? 'dành cho bạn' : 'for you'}
                 </span>
               </h1>
               <p className="animate-fade-in-up text-lg md:text-xl text-white/80 font-light max-w-2xl mx-auto mb-12"
                 style={{ animationDelay: '0.3s' }}>
-                Khám phá bộ sưu tập biệt thự, căn hộ cao cấp và homestay độc đáo được tuyển chọn kỹ lưỡng trên khắp Việt
-                Nam.
+                {language === 'vi' ? 'Khám phá bộ sưu tập biệt thự, căn hộ cao cấp và homestay độc đáo được tuyển chọn kỹ lưỡng trên khắp Việt Nam.' : 'Explore our hand-picked collection of luxury villas, premium apartments, and unique homestays across Vietnam.'}
               </p>
 
               {/* Premium Search Bar */}
@@ -369,7 +372,7 @@ export default function Home() {
                       <div
                         className="flex items-center h-14 px-5 rounded-xl bg-cream/50 hover:bg-cream transition-colors duration-300">
                         <span className="material-symbols-outlined text-accent mr-3">location_on</span>
-                        <input type="text" id="home-search-input" placeholder="Bạn muốn đến đâu?"
+                        <input type="text" id="home-search-input" placeholder={t('home.searchPlaceholder')}
                           value={searchQuery}
                           onChange={handleSearchChange}
                           onFocus={() => {
@@ -404,7 +407,7 @@ export default function Home() {
                         onClick={handleSearchSubmit}
                         className="btn-premium flex items-center justify-center w-full h-14 bg-primary rounded-xl text-white hover:bg-primary-light transition-all duration-300 gap-2">
                         <span className="material-symbols-outlined">search</span>
-                        <span className="font-medium">Tìm kiếm</span>
+                        <span className="font-medium">{t('home.search')}</span>
                       </button>
                     </div>
                   </div>
@@ -419,9 +422,9 @@ export default function Home() {
               {/* Section Header */}
               <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
                 <div>
-                  <p className="text-accent text-sm uppercase tracking-[0.2em] font-medium mb-3">Được yêu thích</p>
+                  <p className="text-accent text-sm uppercase tracking-[0.2em] font-medium mb-3">{language === 'vi' ? 'Được yêu thích' : 'Popular picks'}</p>
                   <h2 className="accent-line font-display text-3xl md:text-4xl font-semibold text-charcoal">
-                    Chỗ ở nổi bật
+                    {t('home.featured')}
                   </h2>
                 </div>
               </div>
@@ -568,12 +571,12 @@ export default function Home() {
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
               {/* Section Header */}
               <div className="text-center mb-16">
-                <p className="text-accent text-sm uppercase tracking-[0.2em] font-medium mb-3">Điểm đến hấp dẫn</p>
+                <p className="text-accent text-sm uppercase tracking-[0.2em] font-medium mb-3">{language === 'vi' ? 'Điểm đến hấp dẫn' : 'Popular destinations'}</p>
                 <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-charcoal mb-4">
-                  Khám phá vẻ đẹp Việt Nam
+                  {language === 'vi' ? 'Khám phá vẻ đẹp Việt Nam' : 'Discover the beauty of Vietnam'}
                 </h2>
                 <p className="text-warm-gray text-lg max-w-2xl mx-auto">
-                  Từ những đỉnh núi sương mù đến bờ biển trong xanh, mỗi điểm đến đều mang một câu chuyện riêng.
+                  {language === 'vi' ? 'Từ những đỉnh núi sương mù đến bờ biển trong xanh, mỗi điểm đến đều mang một câu chuyện riêng.' : 'From misty mountains to crystal-blue coastlines, every destination tells its own story.'}
                 </p>
               </div>
 
@@ -589,10 +592,9 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-8">
                     <p className="text-accent-light text-sm uppercase tracking-wider mb-2">Lâm Đồng</p>
                     <h3 className="font-display text-3xl md:text-4xl font-semibold text-white mb-3">Đà Lạt</h3>
-                    <p className="text-white/80 text-sm max-w-md mb-4 hidden md:block">Thành phố ngàn hoa với khí hậu mát mẻ
-                      quanh năm, kiến trúc Pháp cổ kính và những đồi thông bạt ngàn.</p>
+                    <p className="text-white/80 text-sm max-w-md mb-4 hidden md:block">{language === 'vi' ? 'Thành phố ngàn hoa với khí hậu mát mẻ quanh năm, kiến trúc Pháp cổ kính và những đồi thông bạt ngàn.' : 'The city of thousands of flowers with a cool climate year-round, ancient French architecture, and endless pine hills.'}</p>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Khám phá</span>
+                      <span className="text-sm font-medium">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
@@ -611,7 +613,7 @@ export default function Home() {
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="font-display text-2xl font-semibold text-white mb-1">Hội An</h3>
                       <div className="flex items-center gap-2 text-white/90">
-                        <span className="text-sm">Khám phá</span>
+                        <span className="text-sm">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                         <span
                           className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                       </div>
@@ -628,7 +630,7 @@ export default function Home() {
                     <div className="absolute bottom-0 left-0 right-0 p-6">
                       <h3 className="font-display text-2xl font-semibold text-white mb-1">Sapa</h3>
                       <div className="flex items-center gap-2 text-white/90">
-                        <span className="text-sm">Khám phá</span>
+                        <span className="text-sm">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                         <span
                           className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                       </div>
@@ -646,7 +648,7 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Đà Nẵng</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Khám phá</span>
+                      <span className="text-sm font-medium">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
@@ -660,7 +662,7 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Phan Thiết</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Khám phá</span>
+                      <span className="text-sm font-medium">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
@@ -674,7 +676,7 @@ export default function Home() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <h3 className="font-display text-xl font-semibold text-white mb-1">Nha Trang</h3>
                     <div className="flex items-center gap-2 text-white/90">
-                      <span className="text-sm font-medium">Khám phá</span>
+                      <span className="text-sm font-medium">{language === 'vi' ? 'Khám phá' : 'Explore'}</span>
                       <span
                         className="material-symbols-outlined text-lg transform group-hover:translate-x-1 transition-transform duration-300">arrow_forward</span>
                     </div>
@@ -697,10 +699,10 @@ export default function Home() {
             </div>
 
             <div className="relative max-w-4xl mx-auto px-6 lg:px-8 text-center">
-              <p className="text-accent-light text-sm uppercase tracking-[0.2em] font-medium mb-4">Trở thành đối tác</p>
+              <p className="text-accent-light text-sm uppercase tracking-[0.2em] font-medium mb-4">{language === 'vi' ? 'Trở thành đối tác' : 'Become a partner'}</p>
               <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-semibold text-white mb-6">
-                Chia sẻ không gian của bạn,<br />
-                <span className="italic text-accent-light">tạo nên giá trị mới</span>
+                {language === 'vi' ? 'Chia sẻ không gian của bạn,' : 'Share your space,'}<br />
+                <span className="italic text-accent-light">{language === 'vi' ? 'tạo nên giá trị mới' : 'create new value'}</span>
               </h2>
               <p className="text-white/80 text-lg max-w-2xl mx-auto mb-10">
                 Gia nhập cộng đồng hàng nghìn chủ nhà trên Aoklevart và bắt đầu hành trình kinh doanh nghỉ dưỡng của bạn với
@@ -709,11 +711,11 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a href="household.html"
                   className="btn-premium px-8 py-4 bg-accent text-charcoal text-base font-semibold rounded-xl hover:bg-accent-light transition-all duration-300 shadow-elegant">
-                  Bắt đầu cho thuê
+                  {language === 'vi' ? 'Bắt đầu cho thuê' : 'Start hosting'}
                 </a>
                 <a href="household.html"
                   className="px-8 py-4 text-white text-base font-medium rounded-xl border border-white/30 hover:bg-white/10 transition-all duration-300">
-                  Tìm hiểu thêm
+                  {language === 'vi' ? 'Tìm hiểu thêm' : 'Learn more'}
                 </a>
               </div>
             </div>
@@ -727,22 +729,22 @@ export default function Home() {
                   <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-primary/10 rounded-2xl">
                     <span className="material-symbols-outlined text-primary text-3xl">verified_user</span>
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">Đảm bảo an toàn</h3>
-                  <p className="text-warm-gray">Tất cả chỗ ở được xác minh kỹ lưỡng với tiêu chuẩn chất lượng cao nhất.</p>
+                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">{language === 'vi' ? 'Đảm bảo an toàn' : 'Safety guaranteed'}</h3>
+                  <p className="text-warm-gray">{language === 'vi' ? 'Tất cả chỗ ở được xác minh kỹ lưỡng với tiêu chuẩn chất lượng cao nhất.' : 'All stays are thoroughly verified to the highest quality standards.'}</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-primary/10 rounded-2xl">
                     <span className="material-symbols-outlined text-primary text-3xl">support_agent</span>
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">Hỗ trợ 24/7</h3>
-                  <p className="text-warm-gray">Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.</p>
+                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">{language === 'vi' ? 'Hỗ trợ 24/7' : '24/7 support'}</h3>
+                  <p className="text-warm-gray">{language === 'vi' ? 'Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.' : 'Our customer care team is ready to help you anytime, anywhere.'}</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center bg-primary/10 rounded-2xl">
                     <span className="material-symbols-outlined text-primary text-3xl">payments</span>
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">Thanh toán linh hoạt</h3>
-                  <p className="text-warm-gray">Đa dạng phương thức thanh toán an toàn và chính sách hủy phòng linh hoạt.</p>
+                  <h3 className="font-display text-xl font-semibold text-charcoal mb-3">{language === 'vi' ? 'Thanh toán linh hoạt' : 'Flexible payments'}</h3>
+                  <p className="text-warm-gray">{language === 'vi' ? 'Đa dạng phương thức thanh toán an toàn và chính sách hủy phòng linh hoạt.' : 'Multiple secure payment methods and flexible cancellation policies.'}</p>
                 </div>
               </div>
             </div>
@@ -763,8 +765,7 @@ export default function Home() {
                   <span className="font-display text-xl font-semibold">Aoklevart</span>
                 </div>
                 <p className="text-white/60 text-sm leading-relaxed mb-6 max-w-xs">
-                  Nền tảng đặt phòng nghỉ dưỡng hàng đầu Việt Nam, kết nối bạn với những trải nghiệm lưu trú độc đáo và đáng
-                  nhớ.
+                  {language === 'vi' ? 'Nền tảng đặt phòng nghỉ dưỡng hàng đầu Việt Nam, kết nối bạn với những trải nghiệm lưu trú độc đáo và đáng nhớ.' : 'Vietnam\'s leading vacation booking platform, connecting you with unique and memorable stay experiences.'}
                 </p>
                 <div className="flex items-center gap-4">
                   <a href="#"
@@ -793,15 +794,13 @@ export default function Home() {
 
               {/* Links Columns */}
               <div>
-                <h4 className="font-semibold text-white mb-5">Về Aoklevart</h4>
+                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Về Aoklevart' : 'About Aoklevart'}</h4>
                 <ul className="space-y-3">
                   <li><a href="about.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Giới
-                    thiệu</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Giới thiệu' : 'About Us'}</a></li>
                   <li><a href="careers.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Tuyển
-                    dụng</a></li>
-                  <li><a href="#" className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Báo chí</a>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Tuyển dụng' : 'Careers'}</a></li>
+                  <li><a href="#" className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Báo chí' : 'Press'}</a>
                   </li>
                   <li><a href="#" className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Blog</a>
                   </li>
@@ -809,32 +808,27 @@ export default function Home() {
               </div>
 
               <div>
-                <h4 className="font-semibold text-white mb-5">Hỗ trợ</h4>
+                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Hỗ trợ' : 'Support'}</h4>
                 <ul className="space-y-3">
                   <li><a href="support.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Trung tâm
-                    trợ giúp</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Trung tâm trợ giúp' : 'Help Center'}</a></li>
                   <li><a href="support.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Câu hỏi
-                    thường gặp</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Câu hỏi thường gặp' : 'FAQs'}</a></li>
                   <li><a href="support.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Liên hệ</a>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Liên hệ' : 'Contact'}</a>
                   </li>
                   <li><a href="support.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Chính sách
-                    hủy phòng</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Chính sách hủy phòng' : 'Cancellation Policy'}</a></li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="font-semibold text-white mb-5">Pháp lý</h4>
+                <h4 className="font-semibold text-white mb-5">{language === 'vi' ? 'Pháp lý' : 'Legal'}</h4>
                 <ul className="space-y-3">
                   <li><a href="terms.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Điều khoản
-                    dịch vụ</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Điều khoản dịch vụ' : 'Terms of Service'}</a></li>
                   <li><a href="terms.html"
-                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Chính sách
-                    bảo mật</a></li>
+                    className="text-white/60 text-sm hover:text-accent transition-colors duration-300">{language === 'vi' ? 'Chính sách bảo mật' : 'Privacy Policy'}</a></li>
                   <li><a href="terms.html"
                     className="text-white/60 text-sm hover:text-accent transition-colors duration-300">Cookie</a>
                   </li>
@@ -846,7 +840,7 @@ export default function Home() {
             <div className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="text-white/40 text-sm">© 2024 Aoklevart. Nhóm 8386.</p>
               <div className="flex items-center gap-6">
-                <span className="text-white/40 text-sm">Ngôn ngữ: Tiếng Việt</span>
+                <span className="text-white/40 text-sm">{language === 'vi' ? 'Ngôn ngữ: Tiếng Việt' : 'Language: English'}</span>
                 <span className="text-white/40 text-sm">VND (₫)</span>
               </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 export default function EmailClone() {
     const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function EmailClone() {
 
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const user = readJsonStorage('currentUser');
         if (!user || user.role !== 'admin') {
             navigate('/');
             return;

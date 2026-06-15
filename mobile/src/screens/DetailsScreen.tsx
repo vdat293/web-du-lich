@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
 import { useFavorites } from '../context/FavoritesContext';
@@ -40,6 +41,7 @@ function amenityIcon(amenity: Amenity): keyof typeof Ionicons.glyphMap {
 }
 
 export function DetailsScreen({ navigation, route }: Props) {
+  const { t, i18n } = useTranslation();
   const { property } = route.params;
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -61,7 +63,8 @@ export function DetailsScreen({ navigation, route }: Props) {
   const subtotal = selectedRoom ? selectedRoom.price * nights : 0;
   const serviceFee = Math.round(subtotal * 0.08);
   const total = subtotal + serviceFee;
-  const fullDescription = property.description || 'Một không gian nghỉ dưỡng được chăm chút để bạn tận hưởng trọn vẹn từng khoảnh khắc của chuyến đi.';
+  const fullDescription = property.description || t('details.fallbackDescription');
+  const fallbackAmenities = ['WiFi tốc độ cao', 'Điều hòa', 'Bãi đỗ xe', 'Không gian riêng tư'];
   const hasLongDescription = fullDescription.length > MAX_DESCRIPTION_CHARS;
   const shortDescription = hasLongDescription
     ? `${fullDescription.slice(0, MAX_DESCRIPTION_CHARS).trimEnd()}...`
@@ -69,11 +72,11 @@ export function DetailsScreen({ navigation, route }: Props) {
 
   async function continueToPayment() {
     if (!selectedRoom) {
-      setError('Chỗ nghỉ này chưa có hạng phòng để đặt.');
+      setError(t('details.unavailableRoomType'));
       return;
     }
     if (!nights) {
-      setError('Ngày trả phòng phải sau ngày nhận phòng.');
+      setError(t('details.checkoutAfterCheckin'));
       return;
     }
     setChecking(true);
@@ -99,7 +102,7 @@ export function DetailsScreen({ navigation, route }: Props) {
         },
       });
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể kiểm tra phòng trống.');
+      setError(reason instanceof Error ? reason.message : t('details.availabilityError'));
     } finally {
       setChecking(false);
     }
@@ -133,14 +136,14 @@ export function DetailsScreen({ navigation, route }: Props) {
             </View>
           </SafeAreaView>
           <View style={styles.imageCount}>
-            <Text style={styles.imageCountText}>{currentImage + 1} / {images.length} ảnh</Text>
+            <Text style={styles.imageCountText}>{t('details.images', { current: currentImage + 1, total: images.length })}</Text>
           </View>
         </View>
 
         <View style={styles.content}>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={17} color={colors.secondary} />
-            <Text style={styles.ratingText}>{property.rating || 'Mới'} · {property.reviews} đánh giá</Text>
+            <Text style={styles.ratingText}>{property.rating || t('details.newBadge')} · {t('details.reviews', { count: property.reviews })}</Text>
           </View>
           <Text style={styles.title}>{property.name}</Text>
           <Text style={styles.location}>{property.location} · {property.type}</Text>
@@ -151,29 +154,24 @@ export function DetailsScreen({ navigation, route }: Props) {
               {property.host.avatar ? <Image source={{ uri: property.host.avatar }} style={styles.hostAvatarImage} /> : <Text style={styles.hostInitial}>{property.host.name.charAt(0)}</Text>}
             </View>
             <View style={styles.hostCopy}>
-              <Text style={styles.hostTitle}>Được đón tiếp bởi {property.host.name}</Text>
-              <Text style={styles.hostMeta}>{property.maxGuests} khách · {property.bedrooms} phòng ngủ · {property.bathrooms} phòng tắm</Text>
+              <Text style={styles.hostTitle}>{t('details.hostedBy', { name: property.host.name })}</Text>
+              <Text style={styles.hostMeta}>{t('details.maxGuests', { count: property.maxGuests })} · {t('details.bedrooms', { count: property.bedrooms })} · {t('details.bathrooms', { count: property.bathrooms })}</Text>
             </View>
           </View>
 
           <View style={styles.divider} />
-          <Text style={styles.sectionTitle}>Về không gian này</Text>
+          <Text style={styles.sectionTitle}>{t('details.about')}</Text>
           <Text style={[styles.description, hasLongDescription && styles.descriptionCollapsed]}>{shortDescription}</Text>
           {hasLongDescription ? (
             <Pressable style={styles.descriptionButton} onPress={() => setShowDescription(true)}>
-              <Text style={styles.descriptionButtonText}>Hiển thị thêm</Text>
+              <Text style={styles.descriptionButtonText}>{t('details.showMore')}</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.primary} />
             </Pressable>
           ) : null}
 
-          <Text style={styles.sectionTitle}>Tiện nghi nổi bật</Text>
+          <Text style={styles.sectionTitle}>{t('details.amenities')}</Text>
           <View style={styles.amenitiesGrid}>
-            {(property.amenities.length ? property.amenities : [
-              { id: -1, name: 'WiFi tốc độ cao' },
-              { id: -2, name: 'Điều hòa' },
-              { id: -3, name: 'Bãi đỗ xe' },
-              { id: -4, name: 'Không gian riêng tư' },
-            ]).slice(0, 6).map((amenity) => (
+            {(property.amenities.length ? property.amenities : fallbackAmenities.map((name, index) => ({ id: -(index + 1), name }))).slice(0, 6).map((amenity) => (
               <View key={amenity.id} style={styles.amenity}>
                 <View style={styles.amenityIcon}>
                   <Ionicons name={amenityIcon(amenity)} size={21} color={colors.primary} />
@@ -183,7 +181,7 @@ export function DetailsScreen({ navigation, route }: Props) {
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Chọn hạng phòng</Text>
+          <Text style={styles.sectionTitle}>{t('details.chooseRoom')}</Text>
           {property.rooms.length ? property.rooms.map((room) => {
             const active = room.id === selectedRoom?.id;
             return (
@@ -191,29 +189,29 @@ export function DetailsScreen({ navigation, route }: Props) {
                 <View style={styles.radioOuter}>{active ? <View style={styles.radioInner} /> : null}</View>
                 <View style={styles.roomInfo}>
                   <Text style={styles.roomName}>{room.name}</Text>
-                  <Text style={styles.roomMeta}>{room.bed_type || 'Giường tiêu chuẩn'} · tối đa {room.max_adults + room.max_children} khách</Text>
+                  <Text style={styles.roomMeta}>{room.bed_type || t('details.standardBed')} · {t('details.maxGuests', { count: room.max_adults + room.max_children })}</Text>
                 </View>
                 <Text style={styles.roomPrice}>{formatCurrency(room.price)}</Text>
               </Pressable>
             );
-          }) : <Text style={styles.description}>Liên hệ chỗ nghỉ để biết tình trạng phòng.</Text>}
+          }) : <Text style={styles.description}>{t('details.contactForAvailability')}</Text>}
 
           <View style={styles.bookingCard}>
-            <Text style={styles.bookingTitle}>Lịch trình của bạn</Text>
+            <Text style={styles.bookingTitle}>{t('details.itinerary')}</Text>
             <View style={styles.dateRow}>
               <View style={styles.dateField}>
-                <Text style={styles.fieldLabel}>NHẬN PHÒNG</Text>
+                <Text style={styles.fieldLabel}>{t('details.checkIn')}</Text>
                 <TextInput value={checkIn} onChangeText={setCheckIn} placeholder="YYYY-MM-DD" style={styles.dateInput} />
               </View>
               <View style={styles.dateField}>
-                <Text style={styles.fieldLabel}>TRẢ PHÒNG</Text>
+                <Text style={styles.fieldLabel}>{t('details.checkOut')}</Text>
                 <TextInput value={checkOut} onChangeText={setCheckOut} placeholder="YYYY-MM-DD" style={styles.dateInput} />
               </View>
             </View>
             <View style={styles.guestRow}>
               <View>
-                <Text style={styles.fieldLabel}>KHÁCH</Text>
-                <Text style={styles.guestValue}>{guests} khách</Text>
+                <Text style={styles.fieldLabel}>{t('details.guests')}</Text>
+                <Text style={styles.guestValue}>{t('common.guests', { count: guests })}</Text>
               </View>
               <View style={styles.stepper}>
                 <Pressable style={styles.stepButton} onPress={() => setGuests((value) => Math.max(1, value - 1))}><Ionicons name="remove" size={18} color={colors.primary} /></Pressable>
@@ -222,9 +220,9 @@ export function DetailsScreen({ navigation, route }: Props) {
             </View>
             {nights > 0 && selectedRoom ? (
               <View style={styles.priceDetails}>
-                <View style={styles.priceLine}><Text style={styles.priceLabel}>{formatCurrency(selectedRoom.price)} × {nights} đêm</Text><Text style={styles.priceValue}>{formatCurrency(subtotal)}</Text></View>
-                <View style={styles.priceLine}><Text style={styles.priceLabel}>Phí dịch vụ</Text><Text style={styles.priceValue}>{formatCurrency(serviceFee)}</Text></View>
-                <View style={[styles.priceLine, styles.totalLine]}><Text style={styles.totalLabel}>Tổng cộng</Text><Text style={styles.totalValue}>{formatCurrency(total)}</Text></View>
+                <View style={styles.priceLine}><Text style={styles.priceLabel}>{formatCurrency(selectedRoom.price)} × {t('common.nights', { count: nights })}</Text><Text style={styles.priceValue}>{formatCurrency(subtotal)}</Text></View>
+                <View style={styles.priceLine}><Text style={styles.priceLabel}>{t('details.serviceFee')}</Text><Text style={styles.priceValue}>{formatCurrency(serviceFee)}</Text></View>
+                <View style={[styles.priceLine, styles.totalLine]}><Text style={styles.totalLabel}>{t('details.total')}</Text><Text style={styles.totalValue}>{formatCurrency(total)}</Text></View>
               </View>
             ) : null}
             {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -235,17 +233,17 @@ export function DetailsScreen({ navigation, route }: Props) {
       <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <View>
           <Text style={styles.bottomPrice}>{selectedRoom ? formatCurrency(selectedRoom.price) : property.price}</Text>
-          <Text style={styles.bottomMeta}>mỗi đêm · {nights || 0} đêm</Text>
+          <Text style={styles.bottomMeta}>{t('common.perNight')} · {t('common.nights', { count: nights || 0 })}</Text>
         </View>
         <Pressable disabled={checking || !selectedRoom} style={[styles.reserveButton, (!selectedRoom || checking) && styles.disabledButton]} onPress={() => void continueToPayment()}>
-          {checking ? <ActivityIndicator color={colors.white} /> : <Text style={styles.reserveText}>Đặt ngay</Text>}
+          {checking ? <ActivityIndicator color={colors.white} /> : <Text style={styles.reserveText}>{t('details.bookNow')}</Text>}
         </Pressable>
       </View>
 
       <Modal visible={showDescription} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowDescription(false)}>
         <SafeAreaView style={styles.descriptionModal}>
           <View style={styles.descriptionModalHeader}>
-            <Text style={styles.descriptionModalTitle}>Về không gian này</Text>
+            <Text style={styles.descriptionModalTitle}>{t('details.about')}</Text>
             <Pressable style={styles.modalCloseButton} onPress={() => setShowDescription(false)}>
               <Ionicons name="close" size={22} color={colors.primary} />
             </Pressable>

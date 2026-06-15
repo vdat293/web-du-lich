@@ -17,6 +17,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 const SmsClone = () => {
     const navigate = useNavigate();
@@ -29,7 +30,7 @@ const SmsClone = () => {
 
 
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const user = readJsonStorage('currentUser');
         if (!user || user.role !== 'admin') {
             navigate('/');
             return;

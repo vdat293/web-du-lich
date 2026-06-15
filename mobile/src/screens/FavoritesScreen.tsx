@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { propertyService } from '../api/services';
 import { PropertyCard } from '../components/PropertyCard';
@@ -15,6 +16,7 @@ import type { Property } from '../types';
 export function FavoritesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { favoriteIds } = useFavorites();
+  const { t } = useTranslation();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,8 +43,8 @@ export function FavoritesScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>BỘ SƯU TẬP CỦA BẠN</Text>
-        <Text style={styles.title}>Những nơi đã lưu</Text>
+        <Text style={styles.eyebrow}>{t('favorites.eyebrow')}</Text>
+        <Text style={styles.title}>{t('favorites.title')}</Text>
       </View>
       {loading ? <LoadingState /> : (
         <FlatList
@@ -50,7 +52,7 @@ export function FavoritesScreen() {
           keyExtractor={(item) => String(item.id)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<EmptyState icon="heart-outline" title="Chưa có nơi nào được lưu" message="Chạm biểu tượng trái tim trên chỗ nghỉ bạn yêu thích để xem lại tại đây." actionLabel="Khám phá ngay" onAction={() => navigation.navigate('Search')} />}
+          ListEmptyComponent={<EmptyState icon="heart-outline" title={t('favorites.emptyTitle')} message={t('favorites.emptyMessage')} actionLabel={t('favorites.action')} onAction={() => navigation.navigate('Search')} />}
           renderItem={({ item }) => <PropertyCard property={item} onPress={() => navigation.navigate('Details', { property: item })} />}
         />
       )}

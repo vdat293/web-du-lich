@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 
 import { userService } from '../api/services';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'PersonalInfo'>;
 
 export function PersonalInfoScreen({ navigation }: Props) {
   const { user, updateUser } = useAuth();
+  const { t } = useTranslation();
   
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
@@ -37,7 +39,7 @@ export function PersonalInfoScreen({ navigation }: Props) {
 
   const handleUpdateProfile = async () => {
     if (!editName.trim()) {
-      setUpdateError('Họ và tên không được để trống.');
+      setUpdateError(t('personalInfo.requiredName'));
       return;
     }
     setIsUpdating(true);
@@ -48,10 +50,10 @@ export function PersonalInfoScreen({ navigation }: Props) {
         phone: editPhone.trim() || undefined,
       });
       await updateUser(response.user);
-      Alert.alert('Thành công', 'Thông tin cá nhân đã được cập nhật thành công!');
+      Alert.alert(t('personalInfo.successTitle'), t('personalInfo.successMessage'));
       navigation.goBack();
     } catch (err) {
-      setUpdateError(err instanceof Error ? err.message : 'Đã có lỗi xảy ra.');
+      setUpdateError(err instanceof Error ? err.message : t('personalInfo.error'));
     } finally {
       setIsUpdating(false);
     }
@@ -63,7 +65,7 @@ export function PersonalInfoScreen({ navigation }: Props) {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
-        <Text style={styles.headerTitle}>Thông tin cá nhân</Text>
+        <Text style={styles.headerTitle}>{t('personalInfo.title')}</Text>
         <View style={styles.placeholderButton} />
       </View>
 
@@ -77,12 +79,12 @@ export function PersonalInfoScreen({ navigation }: Props) {
 
         <View style={styles.formContainer}>
           <View style={styles.fieldLabelContainer}>
-            <Text style={styles.fieldLabel}>Họ và tên</Text>
+            <Text style={styles.fieldLabel}>{t('personalInfo.name')}</Text>
           </View>
           <View style={styles.field}>
             <Ionicons name="person-outline" size={19} color={colors.textMuted} />
             <TextInput
-              placeholder="Họ và tên"
+              placeholder={t('personalInfo.name')}
               placeholderTextColor={colors.textMuted}
               style={styles.input}
               value={editName}
@@ -91,12 +93,12 @@ export function PersonalInfoScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.fieldLabelContainer}>
-            <Text style={styles.fieldLabel}>Số điện thoại</Text>
+            <Text style={styles.fieldLabel}>{t('personalInfo.phone')}</Text>
           </View>
           <View style={styles.field}>
             <Ionicons name="call-outline" size={19} color={colors.textMuted} />
             <TextInput
-              placeholder="Số điện thoại"
+              placeholder={t('personalInfo.phone')}
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
               style={styles.input}
@@ -106,7 +108,7 @@ export function PersonalInfoScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.fieldLabelContainer}>
-            <Text style={styles.fieldLabel}>Email (Không thể thay đổi)</Text>
+            <Text style={styles.fieldLabel}>{t('personalInfo.email')}</Text>
           </View>
           <View style={[styles.field, styles.disabledField]}>
             <Ionicons name="mail-outline" size={19} color={colors.outline} />
@@ -128,7 +130,7 @@ export function PersonalInfoScreen({ navigation }: Props) {
             {isUpdating ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.updateButtonText}>Lưu thay đổi</Text>
+              <Text style={styles.updateButtonText}>{t('personalInfo.save')}</Text>
             )}
           </Pressable>
         </View>

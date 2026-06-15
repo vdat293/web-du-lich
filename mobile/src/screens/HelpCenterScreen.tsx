@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
@@ -18,19 +19,20 @@ type Props = NativeStackScreenProps<RootStackParamList, 'HelpCenter'>;
 
 export function HelpCenterScreen({ navigation }: Props) {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const { t } = useTranslation();
 
   const faqs = [
     {
-      q: 'Làm thế nào để hủy phòng?',
-      a: 'Bạn có thể vào tab "Chuyến đi", chọn đặt phòng muốn hủy và nhấn nút "Hủy đặt phòng". Việc hủy phòng trước 24 giờ kể từ giờ check-in sẽ được hoàn tiền đầy đủ.',
+      q: t('help.faqs.cancel'),
+      a: t('help.faqs.cancelAnswer'),
     },
     {
-      q: 'Phương thức thanh toán được hỗ trợ?',
-      a: 'Chúng tôi hỗ trợ thanh toán qua thẻ ngân hàng, ví điện tử (MoMo, ZaloPay) và chuyển khoản Sandbox trực tiếp.',
+      q: t('help.faqs.payment'),
+      a: t('help.faqs.paymentAnswer'),
     },
     {
-      q: 'Tôi có thể thay đổi ngày đi không?',
-      a: 'Để thay đổi thông tin đặt phòng như ngày nhận/trả phòng, vui lòng liên hệ bộ phận hỗ trợ khách hàng của chúng tôi để được tư vấn nhanh nhất.',
+      q: t('help.faqs.dateChange'),
+      a: t('help.faqs.dateChangeAnswer'),
     },
   ];
 
@@ -40,12 +42,12 @@ export function HelpCenterScreen({ navigation }: Props) {
         <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
-        <Text style={styles.headerTitle}>Trung tâm trợ giúp</Text>
+        <Text style={styles.headerTitle}>{t('help.header')}</Text>
         <View style={styles.placeholderButton} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <Text style={styles.sectionHeader}>Câu hỏi thường gặp (FAQ)</Text>
+        <Text style={styles.sectionHeader}>{t('help.faq')}</Text>
         
         {faqs.map((faq, index) => {
           const isExpanded = expandedFaq === index;
@@ -71,31 +73,31 @@ export function HelpCenterScreen({ navigation }: Props) {
           );
         })}
 
-        <Text style={[styles.sectionHeader, { marginTop: 32 }]}>Kênh liên hệ hỗ trợ</Text>
+        <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('help.support')}</Text>
 
         <Pressable 
           style={styles.contactCard} 
-          onPress={() => Alert.alert('Hotline 24/7', 'Đang thực hiện cuộc gọi hỗ trợ đến 1900 1234...')}
+          onPress={() => Alert.alert(t('help.hotlineTitle'), t('help.hotlineMessage'))}
         >
           <View style={styles.contactIcon}>
             <Ionicons name="call" size={20} color={colors.primary} />
           </View>
           <View style={styles.contactTextContainer}>
-            <Text style={styles.contactLabel}>Hotline Chăm sóc khách hàng</Text>
-            <Text style={styles.contactValue}>1900 1234 (Miễn phí cuộc gọi)</Text>
+            <Text style={styles.contactLabel}>{t('help.hotlineLabel')}</Text>
+            <Text style={styles.contactValue}>{t('help.hotlineValue')}</Text>
           </View>
         </Pressable>
 
         <Pressable 
           style={styles.contactCard} 
-          onPress={() => Alert.alert('Gửi Email', 'Mở ứng dụng thư điện tử để gửi email đến support@aoklevart.com...')}
+          onPress={() => Alert.alert(t('help.emailTitle'), t('help.emailMessage'))}
         >
           <View style={styles.contactIcon}>
             <Ionicons name="mail" size={20} color={colors.primary} />
           </View>
           <View style={styles.contactTextContainer}>
-            <Text style={styles.contactLabel}>Gửi Email phản hồi</Text>
-            <Text style={styles.contactValue}>support@aoklevart.com</Text>
+            <Text style={styles.contactLabel}>{t('help.emailLabel')}</Text>
+            <Text style={styles.contactValue}>{t('help.emailValue')}</Text>
           </View>
         </Pressable>
       </ScrollView>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { bookingService } from '../api/services';
 import { EmptyState, LoadingState } from '../components/ScreenState';
@@ -11,17 +12,18 @@ import type { Booking } from '../types';
 import { formatCurrency, formatDate } from '../utils/date';
 
 const statusLabels: Record<string, string> = {
-  pending: 'Chờ xác nhận',
-  confirmed: 'Đã xác nhận',
-  checked_in: 'Đã nhận phòng',
-  completed: 'Hoàn thành',
-  cancelled: 'Đã hủy',
-  no_show: 'Không nhận phòng',
-  not_checked_in: 'Chờ nhận phòng',
+  pending: 'bookingStatus.pending',
+  confirmed: 'bookingStatus.confirmed',
+  checked_in: 'bookingStatus.checked_in',
+  completed: 'bookingStatus.completed',
+  cancelled: 'bookingStatus.cancelled',
+  no_show: 'bookingStatus.no_show',
+  not_checked_in: 'bookingStatus.not_checked_in',
 };
 
 export function TripsScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(Boolean(user));
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +36,7 @@ export function TripsScreen() {
     try {
       setBookings(await bookingService.list());
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể tải chuyến đi.');
+      setError(reason instanceof Error ? reason.message : t('trips.notAvailable'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -48,28 +50,28 @@ export function TripsScreen() {
   if (!user) {
     return (
       <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.header}><Text style={styles.eyebrow}>HÀNH TRÌNH</Text><Text style={styles.title}>Chuyến đi của bạn</Text></View>
-        <EmptyState icon="briefcase-outline" title="Đăng nhập để xem chuyến đi" message="Các booking gắn với tài khoản sẽ xuất hiện và được cập nhật tại đây." />
+        <View style={styles.header}><Text style={styles.eyebrow}>{t('trips.eyebrow')}</Text><Text style={styles.title}>{t('trips.title')}</Text></View>
+        <EmptyState icon="briefcase-outline" title={t('trips.loginTitle')} message={t('trips.loginMessage')} />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}><Text style={styles.eyebrow}>HÀNH TRÌNH</Text><Text style={styles.title}>Chuyến đi của bạn</Text></View>
-      {loading ? <LoadingState /> : (
+      <View style={styles.header}><Text style={styles.eyebrow}>{t('trips.eyebrow')}</Text><Text style={styles.title}>{t('trips.title')}</Text></View>
+      {loading ? <LoadingState label={t('trips.loading')} /> : (
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}
         >
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!bookings.length ? <EmptyState icon="calendar-outline" title="Chưa có chuyến đi" message="Sau khi đặt phòng, hành trình của bạn sẽ xuất hiện tại đây." /> : null}
+          {!bookings.length ? <EmptyState icon="calendar-outline" title={t('trips.emptyTitle')} message={t('trips.emptyMessage')} /> : null}
           {bookings.map((booking) => (
             <View key={booking.id} style={styles.card}>
               {booking.property_image ? <Image source={{ uri: booking.property_image }} style={styles.image} /> : <View style={[styles.image, styles.imagePlaceholder]}><Ionicons name="bed-outline" size={30} color={colors.primary} /></View>}
               <View style={styles.cardContent}>
-                <View style={styles.cardTop}><Text style={styles.bookingCode}>#{booking.id}</Text><View style={styles.status}><Text style={styles.statusText}>{statusLabels[booking.displayStatus || booking.status] || booking.status}</Text></View></View>
+                <View style={styles.cardTop}><Text style={styles.bookingCode}>#{booking.id}</Text><View style={styles.status}><Text style={styles.statusText}>{t(statusLabels[booking.displayStatus || booking.status] || booking.status)}</Text></View></View>
                 <Text style={styles.propertyName}>{booking.property_name}</Text>
                 <Text style={styles.location}>{booking.property_location}</Text>
                 <View style={styles.metaRow}><Ionicons name="calendar-outline" size={15} color={colors.textMuted} /><Text style={styles.meta}>{formatDate(booking.check_in)} - {formatDate(booking.check_out)}</Text></View>

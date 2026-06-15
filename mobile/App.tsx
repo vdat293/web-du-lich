@@ -17,9 +17,14 @@ import {
 import { AuthProvider } from './src/context/AuthContext';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
+import i18n from './src/i18n';
+import './src/i18n';
 
 void SplashScreen.preventAutoHideAsync();
+
+const STORAGE_KEY = 'aoklevart_language';
 
 export default function App() {
   const [dmLoaded] = useDmSans({
@@ -39,6 +44,14 @@ export default function App() {
       void SplashScreen.hideAsync();
     }
   }, [ready]);
+
+  useEffect(() => {
+    void getStoredValue(STORAGE_KEY).then((stored) => {
+      if (stored === 'en' || stored === 'vi') {
+        void i18n.changeLanguage(stored);
+      }
+    });
+  }, []);
 
   if (!ready) {
     return <View style={{ flex: 1, backgroundColor: colors.surface }} />;

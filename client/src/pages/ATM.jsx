@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 export default function ATM() {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function ATM() {
             try {
                 const storedUser = localStorage.getItem('currentUser');
                 if (storedUser) {
-                    const user = JSON.parse(storedUser);
+                    const user = readJsonStorage('currentUser');
                     if (user && user.role === 'admin') {
                         setCurrentUser(user);
                         fetchCards();

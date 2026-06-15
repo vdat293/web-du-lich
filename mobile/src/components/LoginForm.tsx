@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../context/AuthContext';
 import { colors, fonts } from '../theme';
 
 export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [secure, setSecure] = useState(true);
@@ -15,7 +17,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
 
   async function submit() {
     if (!identifier.trim() || !password) {
-      setError('Vui lòng nhập email/số điện thoại và mật khẩu.');
+      setError(t('login.required'));
       return;
     }
     setSubmitting(true);
@@ -24,7 +26,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       await login(identifier.trim(), password);
       onSuccess?.();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Đăng nhập không thành công.');
+      setError(reason instanceof Error ? reason.message : t('login.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -37,7 +39,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         <TextInput
           autoCapitalize="none"
           keyboardType="email-address"
-          placeholder="Email hoặc số điện thoại"
+          placeholder={t('login.identifier')}
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           value={identifier}
@@ -48,7 +50,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         <Ionicons name="lock-closed-outline" size={19} color={colors.textMuted} />
         <TextInput
           autoCapitalize="none"
-          placeholder="Mật khẩu"
+          placeholder={t('login.password')}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={secure}
           style={styles.input}
@@ -64,7 +66,7 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
         {submitting ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Text style={styles.buttonText}>Đăng nhập</Text>
+          <Text style={styles.buttonText}>{t('login.submit')}</Text>
         )}
       </Pressable>
     </View>

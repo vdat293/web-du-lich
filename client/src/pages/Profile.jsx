@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import Header from '../components/Header';
 import api from '../utils/api';
+import { readJsonStorage } from '../utils/storage';
 
 export default function Profile() {
+    const { t } = useTranslation();
+    const language = i18n.language === 'en' ? 'en' : 'vi';
     const navigate = useNavigate();
     const location = useLocation();
     const [user, setUser] = useState(null);
@@ -31,7 +36,7 @@ export default function Profile() {
         // Lấy thông tin user từ local storage
         const storedUser = localStorage.getItem('currentUser');
         if (storedUser) {
-            const parsedUser = JSON.parse(storedUser);
+            const parsedUser = readJsonStorage('currentUser');
             setUser(parsedUser);
             setName(parsedUser.name || '');
             setPhone(parsedUser.phone || '');
@@ -74,7 +79,7 @@ export default function Profile() {
 
         const token = localStorage.getItem('token');
         if (!token) {
-            setError('Bạn chưa đăng nhập hoặc phiên đã hết hạn.');
+            setError(language === 'vi' ? 'Bạn chưa đăng nhập hoặc phiên đã hết hạn.' : 'You are not logged in or your session has expired.');
             setLoading(false);
             return;
         }
@@ -83,14 +88,14 @@ export default function Profile() {
             const res = await api.put('/api/user/profile', { name, phone, avatarBase64 });
 
             // Thành công
-            setMessage('Cập nhật thông tin thành công!');
+            setMessage(t('profile.updateSuccess'));
             setUser(res.data.user);
             // Cập nhật lại local storage để App và Header nhận diện
             localStorage.setItem('currentUser', JSON.stringify(res.data.user));
             window.dispatchEvent(new Event('userUpdated'));
             setTimeout(() => setMessage(''), 3000);
         } catch (err) {
-            setError(err.response?.data?.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+            setError(err.response?.data?.message || (language === 'vi' ? 'Có lỗi xảy ra, vui lòng thử lại.' : 'Something went wrong, please try again.'));
         } finally {
             setLoading(false);
         }
@@ -147,8 +152,8 @@ export default function Profile() {
     if (!user) return null; // đang check chuyển trang
 
     const sidebarItems = [
-        { key: 'info', icon: 'person', label: 'Thông tin cá nhân' },
-        { key: 'favorites', icon: 'favorite', label: 'Phòng yêu thích', count: favoriteProperties.length },
+        { key: 'info', icon: 'person', label: t('profile.personalInfo') },
+        { key: 'favorites', icon: 'favorite', label: t('profile.favorites'), count: favoriteProperties.length },
     ];
 
     const getInitials = (name) => {
@@ -222,7 +227,7 @@ export default function Profile() {
                                                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
                                                     <div className="text-center">
                                                         <span className="material-symbols-outlined text-white !text-2xl" style={{ fontVariationSettings: "'FILL' 0" }}>photo_camera</span>
-                                                        <p className="text-white text-[10px] font-medium mt-0.5">Thay ảnh</p>
+                                                        <p className="text-white text-[10px] font-medium mt-0.5">{t('profile.avatar')}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -315,8 +320,8 @@ export default function Profile() {
                                             <span className="material-symbols-outlined text-primary !text-xl">edit_note</span>
                                         </div>
                                         <div>
-                                            <h3 className="text-lg font-display font-bold text-charcoal">Thông tin cá nhân</h3>
-                                            <p className="text-sm text-warm-gray mt-0.5">Cập nhật thông tin tài khoản của bạn</p>
+                                            <h3 className="text-lg font-display font-bold text-charcoal">{language === 'vi' ? 'Thông tin cá nhân' : 'Personal information'}</h3>
+                                            <p className="text-sm text-warm-gray mt-0.5">{language === 'vi' ? 'Cập nhật thông tin tài khoản của bạn' : 'Update your account details'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -444,7 +449,7 @@ export default function Profile() {
                                                 <span className="material-symbols-outlined text-red-400 !text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-display font-bold text-charcoal">Phòng yêu thích</h3>
+                                                <h3 className="text-lg font-display font-bold text-charcoal">{language === 'vi' ? 'Phòng yêu thích' : 'Favorite stays'}</h3>
                                                 <p className="text-sm text-warm-gray mt-0.5">Danh sách những nơi bạn đã lưu</p>
                                             </div>
                                         </div>

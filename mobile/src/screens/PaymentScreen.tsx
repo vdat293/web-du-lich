@@ -15,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 import { bookingService, paymentService } from '../api/services';
 import { LoginForm } from '../components/LoginForm';
@@ -34,6 +35,7 @@ const TEST_CARD = {
 };
 
 export function PaymentScreen({ navigation, route }: Props) {
+  const { t, i18n } = useTranslation();
   const { draft } = route.params;
   const { user } = useAuth();
   const [method, setMethod] = useState<PaymentMethod>('card');
@@ -88,7 +90,7 @@ export function PaymentScreen({ navigation, route }: Props) {
 
   useEffect(() => {
     if (!momoBookingId || momoSeconds > 0 || momoStatus !== 'pending') return;
-    void cancelMomo('Giao dịch MoMo quá hạn 15 phút');
+    void cancelMomo(i18n.language === 'en' ? 'MoMo transaction expired after 15 minutes' : 'Giao dịch MoMo quá hạn 15 phút');
   }, [momoBookingId, momoSeconds, momoStatus]);
 
   function fillTestCard() {
@@ -111,7 +113,7 @@ export function PaymentScreen({ navigation, route }: Props) {
   function validateGuest() {
     if (user) return true;
     if (!guestName.trim() || !guestPhone.trim()) {
-      setError('Vui lòng nhập họ tên và số điện thoại của khách đặt phòng.');
+      setError(i18n.language === 'en' ? 'Please enter the guest name and phone number.' : 'Vui lòng nhập họ tên và số điện thoại của khách đặt phòng.');
       return false;
     }
     return true;
@@ -140,7 +142,7 @@ export function PaymentScreen({ navigation, route }: Props) {
     return result.booking_id;
   }
 
-  async function cancelMomo(note = 'Người dùng chủ động hủy giao dịch MoMo') {
+  async function cancelMomo(note = i18n.language === 'en' ? 'User cancelled the MoMo transaction' : 'Người dùng chủ động hủy giao dịch MoMo') {
     if (!momoBookingId || processing) return;
     setProcessing(true);
     setError('');
@@ -148,7 +150,7 @@ export function PaymentScreen({ navigation, route }: Props) {
       await paymentService.cancelBooking(momoBookingId, note);
       setMomoStatus('cancelled');
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể hủy giao dịch MoMo.');
+      setError(reason instanceof Error ? reason.message : (i18n.language === 'en' ? 'Unable to cancel the MoMo transaction.' : 'Không thể hủy giao dịch MoMo.'));
     } finally {
       setProcessing(false);
     }
@@ -171,19 +173,19 @@ export function PaymentScreen({ navigation, route }: Props) {
         return;
       }
       if (!cardHolder.trim() || !cardNumber.trim() || !expiry.trim() || !cvv.trim()) {
-        setError('Vui lòng nhập đầy đủ thông tin thẻ sandbox.');
+        setError(i18n.language === 'en' ? 'Please enter all sandbox card details.' : 'Vui lòng nhập đầy đủ thông tin thẻ sandbox.');
         return;
       }
       if (cardNumber.replace(/\D/g, '').length < 16) {
-        setError('Số thẻ phải có ít nhất 16 chữ số.');
+        setError(i18n.language === 'en' ? 'Card number must be at least 16 digits.' : 'Số thẻ phải có ít nhất 16 chữ số.');
         return;
       }
       if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry.trim())) {
-        setError('Ngày hết hạn phải đúng định dạng MM/YY.');
+        setError(i18n.language === 'en' ? 'Expiry date must be in MM/YY format.' : 'Ngày hết hạn phải đúng định dạng MM/YY.');
         return;
       }
       if (!/^\d{3,4}$/.test(cvv.trim())) {
-        setError('CVV phải gồm 3 hoặc 4 chữ số.');
+        setError(i18n.language === 'en' ? 'CVV must contain 3 or 4 digits.' : 'CVV phải gồm 3 hoặc 4 chữ số.');
         return;
       }
       const result = await paymentService.initiate({
@@ -197,7 +199,7 @@ export function PaymentScreen({ navigation, route }: Props) {
       setOtp('');
       setShowOtp(true);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Không thể xử lý thanh toán.');
+      setError(reason instanceof Error ? reason.message : (i18n.language === 'en' ? 'Unable to process the payment.' : 'Không thể xử lý thanh toán.'));
     } finally {
       setProcessing(false);
     }
@@ -205,7 +207,7 @@ export function PaymentScreen({ navigation, route }: Props) {
 
   async function confirmOtp() {
     if (otp.length !== 6) {
-      setError('Vui lòng nhập đủ 6 số OTP.');
+      setError(i18n.language === 'en' ? 'Please enter the full 6-digit OTP.' : 'Vui lòng nhập đủ 6 số OTP.');
       return;
     }
     setProcessing(true);
@@ -215,7 +217,7 @@ export function PaymentScreen({ navigation, route }: Props) {
       setShowOtp(false);
       setBookingId(await createBooking('confirmed', 'card'));
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'OTP không hợp lệ.');
+      setError(reason instanceof Error ? reason.message : (i18n.language === 'en' ? 'Invalid OTP.' : 'OTP không hợp lệ.'));
     } finally {
       setProcessing(false);
     }
@@ -227,13 +229,13 @@ export function PaymentScreen({ navigation, route }: Props) {
         <View style={styles.successIcon}>
           <Ionicons name="checkmark" size={42} color={colors.white} />
         </View>
-        <Text style={styles.successTitle}>Đặt phòng thành công</Text>
-        <Text style={styles.successMessage}>Mã đặt phòng #{bookingId} đã được ghi nhận. Thông tin xác nhận sẽ được gửi theo thông tin liên hệ của bạn.</Text>
+        <Text style={styles.successTitle}>{t('payment.bookingSuccess')}</Text>
+        <Text style={styles.successMessage}>{t('payment.bookingSuccessMessage', { id: bookingId })}</Text>
         <Pressable style={styles.primaryButton} onPress={() => navigation.navigate('Tabs', { screen: 'Trips' })}>
-          <Text style={styles.primaryButtonText}>Xem chuyến đi</Text>
+          <Text style={styles.primaryButtonText}>{t('payment.viewTrips')}</Text>
         </Pressable>
         <Pressable style={styles.linkButton} onPress={() => navigation.navigate('Tabs', { screen: 'Explore' })}>
-          <Text style={styles.linkText}>Về trang khám phá</Text>
+          <Text style={styles.linkText}>{t('payment.backToExplore')}</Text>
         </Pressable>
       </SafeAreaView>
     );
@@ -248,30 +250,30 @@ export function PaymentScreen({ navigation, route }: Props) {
       <SafeAreaView style={styles.momoScreen}>
         <ScrollView contentContainerStyle={styles.momoContent} showsVerticalScrollIndicator={false}>
           <View style={styles.momoLogo}><Text style={styles.momoLogoText}>M</Text></View>
-          <Text style={styles.momoTitle}>Thanh toán MoMo</Text>
-          <Text style={styles.momoSubtitle}>Môi trường test, đồng bộ trạng thái như phiên bản web</Text>
+          <Text style={styles.momoTitle}>{t('payment.momoTitle')}</Text>
+          <Text style={styles.momoSubtitle}>{t('payment.momoSubtitle')}</Text>
 
           {isCancelled ? (
             <View style={styles.momoStateCard}>
               <Ionicons name="close-circle" size={54} color={colors.error} />
-              <Text style={styles.momoStateTitle}>Giao dịch đã hủy</Text>
-              <Text style={styles.momoStateText}>Booking #{momoBookingId} không còn chờ thanh toán.</Text>
+              <Text style={styles.momoStateTitle}>{t('payment.cancelled')}</Text>
+              <Text style={styles.momoStateText}>{t('payment.notWaiting', { id: momoBookingId })}</Text>
             </View>
           ) : (
             <>
               <View style={styles.momoInfoCard}>
-                <Text style={styles.momoLabel}>Mã đơn hàng</Text>
+                <Text style={styles.momoLabel}>{t('payment.tripDetails')}</Text>
                 <Text style={styles.momoBookingCode}>#BK-{momoBookingId}</Text>
                 <Image
                   source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrData}` }}
                   style={styles.momoQr}
                 />
                 <Text style={styles.momoAmount}>{formatCurrency(draft.total)}</Text>
-                <Text style={styles.momoTimer}>Còn lại {minutes}:{seconds}</Text>
+                <Text style={styles.momoTimer}>{minutes}:{seconds}</Text>
               </View>
               <View style={styles.momoHint}>
                 <Ionicons name="sync-outline" size={20} color={colors.primary} />
-                <Text style={styles.momoHintText}>Ứng dụng tự kiểm tra trạng thái mỗi 3 giây. Dùng trang quản trị để xác nhận booking khi test.</Text>
+                <Text style={styles.momoHintText}>{i18n.language === 'en' ? 'The app checks status every 3 seconds. Use the admin page to confirm bookings while testing.' : 'Ứng dụng tự kiểm tra trạng thái mỗi 3 giây. Dùng trang quản trị để xác nhận booking khi test.'}</Text>
               </View>
             </>
           )}
@@ -279,11 +281,11 @@ export function PaymentScreen({ navigation, route }: Props) {
           {error ? <Text style={styles.error}>{error}</Text> : null}
           {isCancelled ? (
             <Pressable style={styles.primaryButton} onPress={() => { setMomoBookingId(null); setError(''); }}>
-              <Text style={styles.primaryButtonText}>Quay lại thanh toán</Text>
+              <Text style={styles.primaryButtonText}>{t('payment.backToPayment')}</Text>
             </Pressable>
           ) : (
             <Pressable disabled={processing} style={styles.momoCancelButton} onPress={() => void cancelMomo()}>
-              {processing ? <ActivityIndicator color={colors.error} /> : <Text style={styles.momoCancelText}>Hủy giao dịch</Text>}
+              {processing ? <ActivityIndicator color={colors.error} /> : <Text style={styles.momoCancelText}>{t('payment.cancelTransaction')}</Text>}
             </Pressable>
           )}
         </ScrollView>
@@ -303,11 +305,11 @@ export function PaymentScreen({ navigation, route }: Props) {
         </View>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.steps}>
-            <Step number="1" label="Chi tiết" done />
+            <Step number="1" label="1" done />
             <View style={styles.stepLine} />
-            <Step number="2" label="Thanh toán" active />
+            <Step number="2" label="2" active />
             <View style={styles.stepLine} />
-            <Step number="3" label="Xác nhận" />
+            <Step number="3" label="3" />
           </View>
 
           <View style={styles.summaryCard}>
@@ -315,16 +317,16 @@ export function PaymentScreen({ navigation, route }: Props) {
             <View style={styles.summaryCopy}>
               <Text style={styles.summaryName} numberOfLines={2}>{draft.property.name}</Text>
               <Text style={styles.summaryLocation}>{draft.property.location}</Text>
-              <Text style={styles.summaryMeta}>{draft.nights} đêm · {draft.guests} khách · {draft.room.name}</Text>
+              <Text style={styles.summaryMeta}>{draft.nights} {t('common.nights', { count: draft.nights })} · {draft.guests} {t('common.guests', { count: draft.guests })} · {draft.room.name}</Text>
             </View>
           </View>
 
           <View style={styles.priceCard}>
-            <Text style={styles.cardTitle}>Chi tiết giá</Text>
-            <PriceLine label={`${formatCurrency(draft.room.price)} × ${draft.nights} đêm`} value={formatCurrency(draft.subtotal)} />
-            <PriceLine label="Phí dịch vụ" value={formatCurrency(draft.serviceFee)} />
+            <Text style={styles.cardTitle}>{t('payment.priceDetails')}</Text>
+            <PriceLine label={`${formatCurrency(draft.room.price)} × ${draft.nights} ${t('common.nights', { count: draft.nights })}`} value={formatCurrency(draft.subtotal)} />
+            <PriceLine label={t('payment.serviceFee')} value={formatCurrency(draft.serviceFee)} />
             <View style={styles.totalDivider} />
-            <PriceLine label="Tổng thanh toán" value={formatCurrency(draft.total)} total />
+            <PriceLine label={t('payment.totalPayment')} value={formatCurrency(draft.total)} total />
             <View style={styles.tripDates}>
               <Ionicons name="calendar-outline" size={18} color={colors.primary} />
               <Text style={styles.tripDateText}>{formatDate(draft.checkIn)} - {formatDate(draft.checkOut)}</Text>
@@ -334,53 +336,53 @@ export function PaymentScreen({ navigation, route }: Props) {
           {!user ? (
             <View style={styles.card}>
               <View style={styles.cardHeadingRow}>
-                <Text style={styles.cardTitle}>Thông tin khách</Text>
-                <Pressable onPress={() => setShowLogin(true)}><Text style={styles.loginLink}>Đăng nhập</Text></Pressable>
+                <Text style={styles.cardTitle}>{t('payment.customerInfo')}</Text>
+                <Pressable onPress={() => setShowLogin(true)}><Text style={styles.loginLink}>{t('payment.login')}</Text></Pressable>
               </View>
-              <Field icon="person-outline" placeholder="Họ và tên *" value={guestName} onChangeText={setGuestName} />
-              <Field icon="call-outline" placeholder="Số điện thoại *" keyboardType="phone-pad" value={guestPhone} onChangeText={setGuestPhone} />
-              <Field icon="mail-outline" placeholder="Email (không bắt buộc)" keyboardType="email-address" autoCapitalize="none" value={guestEmail} onChangeText={setGuestEmail} />
+              <Field icon="person-outline" placeholder={t('payment.guestName')} value={guestName} onChangeText={setGuestName} />
+              <Field icon="call-outline" placeholder={t('payment.guestPhone')} keyboardType="phone-pad" value={guestPhone} onChangeText={setGuestPhone} />
+              <Field icon="mail-outline" placeholder={t('payment.guestEmail')} keyboardType="email-address" autoCapitalize="none" value={guestEmail} onChangeText={setGuestEmail} />
             </View>
           ) : (
             <View style={styles.signedInCard}>
               <Ionicons name="checkmark-circle" size={24} color={colors.success} />
               <View style={styles.signedInCopy}>
-                <Text style={styles.signedInTitle}>Đặt phòng với {user.name}</Text>
+                <Text style={styles.signedInTitle}>{t('payment.signedInAs', { name: user.name })}</Text>
                 <Text style={styles.signedInMeta}>{user.email}</Text>
               </View>
             </View>
           )}
 
-          <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
-          <PaymentOption active={method === 'card'} icon="card-outline" title="Thẻ ATM / tín dụng" subtitle="Thanh toán sandbox có xác thực OTP" onPress={() => { setMethod('card'); setError(''); }} />
+          <Text style={styles.sectionTitle}>{t('payment.paymentMethod')}</Text>
+          <PaymentOption active={method === 'card'} icon="card-outline" title={t('payment.atmCard')} subtitle={t('payment.atmSubtitle')} onPress={() => { setMethod('card'); setError(''); }} />
           {method === 'card' ? (
             <View style={styles.cardFields}>
-              <Field icon="person-outline" placeholder="Tên chủ thẻ" autoCapitalize="characters" value={cardHolder} onChangeText={(value) => setCardHolder(value.toUpperCase())} />
-              <Field icon="card-outline" placeholder="Số thẻ sandbox" keyboardType="number-pad" maxLength={23} value={cardNumber} onChangeText={(value) => setCardNumber(formatCardNumber(value))} />
+              <Field icon="person-outline" placeholder={t('payment.guestName')} autoCapitalize="characters" value={cardHolder} onChangeText={(value) => setCardHolder(value.toUpperCase())} />
+              <Field icon="card-outline" placeholder={t('payment.atmCard')} keyboardType="number-pad" maxLength={23} value={cardNumber} onChangeText={(value) => setCardNumber(formatCardNumber(value))} />
               <View style={styles.halfRow}>
                 <View style={styles.half}><Field placeholder="MM/YY" keyboardType="number-pad" maxLength={5} value={expiry} onChangeText={(value) => setExpiry(formatExpiry(value))} /></View>
                 <View style={styles.half}><Field placeholder="CVV" keyboardType="number-pad" maxLength={4} secureTextEntry value={cvv} onChangeText={(value) => setCvv(value.replace(/\D/g, ''))} /></View>
               </View>
               <View style={styles.testCardBox}>
                 <View style={styles.testCardCopy}>
-                  <Text style={styles.testCardTitle}>Thẻ test Sandbox</Text>
+                  <Text style={styles.testCardTitle}>Sandbox test card</Text>
                   <Text style={styles.testCardText}>9704 0000 0000 0018 · 12/28 · CVV 123</Text>
                 </View>
-                <Pressable style={styles.testCardButton} onPress={fillTestCard}><Text style={styles.testCardButtonText}>Điền</Text></Pressable>
+                <Pressable style={styles.testCardButton} onPress={fillTestCard}><Text style={styles.testCardButtonText}>{t('common.save')}</Text></Pressable>
               </View>
             </View>
           ) : null}
-          <PaymentOption active={method === 'momo'} icon="phone-portrait-outline" title="Ví MoMo (test)" subtitle="Tạo mã QR và chờ xác nhận như trên web" onPress={() => { setMethod('momo'); setError(''); }} />
-          <PaymentOption active={method === 'cash'} icon="wallet-outline" title="Thanh toán tại chỗ nghỉ" subtitle="Tạo yêu cầu và chờ chủ nhà xác nhận" onPress={() => { setMethod('cash'); setError(''); }} />
+          <PaymentOption active={method === 'momo'} icon="phone-portrait-outline" title={t('payment.momo')} subtitle={t('payment.momoDesc')} onPress={() => { setMethod('momo'); setError(''); }} />
+          <PaymentOption active={method === 'cash'} icon="wallet-outline" title={t('payment.cash')} subtitle={t('payment.cashDesc')} onPress={() => { setMethod('cash'); setError(''); }} />
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Yêu cầu đặc biệt</Text>
+            <Text style={styles.cardTitle}>{t('payment.specialRequests')}</Text>
             <TextInput
               multiline
               numberOfLines={4}
               value={specialRequests}
               onChangeText={setSpecialRequests}
-              placeholder="Ví dụ: nhận phòng muộn, phòng yên tĩnh..."
+              placeholder={t('payment.specialPlaceholder')}
               placeholderTextColor={colors.textMuted}
               style={styles.notes}
               textAlignVertical="top"
@@ -389,13 +391,13 @@ export function PaymentScreen({ navigation, route }: Props) {
 
           <View style={styles.securityNote}>
             <Ionicons name="shield-checkmark-outline" size={21} color={colors.primary} />
-            <Text style={styles.securityText}>Thông tin thanh toán được xử lý qua môi trường sandbox của Aoklevart.</Text>
+            <Text style={styles.securityText}>{t('payment.security')}</Text>
           </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Pressable disabled={processing} style={[styles.primaryButton, processing && styles.disabled]} onPress={() => void submit()}>
-            {processing ? <ActivityIndicator color={colors.white} /> : <><Text style={styles.primaryButtonText}>{method === 'card' ? 'Tiếp tục xác thực OTP' : method === 'momo' ? 'Tạo thanh toán MoMo test' : 'Gửi yêu cầu đặt phòng'}</Text><Ionicons name="lock-closed" size={15} color={colors.white} /></>}
+            {processing ? <ActivityIndicator color={colors.white} /> : <><Text style={styles.primaryButtonText}>{method === 'card' ? t('payment.continueOtp') : method === 'momo' ? t('payment.createMomo') : t('payment.submitBooking')}</Text><Ionicons name="lock-closed" size={15} color={colors.white} /></>}
           </Pressable>
-          <Text style={styles.terms}>Bằng cách tiếp tục, bạn đồng ý với điều khoản dịch vụ của Aoklevart.</Text>
+          <Text style={styles.terms}>{t('payment.terms')}</Text>
         </ScrollView>
       </SafeAreaView>
 
@@ -403,8 +405,8 @@ export function PaymentScreen({ navigation, route }: Props) {
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <View style={styles.modalIcon}><Ionicons name="chatbubble-ellipses-outline" size={28} color={colors.primary} /></View>
-            <Text style={styles.modalTitle}>Xác thực thanh toán</Text>
-            <Text style={styles.modalMessage}>Nhập mã OTP 6 số đã được gửi tới số điện thoại liên kết với thẻ sandbox.</Text>
+            <Text style={styles.modalTitle}>{t('payment.otpTitle')}</Text>
+            <Text style={styles.modalMessage}>{t('payment.otpMessage')}</Text>
             <TextInput
               autoFocus
               keyboardType="number-pad"
@@ -417,9 +419,9 @@ export function PaymentScreen({ navigation, route }: Props) {
             />
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <Pressable disabled={processing} style={styles.primaryButton} onPress={() => void confirmOtp()}>
-              {processing ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryButtonText}>Xác nhận và thanh toán</Text>}
+              {processing ? <ActivityIndicator color={colors.white} /> : <Text style={styles.primaryButtonText}>{t('payment.confirmAndPay')}</Text>}
             </Pressable>
-            <Pressable style={styles.linkButton} onPress={() => setShowOtp(false)}><Text style={styles.linkText}>Quay lại</Text></Pressable>
+            <Pressable style={styles.linkButton} onPress={() => setShowOtp(false)}><Text style={styles.linkText}>{t('payment.back')}</Text></Pressable>
           </View>
         </View>
       </Modal>
@@ -428,10 +430,10 @@ export function PaymentScreen({ navigation, route }: Props) {
         <View style={styles.modalBackdropBottom}>
           <View style={styles.loginSheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.modalTitle}>Đăng nhập Aoklevart</Text>
-            <Text style={styles.modalMessage}>Đăng nhập để chuyến đi được lưu trực tiếp vào tài khoản.</Text>
+            <Text style={styles.modalTitle}>Aoklevart</Text>
+            <Text style={styles.modalMessage}>{t('payment.login')}</Text>
             <LoginForm onSuccess={() => setShowLogin(false)} />
-            <Pressable style={styles.linkButton} onPress={() => setShowLogin(false)}><Text style={styles.linkText}>Tiếp tục với tư cách khách</Text></Pressable>
+            <Pressable style={styles.linkButton} onPress={() => setShowLogin(false)}><Text style={styles.linkText}>{t('payment.backToExplore')}</Text></Pressable>
           </View>
         </View>
       </Modal>
