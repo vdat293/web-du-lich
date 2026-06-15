@@ -3,6 +3,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
 import { useFavorites } from '../context/FavoritesContext';
+import { useAuth } from '../context/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts, shadow } from '../theme';
 import type { Property } from '../types';
 
@@ -19,6 +23,8 @@ export function PropertyCard({
   wide?: boolean;
   }) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { user } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const liked = isFavorite(property.id);
 
