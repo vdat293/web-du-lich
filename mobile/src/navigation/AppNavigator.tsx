@@ -1,7 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, View, StyleSheet, Pressable } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {
+  BottomTabBar,
+  type BottomTabBarProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -36,60 +40,15 @@ const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
 function TabBarIcon({
   name,
   color,
-  focused,
   size,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   color: string;
-  focused: boolean;
   size: number;
 }) {
-  const animValue = useRef(new Animated.Value(focused ? 1 : 0)).current;
-
-  useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: focused ? 1 : 0,
-      duration: 280,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [focused]);
-
-  const scale = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.1],
-  });
-
-  const translateY = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -2],
-  });
-
-  const dotScale = animValue.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 1],
-  });
-
-  const dotOpacity = animValue.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0.3, 1],
-  });
-
   return (
     <View style={tabIconStyles.wrapper}>
-      <Animated.View style={{ transform: [{ scale }, { translateY }] }}>
-        <Ionicons name={name} color={color} size={size} />
-      </Animated.View>
-      <Animated.View
-        style={[
-          tabIconStyles.dot,
-          {
-            backgroundColor: colors.primary,
-            opacity: dotOpacity,
-            transform: [{ scaleX: dotScale }],
-          },
-        ]}
-      />
+      <Ionicons name={name} color={color} size={size} />
     </View>
   );
 }
@@ -99,13 +58,55 @@ const tabIconStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    marginTop: 3,
+  barContainer: {
+    position: 'relative',
+  },
+  indicator: {
+    position: 'absolute',
+    top: 0,
+    width: 24,
+    height: 3,
+    borderBottomLeftRadius: 3,
+    borderBottomRightRadius: 3,
+    backgroundColor: colors.primary,
   },
 });
+
+function AnimatedTabBar(props: BottomTabBarProps) {
+  const [barWidth, setBarWidth] = useState(0);
+  const progress = useRef(new Animated.Value(props.state.index)).current;
+  const tabWidth = barWidth / props.state.routes.length;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: props.state.index,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [progress, props.state.index]);
+
+  return (
+    <View
+      style={tabIconStyles.barContainer}
+      onLayout={(event) => setBarWidth(event.nativeEvent.layout.width)}
+    >
+      <BottomTabBar {...props} />
+      {barWidth > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            tabIconStyles.indicator,
+            {
+              left: tabWidth / 2 - 12,
+              transform: [{ translateX: Animated.multiply(progress, tabWidth) }],
+            },
+          ]}
+        />
+      ) : null}
+    </View>
+  );
+}
 
 function TabNavigator() {
   const { notifications, user } = useAuth();
@@ -114,8 +115,17 @@ function TabNavigator() {
 
   return (
     <Tabs.Navigator
+      tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,
+        animation: 'shift',
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 280,
+            easing: Easing.out(Easing.cubic),
+          },
+        },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11, paddingBottom: 2 },
@@ -134,7 +144,7 @@ function TabNavigator() {
         },
         tabBarIcon: ({ color, focused, size }) => {
           const iconName = focused ? icons[route.name] : (`${icons[route.name]}-outline` as keyof typeof Ionicons.glyphMap);
-          return <TabBarIcon name={iconName} color={color} focused={focused} size={size} />;
+          return <TabBarIcon name={iconName} color={color} size={size} />;
         },
         tabBarButton: ({ ref: _ref, ...props }) => (
           <Pressable
