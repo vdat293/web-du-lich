@@ -11,10 +11,10 @@ export async function POST(req) {
     let connection;
     try {
         const body = await req.json();
-        const { email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, payment_method, status: bookingStatus } = body;
+        const { email, phone, guest_name, property_id, room_type_id, check_in, check_out, number_of_rooms, special_requests, payment_method, status: bookingStatus } = body;
 
         // Validation: Theo sơ đồ mới, SĐT bắt buộc, Email tùy chọn
-        if (!phone || !guest_name || !property_id || !room_type_id || !check_in || !check_out || !total_price) {
+        if (!phone || !guest_name || !property_id || !room_type_id || !check_in || !check_out) {
             return NextResponse.json({ message: 'Thiếu thông tin bắt buộc (Số điện thoại, Tên, v.v...)' }, { status: 400 });
         }
 
@@ -24,12 +24,14 @@ export async function POST(req) {
         try {
             // === Kiểm tra phòng trống sơ bộ bằng Hàm dùng chung ===
             const { checkRoomAvailability } = await import('../../../../lib/bookings.js');
+            const requestedRooms = Number(number_of_rooms) || 1;
             const availability = await checkRoomAvailability(
                 connection, 
                 room_type_id, 
                 check_in, 
                 check_out, 
-                number_of_rooms || 1
+                requestedRooms,
+                property_id
             );
 
             if (!availability.isAvailable) {
@@ -38,6 +40,9 @@ export async function POST(req) {
                     message: availability.message
                 }, { status: 400 });
             }
+
+            const calculatedTotalPrice =
+                Number(availability.roomType.price) * availability.nights * requestedRooms;
 
             // Kiểm tra SĐT trong hệ thống (Theo sơ đồ: Tài khoản đã tồn tại chưa?)
             const cleanPhone = (phone || '').trim();
@@ -82,7 +87,7 @@ export async function POST(req) {
                 const [result] = await connection.execute(
                     `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests, guest_name, guest_phone)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [userId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, finalStatus, special_requests || null, guest_name, cleanPhone]
+                    [userId, property_id, room_type_id, check_in, check_out, requestedRooms, calculatedTotalPrice, finalStatus, special_requests || null, guest_name, cleanPhone]
                 );
 
                 const bookingId = result.insertId;
@@ -93,7 +98,7 @@ export async function POST(req) {
                 await connection.execute(
                     `INSERT INTO payments (booking_id, amount, payment_method, payment_status)
                      VALUES (?, ?, ?, ?)`,
-                    [bookingId, total_price, finalPaymentMethod, finalPaymentStatus]
+                    [bookingId, calculatedTotalPrice, finalPaymentMethod, finalPaymentStatus]
                 );
 
                 // Lưu lịch sử trạng thái
@@ -126,7 +131,7 @@ export async function POST(req) {
 
                     if (cleanEmail) {
                         const emailSubject = `[Aoklevart] Xác nhận đặt phòng #${bookingId} thành công`;
-                        const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total_price);
+                        const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(calculatedTotalPrice);
                         const emailContent = `
                             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">
                                 <div style="background-color: #0f172a; padding: 30px; text-align: center;">
@@ -184,7 +189,7 @@ export async function POST(req) {
                 const [bookingResult] = await connection.execute(
                     `INSERT INTO bookings (customer_id, property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, status, special_requests, guest_name, guest_phone)
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                    [newUserId, property_id, room_type_id, check_in, check_out, number_of_rooms || 1, total_price, finalStatus, special_requests || null, guest_name, cleanPhone]
+                    [newUserId, property_id, room_type_id, check_in, check_out, requestedRooms, calculatedTotalPrice, finalStatus, special_requests || null, guest_name, cleanPhone]
                 );
 
                 const bookingId = bookingResult.insertId;
@@ -195,7 +200,7 @@ export async function POST(req) {
                 await connection.execute(
                     `INSERT INTO payments (booking_id, amount, payment_method, payment_status)
                      VALUES (?, ?, ?, ?)`,
-                    [bookingId, total_price, finalPaymentMethod, finalPaymentStatus]
+                    [bookingId, calculatedTotalPrice, finalPaymentMethod, finalPaymentStatus]
                 );
 
                 // Lưu lịch sử trạng thái
@@ -237,7 +242,7 @@ export async function POST(req) {
                 // Gửi email (nếu có và đã confirm)
                 if (cleanEmail && isConfirmed) {
                     const emailSubject = `[Aoklevart] Xác nhận đặt phòng #${bookingId} thành công`;
-                    const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total_price);
+                    const formattedPrice = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(calculatedTotalPrice);
                     
                     const emailContent = `
                         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f1f5f9;">

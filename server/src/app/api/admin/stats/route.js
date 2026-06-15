@@ -52,7 +52,7 @@ export async function GET(req) {
             SELECT COALESCE(SUM(total_price), 0) as total
             FROM bookings b
             JOIN users u ON b.customer_id = u.id
-            WHERE b.status IN ('completed', 'confirmed')
+            WHERE b.status IN ('paid', 'confirmed', 'checked_in', 'checked_out', 'completed')
             AND u.email != 'walkin@system.com'
             AND ${getBookingCondition('b')}
         `);
@@ -70,7 +70,7 @@ export async function GET(req) {
             FROM users u
             JOIN bookings b ON u.id = b.customer_id
             WHERE u.email != 'walkin@system.com'
-            AND b.status IN ('completed', 'confirmed')
+            AND b.status IN ('paid', 'confirmed', 'checked_in', 'checked_out', 'completed')
             AND ${getBookingCondition('b')}
             GROUP BY u.id
             ORDER BY total_spent DESC
@@ -121,7 +121,7 @@ export async function GET(req) {
                 COUNT(b.id) as bookings
             FROM bookings b
             JOIN users u ON b.customer_id = u.id
-            WHERE b.status IN ('completed', 'confirmed')
+            WHERE b.status IN ('paid', 'confirmed', 'checked_in', 'checked_out', 'completed')
             AND u.email != 'walkin@system.com'
             AND ${getBookingCondition('b')}
             GROUP BY DATE_FORMAT(b.created_at, ${revenueGroupFormat})

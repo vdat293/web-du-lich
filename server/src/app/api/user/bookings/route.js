@@ -91,9 +91,9 @@ export async function POST(req) {
 
         const userId = decoded.user.id;
         const body = await req.json();
-        const { property_id, room_type_id, check_in, check_out, number_of_rooms, total_price, special_requests, coupon_code, status: bookingStatus, payment_method } = body;
+        const { property_id, room_type_id, check_in, check_out, number_of_rooms, special_requests, coupon_code, status: bookingStatus, payment_method } = body;
 
-        if (!property_id || !room_type_id || !check_in || !check_out || !total_price) {
+        if (!property_id || !room_type_id || !check_in || !check_out) {
             return NextResponse.json({ message: 'Thiếu thông tin đặt phòng' }, { status: 400 });
         }
 
@@ -110,7 +110,8 @@ export async function POST(req) {
                 room_type_id, 
                 check_in, 
                 check_out, 
-                requestedRooms
+                requestedRooms,
+                property_id
             );
 
             if (!availability.isAvailable) {
@@ -120,7 +121,9 @@ export async function POST(req) {
                 }, { status: 400 });
             }
 
-            let finalPrice = total_price;
+            const calculatedTotalPrice =
+                Number(availability.roomType.price) * availability.nights * requestedRooms;
+            let finalPrice = calculatedTotalPrice;
             let couponId = null;
 
             // Kiểm tra và áp dụng coupon nếu có
@@ -170,7 +173,7 @@ export async function POST(req) {
             if (couponId) {
                 await connection.execute(
                     `INSERT INTO booking_coupons (booking_id, coupon_id, discount_amount) VALUES (?, ?, ?)`,
-                    [bookingId, couponId, total_price - finalPrice]
+                    [bookingId, couponId, calculatedTotalPrice - finalPrice]
                 );
             }
 

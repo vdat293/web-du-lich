@@ -63,7 +63,7 @@ export async function POST(req, { params }) {
             SELECT b2.id, b2.check_in, b2.check_out, b2.number_of_rooms
             FROM bookings b2
             WHERE b2.room_type_id = ? 
-            AND b2.status IN ('confirmed', 'checked_in')
+            AND b2.status IN ('pending', 'paid', 'confirmed', 'checked_in')
             AND b2.id != ?
             AND NOT (b2.check_out <= ? OR b2.check_in >= ?)
         `, [b.room_type_id, id, checkStartDate, checkEndDate]);

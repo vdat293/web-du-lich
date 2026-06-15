@@ -13,6 +13,10 @@ export type Room = {
   max_children: number;
   room_size?: number;
   bed_type?: string;
+  bed_count?: number;
+  bathroom_count?: number;
+  bed_configuration?: Record<string, number>;
+  is_active?: boolean;
 };
 
 export type Property = {
@@ -33,6 +37,7 @@ export type Property = {
   maxGuests: number;
   isHot: boolean | number;
   description?: string;
+  searchTags?: string[];
   images: {
     main: string;
     gallery: string[];

@@ -1,6 +1,8 @@
 -- Drop tables in reverse order of creation to avoid foreign key constraints
 DROP TABLE IF EXISTS site_visits;
 DROP TABLE IF EXISTS activity_logs;
+DROP TABLE IF EXISTS verification_otps;
+DROP TABLE IF EXISTS magic_links;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS conversations;
 DROP TABLE IF EXISTS payments;
@@ -24,11 +26,11 @@ DROP TABLE IF EXISTS sandbox_cards;
 CREATE TABLE users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(255) UNIQUE,
   password VARCHAR(255) NOT NULL,
   avatar VARCHAR(255) DEFAULT 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
   role VARCHAR(50) DEFAULT 'customer',
-  phone VARCHAR(20),
+  phone VARCHAR(20) UNIQUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -43,7 +45,13 @@ CREATE TABLE properties (
   map_image VARCHAR(255),
   map_embed TEXT,
   is_hot BOOLEAN DEFAULT FALSE,
+  status VARCHAR(20) DEFAULT 'active',
+  status_reason TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  bedrooms INT DEFAULT 0,
+  bathrooms INT DEFAULT 0,
+  max_guests INT DEFAULT 0,
+  search_tags JSON,
   FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -52,7 +60,8 @@ CREATE TABLE property_images (
   property_id INT NOT NULL,
   image_url VARCHAR(255) NOT NULL,
   is_main BOOLEAN DEFAULT FALSE,
-  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_property_images_property_url (property_id, image_url)
 );
 
 CREATE TABLE amenities (
@@ -80,17 +89,29 @@ CREATE TABLE room_types (
   max_children INT DEFAULT 1,
   room_size INT,
   bed_type VARCHAR(100),
+  bed_count INT,
+  bathroom_count INT,
+  bed_configuration JSON,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_room_types_property_name (property_id, name),
+  CONSTRAINT chk_room_types_price CHECK (price > 0),
+  CONSTRAINT chk_room_types_allotment CHECK (total_allotment > 0),
+  CONSTRAINT chk_room_types_capacity CHECK (max_adults > 0 AND max_children >= 0),
+  CONSTRAINT chk_room_types_details CHECK (room_size > 0 AND bed_count > 0 AND bathroom_count > 0)
 );
 
 CREATE TABLE bookings (
   id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
+  guest_phone VARCHAR(20),
+  guest_name VARCHAR(255),
   property_id INT NOT NULL,
   room_type_id INT NOT NULL,
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
+  actual_check_out DATE,
   number_of_rooms INT DEFAULT 1,
   total_price DECIMAL(15,0) NOT NULL,
   status VARCHAR(50) DEFAULT 'pending',
@@ -99,7 +120,10 @@ CREATE TABLE bookings (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
-  FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE
+  FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE,
+  CONSTRAINT chk_bookings_dates CHECK (check_out > check_in),
+  CONSTRAINT chk_bookings_room_count CHECK (number_of_rooms > 0),
+  CONSTRAINT chk_bookings_total_price CHECK (total_price > 0)
 );
 
 CREATE TABLE reviews (
@@ -112,7 +136,8 @@ CREATE TABLE reviews (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
-  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_payments_booking (booking_id)
 );
 
 -- =====================================================
@@ -235,6 +260,22 @@ CREATE TABLE guest_bookings (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
   FOREIGN KEY (room_type_id) REFERENCES room_types(id) ON DELETE CASCADE
+);
+
+CREATE TABLE magic_links (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  code VARCHAR(10) NOT NULL UNIQUE,
+  token TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE verification_otps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  identifier VARCHAR(255) NOT NULL,
+  otp_code VARCHAR(6) NOT NULL,
+  type VARCHAR(50) DEFAULT 'sms',
+  status VARCHAR(20) DEFAULT 'PENDING',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- =====================================================

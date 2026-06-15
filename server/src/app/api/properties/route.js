@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import db from '../../../lib/db';
 import { toAbsoluteMediaUrl } from '../../../lib/http';
+import { parseSearchTags } from '../../../lib/search-tags';
 
 export async function GET(req) {
     try {
@@ -19,7 +20,10 @@ export async function GET(req) {
                 JOIN property_amenities pa ON a.id = pa.amenity_id
                 WHERE pa.property_id = ?
             `, [p.id]);
-            const [rooms] = await db.execute('SELECT * FROM room_types WHERE property_id = ?', [p.id]);
+            const [rooms] = await db.execute(
+                'SELECT * FROM room_types WHERE property_id = ? AND is_active = 1 ORDER BY price ASC',
+                [p.id]
+            );
 
             // Lấy rating và số lượng reviews thật từ DB
             const [reviewStats] = await db.execute(`
@@ -34,6 +38,19 @@ export async function GET(req) {
 
             const rawPrice = p.price_display != null ? Number(p.price_display) : null;
 
+            const maxGuests = rooms.reduce(
+                (max, room) => Math.max(max, Number(room.max_adults) + Number(room.max_children)),
+                0
+            );
+            const maxBedrooms = rooms.reduce(
+                (max, room) => Math.max(max, Number(room.bed_count) || 0),
+                0
+            );
+            const maxBathrooms = rooms.reduce(
+                (max, room) => Math.max(max, Number(room.bathroom_count) || 0),
+                0
+            );
+
             return {
                 id: p.id,
                 name: p.name,
@@ -47,11 +64,12 @@ export async function GET(req) {
                     avatar: toAbsoluteMediaUrl(req, p.host_avatar),
                     superhost: p.host_role === 'host',
                 },
-                bedrooms: p.bedrooms || 0,
-                bathrooms: p.bathrooms || 0,
-                maxGuests: p.max_guests || (rooms.length > 0 ? rooms[0].max_adults : 0),
+                bedrooms: Number(p.bedrooms) || maxBedrooms,
+                bathrooms: Number(p.bathrooms) || maxBathrooms,
+                maxGuests: Number(p.max_guests) || maxGuests,
                 isHot: p.is_hot,
                 description: p.description,
+                searchTags: parseSearchTags(p.search_tags),
                 images: {
                     main: mainImage ? toAbsoluteMediaUrl(req, mainImage.image_url) : '',
                     gallery: galleryImages.length ? galleryImages : []
@@ -67,6 +85,9 @@ export async function GET(req) {
                     max_children: r.max_children,
                     room_size: r.room_size,
                     bed_type: r.bed_type,
+                    bed_count: r.bed_count,
+                    bathroom_count: r.bathroom_count,
+                    bed_configuration: r.bed_configuration,
                 })),
                 mapImage: toAbsoluteMediaUrl(req, p.map_image),
                 mapEmbed: p.map_embed

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import db from '../../../../lib/db';
+import { buildPropertySearchTags, parseSearchTags } from '../../../../lib/search-tags';
 
 export async function POST(req) {
     try {
@@ -25,10 +26,17 @@ export async function POST(req) {
             return NextResponse.json({ message: 'Vui lòng điền đầy đủ các thông tin bắt buộc (Tên, Loại, Địa chỉ)' }, { status: 400 });
         }
 
+        const searchTags = buildPropertySearchTags({ name, type, location });
         const [result] = await db.execute(`
-            INSERT INTO properties (name, type, location, description, price_display, host_id, status, is_hot, bedrooms, bathrooms, max_guests, map_embed)
-            VALUES (?, ?, ?, ?, ?, ?, 'active', 0, ?, ?, ?, ?)
-        `, [name, type, location, description || '', price_display || 0, hostId, bedrooms || 0, bathrooms || 0, max_guests || 0, map_embed || '']);
+            INSERT INTO properties
+            (name, type, location, description, price_display, host_id, status, is_hot,
+             bedrooms, bathrooms, max_guests, map_embed, search_tags)
+            VALUES (?, ?, ?, ?, ?, ?, 'active', 0, ?, ?, ?, ?, ?)
+        `, [
+            name, type, location, description || '', price_display || 0, hostId,
+            bedrooms || 0, bathrooms || 0, max_guests || 0, map_embed || '',
+            JSON.stringify(searchTags),
+        ]);
 
         const newPropertyId = result.insertId;
 
@@ -83,7 +91,10 @@ export async function GET(req) {
                 JOIN property_amenities pa ON a.id = pa.amenity_id
                 WHERE pa.property_id = ?
             `, [p.id]);
-            const [rooms] = await db.execute('SELECT * FROM room_types WHERE property_id = ?', [p.id]);
+            const [rooms] = await db.execute(
+                'SELECT * FROM room_types WHERE property_id = ? ORDER BY is_active DESC, price ASC',
+                [p.id]
+            );
 
             // Lấy rating và số lượng reviews thật từ DB
             const [reviewStats] = await db.execute(`
@@ -95,6 +106,20 @@ export async function GET(req) {
             const galleryImages = images.filter(img => !mainImage || img.id !== mainImage.id).map(img => img.image_url);
 
             const rawPrice = p.price_display != null ? Number(p.price_display) : null;
+
+            const activeRooms = rooms.filter(room => room.is_active);
+            const maxGuests = activeRooms.reduce(
+                (max, room) => Math.max(max, Number(room.max_adults) + Number(room.max_children)),
+                0
+            );
+            const maxBedrooms = activeRooms.reduce(
+                (max, room) => Math.max(max, Number(room.bed_count) || 0),
+                0
+            );
+            const maxBathrooms = activeRooms.reduce(
+                (max, room) => Math.max(max, Number(room.bathroom_count) || 0),
+                0
+            );
 
             return {
                 id: p.id,
@@ -110,11 +135,12 @@ export async function GET(req) {
                     avatar: p.host_avatar || '',
                     superhost: p.host_role === 'host',
                 },
-                bedrooms: p.bedrooms || 0,
-                bathrooms: p.bathrooms || 0,
-                maxGuests: p.max_guests || (rooms.length > 0 ? rooms[0].max_adults : 0),
+                bedrooms: Number(p.bedrooms) || maxBedrooms,
+                bathrooms: Number(p.bathrooms) || maxBathrooms,
+                maxGuests: Number(p.max_guests) || maxGuests,
                 isHot: p.is_hot,
                 description: p.description,
+                searchTags: parseSearchTags(p.search_tags),
                 images: {
                     main: mainImage ? mainImage.image_url : '',
                     gallery: galleryImages.length ? galleryImages : []
@@ -130,6 +156,10 @@ export async function GET(req) {
                     max_children: r.max_children,
                     room_size: r.room_size,
                     bed_type: r.bed_type,
+                    bed_count: r.bed_count,
+                    bathroom_count: r.bathroom_count,
+                    bed_configuration: r.bed_configuration,
+                    is_active: r.is_active,
                 })),
                 mapImage: p.map_image,
                 mapEmbed: p.map_embed

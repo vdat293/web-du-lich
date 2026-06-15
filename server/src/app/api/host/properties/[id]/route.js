@@ -72,7 +72,7 @@ export async function DELETE(req, { params }) {
         // Check for active bookings
         const [activeBookings] = await db.execute(`
             SELECT COUNT(*) as count FROM bookings
-            WHERE property_id = ? AND status IN ('confirmed', 'completed', 'checked_in')
+            WHERE property_id = ? AND status IN ('pending', 'paid', 'confirmed', 'checked_in')
             AND check_out >= CURDATE()
         `, [id]);
 

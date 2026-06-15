@@ -88,7 +88,10 @@ export async function PATCH(req, { params }) {
             }
             
             // Cập nhật ngày check-out về ngày hiện tại
-            await db.execute('UPDATE bookings SET status = ?, check_out = CURDATE() WHERE id = ?', [status, id]);
+            await db.execute(
+                'UPDATE bookings SET status = ?, actual_check_out = CURDATE() WHERE id = ?',
+                [status, id]
+            );
         } else {
             await db.execute('UPDATE bookings SET status = ? WHERE id = ?', [status, id]);
         }

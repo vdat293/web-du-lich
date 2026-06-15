@@ -30,6 +30,7 @@ export default function Home() {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
 
   const POPULAR_LOCATIONS = [
+    'Biển', 'Núi', 'Resort', 'Villa nguyên căn',
     'Vũng Tàu', 'Hà Nội', 'Đà Lạt', 'Hội An', 'Đà Nẵng',
     'Nha Trang', 'Phú Quốc', 'Sapa', 'Phan Thiết', 'Hạ Long', 'Quy Nhơn', 'Hồ Chí Minh', 'Bà Rịa - Vũng Tàu'
   ];

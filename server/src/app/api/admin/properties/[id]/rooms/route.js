@@ -34,9 +34,16 @@ export async function POST(req, { params }) {
 
         const { id } = await params;
         const body = await req.json();
-        const { name, price, total_allotment, max_adults, max_children, room_size, bed_type } = body;
+        const {
+            name, price, total_allotment, max_adults, max_children, room_size, bed_type,
+            bed_count = 1, bathroom_count = 1, bed_configuration, is_active = true,
+        } = body;
 
-        if (!name || price === undefined || !total_allotment) {
+        if (
+            !name || !bed_type || Number(price) <= 0 || !Number.isInteger(Number(total_allotment)) ||
+            Number(total_allotment) <= 0 || Number(room_size) <= 0 || Number(bed_count) <= 0 ||
+            Number(bathroom_count) <= 0
+        ) {
             return NextResponse.json({ message: 'Thiếu thông tin bắt buộc (name, price, total_allotment)' }, { status: 400 });
         }
 
@@ -47,14 +54,25 @@ export async function POST(req, { params }) {
         }
 
         const [result] = await db.execute(
-            `INSERT INTO room_types (property_id, name, price, total_allotment, max_adults, max_children, room_size, bed_type)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [id, name, price, total_allotment, max_adults || 2, max_children || 1, room_size || null, bed_type || null]
+            `INSERT INTO room_types
+             (property_id, name, price, total_allotment, max_adults, max_children, room_size,
+              bed_type, bed_count, bathroom_count, bed_configuration, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                id, name, Number(price), Number(total_allotment), Number(max_adults) || 2,
+                Number(max_children) || 0, Number(room_size), bed_type,
+                Number(bed_count), Number(bathroom_count),
+                JSON.stringify(bed_configuration || { other: Number(bed_count) }), is_active ? 1 : 0,
+            ]
         );
 
         return NextResponse.json({
             message: 'Thêm loại phòng thành công',
-            roomType: { id: result.insertId, property_id: parseInt(id), name, price, total_allotment, max_adults: max_adults || 2, max_children: max_children || 1, room_size, bed_type }
+            roomType: {
+                id: result.insertId, property_id: parseInt(id), name, price, total_allotment,
+                max_adults: max_adults || 2, max_children: max_children || 0, room_size,
+                bed_type, bed_count, bathroom_count, bed_configuration, is_active,
+            }
         }, { status: 201 });
     } catch (err) {
         console.error('Lỗi khi thêm room type:', err);
@@ -71,7 +89,10 @@ export async function PUT(req, { params }) {
         }
 
         const body = await req.json();
-        const { room_type_id, name, price, total_allotment, max_adults, max_children, room_size, bed_type } = body;
+        const {
+            room_type_id, name, price, total_allotment, max_adults, max_children, room_size,
+            bed_type, bed_count, bathroom_count, bed_configuration, is_active,
+        } = body;
 
         if (!room_type_id) {
             return NextResponse.json({ message: 'Thiếu room_type_id' }, { status: 400 });
@@ -87,6 +108,10 @@ export async function PUT(req, { params }) {
         if (max_children !== undefined) { updateFields.push('max_children = ?'); updateValues.push(max_children); }
         if (room_size !== undefined) { updateFields.push('room_size = ?'); updateValues.push(room_size); }
         if (bed_type !== undefined) { updateFields.push('bed_type = ?'); updateValues.push(bed_type); }
+        if (bed_count !== undefined) { updateFields.push('bed_count = ?'); updateValues.push(Number(bed_count)); }
+        if (bathroom_count !== undefined) { updateFields.push('bathroom_count = ?'); updateValues.push(Number(bathroom_count)); }
+        if (bed_configuration !== undefined) { updateFields.push('bed_configuration = ?'); updateValues.push(JSON.stringify(bed_configuration)); }
+        if (is_active !== undefined) { updateFields.push('is_active = ?'); updateValues.push(is_active ? 1 : 0); }
 
         if (updateFields.length === 0) {
             return NextResponse.json({ message: 'Không có thông tin cần cập nhật' }, { status: 400 });

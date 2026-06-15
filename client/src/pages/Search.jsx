@@ -5,6 +5,7 @@ import { SkeletonCard } from '../components/Loader';
 import { useTranslation } from 'react-i18next';
 import api from '../utils/api';
 import { resolveMediaUrl } from '../utils/media';
+import { matchesPropertySearch } from '../utils/propertySearch';
 export default function Search() {
     const { t, i18n } = useTranslation();
     const language = i18n.language === 'en' ? 'en' : 'vi';
@@ -67,11 +68,7 @@ export default function Search() {
 
         // 1. Text Search (accent-insensitive)
         if (query) {
-            const normalizedQuery = removeDiacritics(query.toLowerCase());
-            results = results.filter(p =>
-                removeDiacritics(p.name.toLowerCase()).includes(normalizedQuery) ||
-                removeDiacritics(p.location.toLowerCase()).includes(normalizedQuery)
-            );
+            results = results.filter(property => matchesPropertySearch(property, query));
         }
 
         // 2. Property Type

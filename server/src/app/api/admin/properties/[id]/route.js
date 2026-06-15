@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAdmin } from '../../../../../lib/auth';
 import db from '../../../../../lib/db';
 import { logActivity } from '../../../../../lib/logger';
+import { buildPropertySearchTags } from '../../../../../lib/search-tags';
 
 
 export async function GET(req, { params }) {
@@ -118,6 +119,18 @@ export async function PUT(req, { params }) {
             updateValues.push(status);
         }
 
+        if (name !== undefined || type !== undefined || location !== undefined) {
+            const current = existingProperties[0];
+            const searchTags = buildPropertySearchTags({
+                id: current.id,
+                name: name ?? current.name,
+                type: type ?? current.type,
+                location: location ?? current.location,
+            });
+            updateFields.push('search_tags = ?');
+            updateValues.push(JSON.stringify(searchTags));
+        }
+
         if (updateFields.length === 0) {
             return NextResponse.json({ message: 'Không có thông tin cần cập nhật' }, { status: 400 });
         }
@@ -165,7 +178,7 @@ export async function DELETE(req, { params }) {
         // Check if there are active bookings
         const [activeBookings] = await db.execute(`
             SELECT COUNT(*) as count FROM bookings
-            WHERE property_id = ? AND status IN ('confirmed', 'completed')
+            WHERE property_id = ? AND status IN ('pending', 'paid', 'confirmed', 'checked_in')
             AND check_out >= CURDATE()
         `, [id]);
 

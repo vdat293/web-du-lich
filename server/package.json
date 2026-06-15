@@ -8,6 +8,8 @@
     "start": "next start",
     "build": "next build",
     "db:export": "node export-db.js",
+    "db:clean-demo": "node scripts/clean-demo-db.js --confirm-reset-bookings",
+    "db:update-search-tags": "node scripts/update-search-tags.js",
     "db:import": "node import-db.js",
     "db:init": "node init-db.js",
     "media:migrate": "node migrate-assets-to-cloudinary.js"

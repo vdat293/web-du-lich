@@ -20,6 +20,7 @@ import { EmptyState, LoadingState } from '../components/ScreenState';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 import type { Property } from '../types';
+import { matchesPropertySearch } from '../utils/propertySearch';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Search'>;
 
@@ -50,13 +51,7 @@ export function SearchScreen({ navigation, route }: Props) {
   }, [load]);
 
   const results = useMemo(() => {
-    const keyword = query.trim().toLocaleLowerCase('vi');
-    if (!keyword) return properties;
-    return properties.filter((property) =>
-      [property.name, property.location, property.type]
-        .filter(Boolean)
-        .some((value) => value.toLocaleLowerCase('vi').includes(keyword)),
-    );
+    return properties.filter(property => matchesPropertySearch(property, query));
   }, [properties, query]);
 
   return (
