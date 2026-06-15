@@ -101,7 +101,7 @@ export function SetupPinScreen() {
       }
       setTimeout(() => otpInputs.current[0]?.focus(), 150);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể gửi mã xác thực lúc này');
+      setError(err instanceof Error ? err.message : t('security.otpSendFailed'));
       setMode('send_otp');
     } finally {
       setSubmitting(false);
@@ -148,6 +148,12 @@ export function SetupPinScreen() {
       // Update local auth context
       if (user) {
         await updateUser({ ...user, transaction_pin_enabled: true });
+      }
+      // Cache PIN in secure store immediately
+      try {
+        await setStoredValue('aoklevart_transaction_pin', pinStr);
+      } catch (storeErr) {
+        console.log('Failed to save PIN in SecureStore during setup:', storeErr);
       }
       setMode('success');
     } catch (err) {

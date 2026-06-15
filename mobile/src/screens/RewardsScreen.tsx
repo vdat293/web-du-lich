@@ -16,7 +16,7 @@ import {
   type TextInputKeyPressEventData,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { getStoredValue } from '../storage';
+import { getStoredValue, setStoredValue } from '../storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -96,6 +96,13 @@ export function RewardsScreen() {
         t('rewards.successMessage', { code: response.coupon_code }),
       );
       setPinModalVisible(false);
+      if (enteredPin) {
+        try {
+          await setStoredValue('aoklevart_transaction_pin', enteredPin);
+        } catch (err) {
+          console.log('Failed to cache PIN in secure store:', err);
+        }
+      }
     } catch (redeemError) {
       Alert.alert(
         t('rewards.errorTitle'),
@@ -139,18 +146,21 @@ export function RewardsScreen() {
     if (biometricsEnabled) {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      if (hasHardware && isEnrolled) {
-        const result = await LocalAuthentication.authenticateAsync({
-          promptMessage: t('security.biometric'),
-          cancelLabel: t('security.transactionPin'),
-          disableDeviceFallback: true,
-        });
-        if (result.success) {
-          const pinVal = await getStoredValue('aoklevart_transaction_pin');
-          if (pinVal) {
+      const pinVal = await getStoredValue('aoklevart_transaction_pin');
+
+      if (hasHardware && isEnrolled && pinVal) {
+        try {
+          const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: t('security.biometric'),
+            cancelLabel: t('security.transactionPin'),
+            disableDeviceFallback: true,
+          });
+          if (result.success) {
             await redeem(reward, pinVal);
             return;
           }
+        } catch (authErr) {
+          console.log('Biometric auth failed or cancelled:', authErr);
         }
       }
     }
@@ -159,7 +169,11 @@ export function RewardsScreen() {
     setSelectedReward(reward);
     setInputPin([...EMPTY_PIN]);
     setPinModalVisible(true);
-    setTimeout(() => pinInputs.current[0]?.focus(), 150);
+    setTimeout(() => {
+      if (pinInputs.current[0]) {
+        pinInputs.current[0].focus();
+      }
+    }, 150);
   };
 
   const confirmRedeem = (reward: Reward) => {

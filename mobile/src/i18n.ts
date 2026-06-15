@@ -222,6 +222,9 @@ const resources = {
         pinModalTitle: 'Xác nhận PIN Giao dịch',
         pinModalRedeeming: 'Đang quy đổi phần thưởng:',
         pinModalCost: 'Tiêu tốn {{count}} điểm',
+        otpSendFailed: 'Không thể gửi mã xác thực lúc này',
+        otpVerifyFailed: 'Không thể xác thực mã OTP',
+        pinLinkBiometrics: 'Xác thực thành công. Vui lòng nhập Mã PIN Giao dịch một lần để liên kết với Sinh trắc học.',
       },
       appLock: {
         title: 'Chào mừng bạn trở lại',
@@ -568,6 +571,9 @@ const resources = {
         pinModalTitle: 'Confirm Transaction PIN',
         pinModalRedeeming: 'Redeeming reward:',
         pinModalCost: 'Cost {{count}} points',
+        otpSendFailed: 'Unable to send the verification code at this time',
+        otpVerifyFailed: 'Unable to verify the OTP code',
+        pinLinkBiometrics: 'Authentication successful. Please enter your Transaction PIN once to link it with biometrics.',
       },
       appLock: {
         title: 'Welcome back',

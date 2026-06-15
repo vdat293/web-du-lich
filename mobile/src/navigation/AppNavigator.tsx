@@ -172,14 +172,14 @@ function TabNavigator() {
       <Tabs.Screen name="Saved" component={FavoritesScreen} options={{ title: tt('nav.saved') }} />
       <Tabs.Screen name="Trips" component={TripsScreen} options={{ title: tt('nav.trips') }} />
       <Tabs.Screen name="Rewards" component={RewardsScreen} options={{ title: tt('nav.rewards') }} />
-      <Tabs.Screen 
-        name="Notifications" 
-        component={NotificationsScreen} 
-        options={{ 
+      <Tabs.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{
           title: tt('nav.notifications'),
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
           tabBarBadgeStyle: { backgroundColor: colors.error, color: colors.white, fontSize: 10, lineHeight: 13, height: 16, minWidth: 16 },
-        }} 
+        }}
       />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: tt('nav.profile') }} />
     </Tabs.Navigator>
