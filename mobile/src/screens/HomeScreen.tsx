@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { propertyService } from '../api/services';
 import { BrandLogo } from '../components/BrandLogo';
 import { PropertyCard } from '../components/PropertyCard';
+import { PropertyCardSkeleton } from '../components/PropertyCardSkeleton';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts, shadow } from '../theme';
@@ -70,12 +71,14 @@ export function HomeScreen() {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     void propertyService
       .list()
       .then((items) => setProperties(items.slice(0, 5)))
-      .catch(() => setProperties([]));
+      .catch(() => setProperties([]))
+      .finally(() => setLoading(false));
   }, []);
 
   function search(value = query) {
@@ -149,7 +152,7 @@ export function HomeScreen() {
           ))}
         </View>
 
-        {properties.length ? (
+        {loading || properties.length ? (
           <View style={styles.featuredSection}>
             <View style={styles.sectionHeadingRow}>
               <Text style={styles.sectionTitle}>{t('home.featuredTitle')}</Text>
@@ -158,14 +161,18 @@ export function HomeScreen() {
               </Pressable>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {properties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  wide
-                  onPress={() => navigation.navigate('Details', { property })}
-                />
-              ))}
+              {loading
+                ? Array.from({ length: 3 }, (_, index) => (
+                    <PropertyCardSkeleton key={index} wide />
+                  ))
+                : properties.map((property) => (
+                    <PropertyCard
+                      key={property.id}
+                      property={property}
+                      wide
+                      onPress={() => navigation.navigate('Details', { property })}
+                    />
+                  ))}
             </ScrollView>
           </View>
         ) : null}

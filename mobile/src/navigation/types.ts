@@ -14,7 +14,12 @@ export type TabParamList = {
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<TabParamList> | undefined;
   Search: { query?: string } | undefined;
-  Details: { property: Property };
+  Details: {
+    property: Property;
+    checkIn?: string;
+    checkOut?: string;
+    guests?: number;
+  };
   Payment: { draft: BookingDraft };
   PersonalInfo: undefined;
   Security: undefined;

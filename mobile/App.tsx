@@ -17,6 +17,7 @@ import {
 import { AuthProvider } from './src/context/AuthContext';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
+import { LoadingState } from './src/components/ScreenState';
 import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
 import { useAuth } from './src/context/AuthContext';
@@ -31,7 +32,7 @@ function AppContent() {
   const { loading } = useAuth();
 
   if (loading) {
-    return <View style={{ flex: 1, backgroundColor: colors.surface }} />;
+    return <LoadingState />;
   }
 
   return <AppNavigator />;

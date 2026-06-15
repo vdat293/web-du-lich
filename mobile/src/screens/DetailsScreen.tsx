@@ -60,15 +60,15 @@ function amenityIcon(amenity: Amenity): keyof typeof Ionicons.glyphMap {
 
 export function DetailsScreen({ navigation, route }: Props) {
   const { t, i18n } = useTranslation();
-  const { property } = route.params;
+  const { property, checkIn: initialCheckIn = '', checkOut: initialCheckOut = '', guests: requestedGuests } = route.params;
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { locked, user } = useAuth();
   const [currentImage, setCurrentImage] = useState(0);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(property.rooms[0]);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState(initialCheckIn);
+  const [checkOut, setCheckOut] = useState(initialCheckOut);
   const [activeDateField, setActiveDateField] = useState<DateField | null>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
@@ -79,7 +79,8 @@ export function DetailsScreen({ navigation, route }: Props) {
 
   const nights = countNights(checkIn, checkOut);
   const canReserve = Boolean(selectedRoom && checkIn && checkOut && nights > 0);
-  const guests = selectedRoom ? selectedRoom.max_adults + selectedRoom.max_children : 0;
+  const roomCapacity = selectedRoom ? selectedRoom.max_adults + selectedRoom.max_children : 0;
+  const guests = requestedGuests && requestedGuests <= roomCapacity ? requestedGuests : roomCapacity;
   const subtotal = selectedRoom ? selectedRoom.price * nights : 0;
   const serviceFee = Math.round(subtotal * 0.08);
   const total = subtotal + serviceFee;

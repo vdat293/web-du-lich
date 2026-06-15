@@ -8,7 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { propertyService } from '../api/services';
 import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { PropertyCard } from '../components/PropertyCard';
-import { EmptyState, LoadingState } from '../components/ScreenState';
+import { PropertyCardSkeleton } from '../components/PropertyCardSkeleton';
+import { EmptyState } from '../components/ScreenState';
 import { useFavorites } from '../context/FavoritesContext';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
@@ -60,7 +61,15 @@ export function FavoritesScreen() {
           title={t('favorites.loginTitle')}
           message={t('favorites.loginMessage')}
         />
-      ) : loading ? <LoadingState /> : (
+      ) : loading ? (
+        <FlatList
+          data={[0, 1, 2]}
+          keyExtractor={(item) => String(item)}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.list}
+          renderItem={() => <PropertyCardSkeleton />}
+        />
+      ) : (
         <FlatList
           data={favorites}
           keyExtractor={(item) => String(item.id)}

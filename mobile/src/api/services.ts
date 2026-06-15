@@ -15,7 +15,28 @@ function normalizeProperty(property: Property): Property {
 }
 
 export const propertyService = {
-  list: async () => (await apiRequest<Property[]>('/api/properties')).map(normalizeProperty),
+  list: async (filters: {
+    checkIn?: string;
+    checkOut?: string;
+    guests?: number;
+    minPrice?: number;
+    maxPrice?: number;
+    type?: string;
+    amenityIds?: number[];
+  } = {}) => {
+    const params = new URLSearchParams();
+    if (filters.checkIn) params.set('check_in', filters.checkIn);
+    if (filters.checkOut) params.set('check_out', filters.checkOut);
+    if (filters.guests) params.set('guests', String(filters.guests));
+    if (filters.minPrice != null) params.set('min_price', String(filters.minPrice));
+    if (filters.maxPrice != null) params.set('max_price', String(filters.maxPrice));
+    if (filters.type) params.set('type', filters.type);
+    if (filters.amenityIds?.length) params.set('amenities', filters.amenityIds.join(','));
+
+    const query = params.toString();
+    return (await apiRequest<Property[]>(`/api/properties${query ? `?${query}` : ''}`))
+      .map(normalizeProperty);
+  },
   checkAvailability: (payload: {
     room_type_id: number;
     check_in: string;

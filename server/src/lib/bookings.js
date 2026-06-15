@@ -59,10 +59,17 @@ export async function checkRoomAvailability(
         `SELECT check_in, check_out, number_of_rooms
          FROM bookings
          WHERE room_type_id = ?
-           AND status IN ('pending', 'paid', 'confirmed', 'checked_in', 'completed')
+           AND status IN ('pending', 'paid', 'confirmed', 'checked_in')
+           AND check_in < ?
+           AND check_out > ?
+         UNION ALL
+         SELECT check_in, check_out, number_of_rooms
+         FROM guest_bookings
+         WHERE room_type_id = ?
+           AND status IN ('pending', 'paid', 'confirmed', 'checked_in')
            AND check_in < ?
            AND check_out > ?`,
-        [roomTypeId, checkOutDate, checkInDate]
+        [roomTypeId, checkOutDate, checkInDate, roomTypeId, checkOutDate, checkInDate]
     );
 
     const occupancyMap = {};
