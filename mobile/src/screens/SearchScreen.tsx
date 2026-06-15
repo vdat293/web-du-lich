@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,7 @@ import { matchesPropertySearch } from '../utils/propertySearch';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Search'>;
 type DateField = 'checkIn' | 'checkOut';
+const PRICE_PRESETS = [1_000_000, 2_000_000, 5_000_000] as const;
 
 function startOfToday() {
   const date = new Date();
@@ -50,6 +51,26 @@ function mergeAmenities(current: Amenity[], properties: Property[]) {
   const byId = new Map(current.map(amenity => [amenity.id, amenity]));
   properties.forEach(property => property.amenities.forEach(amenity => byId.set(amenity.id, amenity)));
   return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function normalizeText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase();
+}
+
+function propertyTypeLabel(type: string, t: (key: string) => string) {
+  const knownTypes: Record<string, string> = {
+    hotel: t('search.typeHotel'),
+    apartment: t('search.typeApartment'),
+    villa: t('search.typeVilla'),
+    resort: t('search.typeResort'),
+    homestay: t('search.typeHomestay'),
+  };
+  return knownTypes[type.toLowerCase()] || type;
 }
 
 export function SearchScreen({ navigation, route }: Props) {
@@ -114,13 +135,35 @@ export function SearchScreen({ navigation, route }: Props) {
     [properties, query],
   );
 
+  const featuredAmenities = useMemo(() => {
+    const definitions = [
+      { key: 'wifi', label: t('search.wifi'), iconName: 'wifi' as const, icons: ['wifi'], terms: ['wifi'] },
+      { key: 'pool', label: t('search.pool'), iconName: 'water' as const, icons: ['pool'], terms: ['ho boi', 'pool'] },
+      { key: 'parking', label: t('search.parking'), iconName: 'car' as const, icons: ['local_parking'], terms: ['do xe', 'dau xe', 'gui xe', 'parking'] },
+    ];
+
+    return definitions.flatMap(definition => {
+      const amenity = availableAmenities.find(item => {
+        const name = normalizeText(item.name);
+        return definition.icons.includes(item.icon || '') || definition.terms.some(term => name.includes(term));
+      });
+      return amenity ? [{ ...definition, amenity }] : [];
+    });
+  }, [availableAmenities, t]);
+
+  const featuredAmenityIds = useMemo(
+    () => new Set(featuredAmenities.map(item => item.amenity.id)),
+    [featuredAmenities],
+  );
+  const otherAmenities = availableAmenities.filter(amenity => !featuredAmenityIds.has(amenity.id));
+
   const dateLabel = checkIn && checkOut
     ? `${formatDate(checkIn).slice(0, 5)} - ${formatDate(checkOut).slice(0, 5)}`
     : t('search.flexibleDates');
   const extraFilterCount = Number(Boolean(minPrice || maxPrice)) + Number(Boolean(propertyType)) + amenityIds.length;
 
-  function selectDate(event: DateTimePickerEvent, date?: Date) {
-    if (event.type === 'dismissed' || !date || !activeDateField) return;
+  function selectDate(event: DateTimePickerChangeEvent, date?: Date) {
+    if (!date || !activeDateField) return;
     const value = toDateInput(date);
     if (activeDateField === 'checkIn') {
       setCheckIn(value);
@@ -129,6 +172,10 @@ export function SearchScreen({ navigation, route }: Props) {
       return;
     }
     setCheckOut(value);
+    setActiveDateField(null);
+  }
+
+  function dismissDatePicker() {
     setActiveDateField(null);
   }
 
@@ -264,7 +311,8 @@ export function SearchScreen({ navigation, route }: Props) {
                 mode="date"
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
-                onChange={selectDate}
+                onValueChange={selectDate}
+                onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}
               />
@@ -327,24 +375,56 @@ export function SearchScreen({ navigation, route }: Props) {
               </View>
             </View>
 
+            <Text style={styles.inputLabel}>{t('search.quickPrice')}</Text>
+            <View style={styles.chipWrap}>
+              {PRICE_PRESETS.map(value => {
+                const selected = draftMaxPrice === String(value);
+                return (
+                  <Pressable key={value} style={[styles.choiceChip, selected && styles.choiceChipActive]} onPress={() => { setDraftMinPrice(''); setDraftMaxPrice(String(value)); }}>
+                    <Text style={[styles.choiceChipText, selected && styles.choiceChipTextActive]}>{`${value / 1_000_000}M`}</Text>
+                  </Pressable>
+                );
+              })}
+              <Pressable style={[styles.choiceChip, !draftMaxPrice && styles.choiceChipActive]} onPress={() => { setDraftMinPrice(''); setDraftMaxPrice(''); }}>
+                <Text style={[styles.choiceChipText, !draftMaxPrice && styles.choiceChipTextActive]}>10M+</Text>
+              </Pressable>
+            </View>
+
             {availableTypes.length ? (
               <>
                 <Text style={styles.sectionTitle}>{t('search.propertyType')}</Text>
                 <View style={styles.chipWrap}>
                   {availableTypes.map(type => (
                     <Pressable key={type} style={[styles.choiceChip, draftType === type && styles.choiceChipActive]} onPress={() => setDraftType(current => current === type ? '' : type)}>
-                      <Text style={[styles.choiceChipText, draftType === type && styles.choiceChipTextActive]}>{type}</Text>
+                      <Text style={[styles.choiceChipText, draftType === type && styles.choiceChipTextActive]}>{propertyTypeLabel(type, t)}</Text>
                     </Pressable>
                   ))}
                 </View>
               </>
             ) : null}
 
-            {availableAmenities.length ? (
+            {featuredAmenities.length ? (
               <>
-                <Text style={styles.sectionTitle}>{t('search.amenities')}</Text>
+                <Text style={styles.sectionTitle}>{t('search.popularAmenities')}</Text>
                 <View style={styles.chipWrap}>
-                  {availableAmenities.map(amenity => {
+                  {featuredAmenities.map(({ key, label, iconName, amenity }) => {
+                    const selected = draftAmenityIds.includes(amenity.id);
+                    return (
+                      <Pressable key={key} style={[styles.featuredChip, selected && styles.choiceChipActive]} onPress={() => setDraftAmenityIds(current => selected ? current.filter(id => id !== amenity.id) : [...current, amenity.id])}>
+                        <Ionicons name={iconName} size={17} color={selected ? colors.white : colors.primary} />
+                        <Text style={[styles.choiceChipText, selected && styles.choiceChipTextActive]}>{label}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
+
+            {otherAmenities.length ? (
+              <>
+                <Text style={styles.sectionTitle}>{t('search.moreAmenities')}</Text>
+                <View style={styles.chipWrap}>
+                  {otherAmenities.map(amenity => {
                     const selected = draftAmenityIds.includes(amenity.id);
                     return (
                       <Pressable key={amenity.id} style={[styles.choiceChip, selected && styles.choiceChipActive]} onPress={() => setDraftAmenityIds(current => selected ? current.filter(id => id !== amenity.id) : [...current, amenity.id])}>
@@ -411,6 +491,7 @@ const styles = StyleSheet.create({
   priceInput: { height: 50, borderRadius: 14, borderWidth: 1, borderColor: colors.outline, backgroundColor: colors.white, color: colors.text, fontFamily: fonts.body, paddingHorizontal: 14 },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginBottom: 18 },
   choiceChip: { minHeight: 40, justifyContent: 'center', borderRadius: 20, borderWidth: 1, borderColor: colors.outline, backgroundColor: colors.white, paddingHorizontal: 14 },
+  featuredChip: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 7, borderRadius: 22, borderWidth: 1, borderColor: colors.outline, backgroundColor: colors.white, paddingHorizontal: 15 },
   choiceChipActive: { borderColor: colors.primary, backgroundColor: colors.primary },
   choiceChipText: { color: colors.primary, fontFamily: fonts.medium, fontSize: 12 },
   choiceChipTextActive: { color: colors.white },

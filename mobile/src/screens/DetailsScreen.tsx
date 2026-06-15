@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -96,8 +96,8 @@ export function DetailsScreen({ navigation, route }: Props) {
     setActiveDateField(field);
   }
 
-  function selectDate(event: DateTimePickerEvent, date?: Date) {
-    if (event.type === 'dismissed' || !date || !activeDateField) return;
+  function selectDate(event: DateTimePickerChangeEvent, date?: Date) {
+    if (!date || !activeDateField) return;
 
     const value = toDateInput(date);
     if (activeDateField === 'checkIn') {
@@ -107,6 +107,10 @@ export function DetailsScreen({ navigation, route }: Props) {
       return;
     }
     setCheckOut(value);
+    setActiveDateField(null);
+  }
+
+  function dismissDatePicker() {
     setActiveDateField(null);
   }
 
@@ -317,7 +321,8 @@ export function DetailsScreen({ navigation, route }: Props) {
                 mode="date"
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
-                onChange={selectDate}
+                onValueChange={selectDate}
+                onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}
               />
