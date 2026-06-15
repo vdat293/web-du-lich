@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS loyalty_transactions;
 DROP TABLE IF EXISTS booking_status_history;
 DROP TABLE IF EXISTS booking_coupons;
 DROP TABLE IF EXISTS reward_redemptions;
+DROP TABLE IF EXISTS rewards;
 DROP TABLE IF EXISTS coupons;
 DROP TABLE IF EXISTS wishlists;
 DROP TABLE IF EXISTS property_rules;
@@ -35,6 +36,8 @@ CREATE TABLE users (
   phone VARCHAR(20) UNIQUE,
   loyalty_points BIGINT UNSIGNED NOT NULL DEFAULT 0,
   membership_tier VARCHAR(20) NOT NULL DEFAULT 'classic',
+  transaction_pin VARCHAR(255) NULL,
+  transaction_pin_enabled BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -222,6 +225,21 @@ CREATE TABLE coupons (
   valid_from DATE,
   valid_until DATE,
   description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE rewards (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  `key` VARCHAR(50) NOT NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  points INT UNSIGNED NOT NULL,
+  discount_type VARCHAR(20) NOT NULL DEFAULT 'fixed',
+  discount_value DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  min_order_amount DECIMAL(15,0) DEFAULT 0,
+  category VARCHAR(50) NOT NULL DEFAULT 'voucher',
+  image_url VARCHAR(500),
+  partner_name VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -56,6 +56,7 @@ export type User = {
   phone?: string;
   loyalty_points?: number;
   membership_tier?: 'classic' | 'gold' | 'platinum' | 'diamond';
+  transaction_pin_enabled?: boolean;
 };
 
 export type Reward = {

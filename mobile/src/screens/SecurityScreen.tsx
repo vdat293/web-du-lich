@@ -101,6 +101,28 @@ export function SecurityScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.settingSection}>
+          <Text style={styles.sectionHeader}>{t('security.transactionSecurity')}</Text>
+          
+          <Pressable 
+            style={styles.actionRow}
+            onPress={() => navigation.navigate('SetupPin')}
+          >
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingLabel}>{t('security.transactionPin')}</Text>
+              <Text style={styles.settingSublabel}>
+                {t('security.transactionPinDesc')}
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 11, color: user?.transaction_pin_enabled ? colors.success : colors.error }}>
+                {user?.transaction_pin_enabled ? t('security.pinSet') : t('security.pinNotSet')}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.outline} />
+            </View>
+          </Pressable>
+        </View>
+
+        <View style={styles.settingSection}>
           <Text style={styles.sectionHeader}>{t('security.loginInfo')}</Text>
           
           <Pressable 

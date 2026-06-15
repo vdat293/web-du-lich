@@ -20,6 +20,7 @@ import { SearchScreen } from '../screens/SearchScreen';
 import { TripsScreen } from '../screens/TripsScreen';
 import { PersonalInfoScreen } from '../screens/PersonalInfoScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
+import { SetupPinScreen } from '../screens/SetupPinScreen'; // Transaction PIN setup screen
 import { HelpCenterScreen } from '../screens/HelpCenterScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -200,6 +201,7 @@ export function AppNavigator() {
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
         <Stack.Screen name="Security" component={SecurityScreen} />
+        <Stack.Screen name="SetupPin" component={SetupPinScreen} />
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
         <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="Unlock" component={AppLockScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />

@@ -18,6 +18,7 @@ export type RootStackParamList = {
   Payment: { draft: BookingDraft };
   PersonalInfo: undefined;
   Security: undefined;
+  SetupPin: { returnToRewards?: boolean } | undefined;
   HelpCenter: undefined;
   Login: undefined;
   Unlock: undefined;

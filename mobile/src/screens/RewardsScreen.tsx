@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -11,7 +11,12 @@ import {
   Image,
   ImageBackground,
   Modal,
+  TextInput,
+  type NativeSyntheticEvent,
+  type TextInputKeyPressEventData,
 } from 'react-native';
+import * as LocalAuthentication from 'expo-local-authentication';
+import { getStoredValue } from '../storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -34,7 +39,7 @@ function formatDate(value: string) {
 }
 
 export function RewardsScreen() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, biometricsEnabled } = useAuth();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -47,6 +52,13 @@ export function RewardsScreen() {
   const [redeemingKey, setRedeemingKey] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [couponsModalVisible, setCouponsModalVisible] = useState(false);
+
+  // Security Verification States
+  const EMPTY_PIN = ['', '', '', '', '', ''];
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [inputPin, setInputPin] = useState([...EMPTY_PIN]);
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
+  const pinInputs = useRef<Array<TextInput | null>>([]);
 
   const load = useCallback(async (refresh = false) => {
     if (!user) {
@@ -72,10 +84,10 @@ export function RewardsScreen() {
     void load();
   }, [load]);
 
-  const redeem = async (reward: Reward) => {
+  const redeem = async (reward: Reward, enteredPin?: string) => {
     setRedeemingKey(reward.key);
     try {
-      const response = await rewardService.redeem(reward.key);
+      const response = await rewardService.redeem(reward.key, enteredPin);
       setPoints(response.loyalty_points);
       if (user) await updateUser({ ...user, loyalty_points: response.loyalty_points });
       await load(true);
@@ -83,23 +95,92 @@ export function RewardsScreen() {
         t('rewards.successTitle'),
         t('rewards.successMessage', { code: response.coupon_code }),
       );
+      setPinModalVisible(false);
     } catch (redeemError) {
       Alert.alert(
         t('rewards.errorTitle'),
         redeemError instanceof Error ? redeemError.message : t('rewards.errorTitle'),
       );
+      setInputPin([...EMPTY_PIN]);
+      setTimeout(() => pinInputs.current[0]?.focus(), 150);
     } finally {
       setRedeemingKey(null);
     }
   };
 
+  const handlePinDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newArr = [...inputPin];
+    newArr[index] = digit;
+    setInputPin(newArr);
+    if (digit && index < inputPin.length - 1) {
+      pinInputs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePinKeyPress = (
+    index: number,
+    event: NativeSyntheticEvent<TextInputKeyPressEventData>
+  ) => {
+    if (event.nativeEvent.key === 'Backspace' && !inputPin[index] && index > 0) {
+      pinInputs.current[index - 1]?.focus();
+    }
+  };
+
+  // Watch PIN completion inside modal
+  useEffect(() => {
+    const pinStr = inputPin.join('');
+    if (pinStr.length === 6 && selectedReward && redeemingKey === null) {
+      void redeem(selectedReward, pinStr);
+    }
+  }, [inputPin]);
+
+  const handleRedeemFlow = async (reward: Reward) => {
+    if (biometricsEnabled) {
+      const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      if (hasHardware && isEnrolled) {
+        const result = await LocalAuthentication.authenticateAsync({
+          promptMessage: t('security.biometric'),
+          cancelLabel: t('security.transactionPin'),
+          disableDeviceFallback: true,
+        });
+        if (result.success) {
+          const pinVal = await getStoredValue('aoklevart_transaction_pin');
+          if (pinVal) {
+            await redeem(reward, pinVal);
+            return;
+          }
+        }
+      }
+    }
+
+    // Fallback: Open transaction PIN modal
+    setSelectedReward(reward);
+    setInputPin([...EMPTY_PIN]);
+    setPinModalVisible(true);
+    setTimeout(() => pinInputs.current[0]?.focus(), 150);
+  };
+
   const confirmRedeem = (reward: Reward) => {
+    if (!user?.transaction_pin_enabled) {
+      Alert.alert(
+        t('security.pinRequiredTitle'),
+        t('security.pinRequiredDesc'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('security.pinRequiredSetup'), onPress: () => navigation.navigate('SetupPin', { returnToRewards: true }) }
+        ]
+      );
+      return;
+    }
+
     Alert.alert(
       t('rewards.confirmTitle'),
       t('rewards.confirmMessage', { count: reward.points.toLocaleString('vi-VN'), title: reward.title }),
       [
         { text: t('common.cancel'), style: 'cancel' },
-        { text: t('common.confirm'), onPress: () => void redeem(reward) },
+        { text: t('common.confirm'), onPress: () => void handleRedeemFlow(reward) },
       ],
     );
   };
@@ -273,6 +354,57 @@ export function RewardsScreen() {
                 })
               )}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Transaction PIN Verification Modal */}
+      <Modal
+        visible={pinModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { paddingBottom: 40 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t('security.pinModalTitle')}</Text>
+              <Pressable onPress={() => setPinModalVisible(false)} style={styles.modalCloseBtn}>
+                <Ionicons name="close" size={24} color={colors.primary} />
+              </Pressable>
+            </View>
+
+            <View style={styles.pinModalBody}>
+              <Text style={styles.pinModalDesc}>{t('security.pinModalRedeeming')}</Text>
+              <Text style={styles.pinModalRewardName} numberOfLines={1}>
+                {selectedReward?.title}
+              </Text>
+              <Text style={styles.pinModalPoints}>
+                {t('security.pinModalCost', { count: selectedReward?.points })}
+              </Text>
+
+              <View style={styles.codeRow}>
+                {inputPin.map((digit, idx) => (
+                  <TextInput
+                    key={idx}
+                    ref={(input) => { pinInputs.current[idx] = input; }}
+                    keyboardType="number-pad"
+                    secureTextEntry
+                    maxLength={1}
+                    editable={redeemingKey === null}
+                    selectTextOnFocus
+                    style={styles.codeInput}
+                    value={digit}
+                    onChangeText={(val) => handlePinDigitChange(idx, val)}
+                    onKeyPress={(e) => handlePinKeyPress(idx, e)}
+                  />
+                ))}
+              </View>
+
+              {redeemingKey !== null && (
+                <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
+              )}
+            </View>
           </View>
         </View>
       </Modal>
@@ -650,5 +782,54 @@ const styles = StyleSheet.create({
   },
   statusTextUnused: {
     color: colors.success,
+  },
+  pinModalBody: {
+    alignItems: 'center',
+    paddingTop: 24,
+    paddingHorizontal: 20,
+  },
+  pinModalDesc: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  pinModalRewardName: {
+    fontFamily: fonts.heading,
+    fontSize: 16,
+    color: colors.primary,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  pinModalPoints: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.text,
+    marginTop: 4,
+    marginBottom: 26,
+  },
+  codeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    width: '100%',
+  },
+  codeInput: {
+    width: 44,
+    height: 50,
+    borderWidth: 1.5,
+    borderColor: colors.outline,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    textAlign: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 4,
+    elevation: 1,
   },
 });

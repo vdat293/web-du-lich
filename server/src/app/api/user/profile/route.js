@@ -13,7 +13,8 @@ function formatUser(req, user) {
         role: user.role,
         phone: user.phone,
         loyalty_points: Number(user.loyalty_points) || 0,
-        membership_tier: user.membership_tier || 'classic'
+        membership_tier: user.membership_tier || 'classic',
+        transaction_pin_enabled: Boolean(user.transaction_pin_enabled)
     };
 }
 

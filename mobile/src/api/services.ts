@@ -128,13 +128,43 @@ export const rewardService = {
       rewards: Reward[];
       redemptions: RewardRedemption[];
     }>('/api/user/rewards', { authenticated: true }),
-  redeem: (rewardKey: string) =>
+  redeem: (rewardKey: string, pin?: string) =>
     apiRequest<{ message: string; loyalty_points: number; coupon_code: string }>(
       '/api/user/rewards',
       {
         method: 'POST',
         authenticated: true,
-        body: JSON.stringify({ reward_key: rewardKey }),
+        body: JSON.stringify({ reward_key: rewardKey, pin }),
+      },
+    ),
+};
+
+export const securityService = {
+  sendSetupOtp: () =>
+    apiRequest<{ success: boolean; message: string; dev_otp?: string }>(
+      '/api/user/security/transaction-pin',
+      {
+        method: 'POST',
+        authenticated: true,
+        body: JSON.stringify({ action: 'send_otp' }),
+      },
+    ),
+  verifySetupOtp: (code: string) =>
+    apiRequest<{ success: boolean; setup_token: string; message: string }>(
+      '/api/user/security/transaction-pin',
+      {
+        method: 'POST',
+        authenticated: true,
+        body: JSON.stringify({ action: 'verify_otp', code }),
+      },
+    ),
+  setTransactionPin: (pin: string, setupToken: string) =>
+    apiRequest<{ success: boolean; message: string }>(
+      '/api/user/security/transaction-pin',
+      {
+        method: 'POST',
+        authenticated: true,
+        body: JSON.stringify({ action: 'set_pin', pin, setup_token: setupToken }),
       },
     ),
 };
