@@ -135,7 +135,11 @@ export function DetailsScreen({ navigation, route }: Props) {
               <Pressable 
                 style={styles.circleButton} 
                 onPress={() => {
-                  toggleFavorite(property.id);
+                  if (!user) {
+                    navigation.navigate('Login');
+                    return;
+                  }
+                  void toggleFavorite(property.id);
                 }}
               >
                 <Ionicons name={isFavorite(property.id) ? 'heart' : 'heart-outline'} size={22} color={isFavorite(property.id) ? colors.error : colors.primary} />

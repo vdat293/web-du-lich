@@ -42,7 +42,11 @@ export function PropertyCard({
           style={styles.favorite}
           onPress={(event) => {
             event.stopPropagation();
-            toggleFavorite(property.id);
+            if (!user) {
+              navigation.navigate('Login');
+              return;
+            }
+            void toggleFavorite(property.id);
           }}
         >
           <Ionicons
