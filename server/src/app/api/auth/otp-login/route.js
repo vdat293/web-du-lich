@@ -38,13 +38,13 @@ export async function POST(req) {
         let user;
         if (isEmail(id)) {
             const [users] = await db.execute(
-                'SELECT id, name, email, avatar, role, phone FROM users WHERE email = ?',
+                'SELECT id, name, email, avatar, role, phone, loyalty_points, membership_tier FROM users WHERE email = ?',
                 [id]
             );
             user = users[0];
         } else {
             const [users] = await db.execute(
-                'SELECT id, name, email, avatar, role, phone FROM users WHERE phone = ?',
+                'SELECT id, name, email, avatar, role, phone, loyalty_points, membership_tier FROM users WHERE phone = ?',
                 [id]
             );
             user = users[0];
@@ -74,7 +74,9 @@ export async function POST(req) {
                 email: user.email,
                 avatar,
                 role: user.role,
-                phone: user.phone
+                phone: user.phone,
+                loyalty_points: Number(user.loyalty_points) || 0,
+                membership_tier: user.membership_tier || 'classic'
             }
         });
 

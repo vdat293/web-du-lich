@@ -4,6 +4,49 @@ import db from '../../../../lib/db';
 import { uploadAvatar } from '../../../../lib/cloudinary';
 import { toAbsoluteMediaUrl } from '../../../../lib/http';
 
+function formatUser(req, user) {
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: toAbsoluteMediaUrl(req, user.avatar),
+        role: user.role,
+        phone: user.phone,
+        loyalty_points: Number(user.loyalty_points) || 0,
+        membership_tier: user.membership_tier || 'classic'
+    };
+}
+
+export async function GET(req) {
+    try {
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json({ message: 'Không có quyền truy cập' }, { status: 401 });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(
+                authHeader.split(' ')[1],
+                process.env.JWT_SECRET || 'your_jwt_secret_key_here'
+            );
+        } catch {
+            return NextResponse.json({ message: 'Token không hợp lệ hoặc đã hết hạn' }, { status: 401 });
+        }
+
+        const [users] = await db.execute('SELECT * FROM users WHERE id = ?', [decoded.user.id]);
+
+        if (!users[0]) {
+            return NextResponse.json({ message: 'Người dùng không tồn tại' }, { status: 404 });
+        }
+
+        return NextResponse.json({ user: formatUser(req, users[0]) });
+    } catch (err) {
+        console.error('Lỗi khi lấy profile:', err);
+        return NextResponse.json({ message: 'Lỗi server !' }, { status: 500 });
+    }
+}
+
 export async function PUT(req) {
     try {
         const authHeader = req.headers.get('authorization');
@@ -65,14 +108,7 @@ export async function PUT(req) {
 
         return NextResponse.json({
             message: 'Cập nhật thông tin thành công',
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                avatar: toAbsoluteMediaUrl(req, user.avatar),
-                role: user.role,
-                phone: user.phone
-            }
+            user: formatUser(req, user)
         });
 
     } catch (err) {

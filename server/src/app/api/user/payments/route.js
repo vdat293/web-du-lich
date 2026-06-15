@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import db from '../../../../lib/db';
+import { awardLoyaltyPoints } from '../../../../lib/loyalty';
 
 // GET: Lấy danh sách thanh toán của user
 // POST: Tạo thanh toán mới (simulate thanh toán)
@@ -113,10 +114,13 @@ export async function POST(req) {
             [booking_id, userId]
         );
 
+        const loyalty = await awardLoyaltyPoints(db, booking_id);
+
         return NextResponse.json({
             message: 'Thanh toán thành công!',
             transaction_id: transactionId,
-            payment_status: 'completed'
+            payment_status: 'completed',
+            loyalty
         }, { status: 200 });
     } catch (err) {
         console.error('Lỗi khi xử lý thanh toán:', err);

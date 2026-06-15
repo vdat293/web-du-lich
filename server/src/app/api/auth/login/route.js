@@ -51,7 +51,9 @@ export async function POST(req) {
                 email: user.email,
                 avatar: toAbsoluteMediaUrl(req, user.avatar),
                 role: user.role,
-                phone: user.phone
+                phone: user.phone,
+                loyalty_points: Number(user.loyalty_points) || 0,
+                membership_tier: user.membership_tier || 'classic'
             }
         });
 

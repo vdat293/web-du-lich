@@ -6,8 +6,10 @@ DROP TABLE IF EXISTS magic_links;
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS conversations;
 DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS loyalty_transactions;
 DROP TABLE IF EXISTS booking_status_history;
 DROP TABLE IF EXISTS booking_coupons;
+DROP TABLE IF EXISTS reward_redemptions;
 DROP TABLE IF EXISTS coupons;
 DROP TABLE IF EXISTS wishlists;
 DROP TABLE IF EXISTS property_rules;
@@ -31,6 +33,8 @@ CREATE TABLE users (
   avatar VARCHAR(255) DEFAULT 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
   role VARCHAR(50) DEFAULT 'customer',
   phone VARCHAR(20) UNIQUE,
+  loyalty_points BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  membership_tier VARCHAR(20) NOT NULL DEFAULT 'classic',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -126,6 +130,18 @@ CREATE TABLE bookings (
   CONSTRAINT chk_bookings_total_price CHECK (total_price > 0)
 );
 
+CREATE TABLE loyalty_transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  booking_id INT NOT NULL,
+  points INT UNSIGNED NOT NULL,
+  amount DECIMAL(15,0) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  UNIQUE KEY uniq_loyalty_booking (booking_id)
+);
+
 CREATE TABLE reviews (
   id INT AUTO_INCREMENT PRIMARY KEY,
   customer_id INT NOT NULL,
@@ -207,6 +223,17 @@ CREATE TABLE coupons (
   valid_until DATE,
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE reward_redemptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  coupon_id INT NOT NULL UNIQUE,
+  reward_key VARCHAR(50) NOT NULL,
+  points_spent INT UNSIGNED NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE
 );
 
 CREATE TABLE booking_coupons (

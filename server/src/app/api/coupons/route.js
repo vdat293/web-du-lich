@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
 import db from '../../../lib/db';
 
 // GET: Lấy danh sách coupon (admin)
@@ -10,13 +11,28 @@ export async function GET(req) {
 
         // Nếu có code -> kiểm tra coupon cụ thể
         if (code) {
+            const authHeader = req.headers.get('authorization');
+            let userId = null;
+            if (authHeader?.startsWith('Bearer ')) {
+                try {
+                    const decoded = jwt.verify(
+                        authHeader.split(' ')[1],
+                        process.env.JWT_SECRET || 'your_jwt_secret_key_here'
+                    );
+                    userId = decoded.user.id;
+                } catch {
+                    userId = null;
+                }
+            }
             const [coupons] = await db.execute(`
-                SELECT * FROM coupons
-                WHERE code = ?
-                AND valid_from <= CURDATE()
-                AND valid_until >= CURDATE()
-                AND (max_uses IS NULL OR used_count < max_uses)
-            `, [code]);
+                SELECT c.* FROM coupons c
+                LEFT JOIN reward_redemptions rr ON rr.coupon_id = c.id
+                WHERE c.code = ?
+                AND c.valid_from <= CURDATE()
+                AND c.valid_until >= CURDATE()
+                AND (c.max_uses IS NULL OR c.used_count < c.max_uses)
+                AND (rr.id IS NULL OR rr.user_id = ?)
+            `, [code, userId]);
 
             if (coupons.length === 0) {
                 return NextResponse.json({ valid: false, message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn' });

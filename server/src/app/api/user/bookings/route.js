@@ -5,6 +5,7 @@ import { sendVirtualSMS } from '../../../../lib/sms';
 import { sendVirtualEmail } from '../../../../lib/email';
 import { toAbsoluteMediaUrl } from '../../../../lib/http';
 import { BRAND_LOGO_URL } from '../../../../lib/brand';
+import { awardLoyaltyPoints } from '../../../../lib/loyalty';
 
 export async function GET(req) {
     try {
@@ -129,12 +130,16 @@ export async function POST(req) {
             // Kiểm tra và áp dụng coupon nếu có
             if (coupon_code) {
                 const [coupons] = await connection.execute(`
-                    SELECT * FROM coupons
-                    WHERE code = ?
-                    AND valid_from <= CURDATE()
-                    AND valid_until >= CURDATE()
-                    AND (max_uses IS NULL OR used_count < max_uses)
-                `, [coupon_code]);
+                    SELECT c.* FROM coupons c
+                    LEFT JOIN reward_redemptions rr ON rr.coupon_id = c.id
+                    WHERE c.code = ?
+                    AND c.valid_from <= CURDATE()
+                    AND c.valid_until >= CURDATE()
+                    AND (c.max_uses IS NULL OR c.used_count < c.max_uses)
+                    AND (c.min_order_amount IS NULL OR c.min_order_amount <= ?)
+                    AND (rr.id IS NULL OR rr.user_id = ?)
+                    FOR UPDATE
+                `, [coupon_code, calculatedTotalPrice, userId]);
 
                 if (coupons.length > 0) {
                     const coupon = coupons[0];
@@ -143,6 +148,7 @@ export async function POST(req) {
                     } else {
                         finalPrice = finalPrice - coupon.discount_value;
                     }
+                    finalPrice = Math.max(0, finalPrice);
 
                     // Cập nhật số lần sử dụng
                     await connection.execute('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
@@ -186,6 +192,10 @@ export async function POST(req) {
 
             // Tất cả ok -> Commit Transaction
             await connection.commit();
+
+            const loyalty = finalPaymentStatus === 'completed'
+                ? await awardLoyaltyPoints(db, bookingId)
+                : null;
 
             // Lấy thông tin phụ để thông báo
             const [propertyInfo] = await db.execute(
@@ -267,7 +277,8 @@ export async function POST(req) {
             return NextResponse.json({
                 message: 'Đặt phòng thành công',
                 booking_id: bookingId,
-                final_price: finalPrice
+                final_price: finalPrice,
+                loyalty
             }, { status: 201 });
 
         } catch (dbError) {

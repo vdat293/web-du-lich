@@ -5,6 +5,7 @@ import { sendVirtualSMS } from '../../../../../lib/sms';
 import { sendVirtualEmail } from '../../../../../lib/email';
 import { logActivity } from '../../../../../lib/logger';
 import { BRAND_LOGO_URL } from '../../../../../lib/brand';
+import { awardLoyaltyPoints } from '../../../../../lib/loyalty';
 
 
 export async function GET(req, { params }) {
@@ -93,6 +94,7 @@ export async function PUT(req, { params }) {
                     'UPDATE payments SET payment_status = ? WHERE booking_id = ?',
                     ['completed', id]
                 );
+                await awardLoyaltyPoints(db, id);
 
                 // Send confirmation notifications if status is upgraded from pending
                 if (oldStatus === 'pending') {

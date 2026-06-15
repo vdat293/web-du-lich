@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import db from '../../../../lib/db';
 import { logActivity } from '../../../../lib/logger';
+import { awardLoyaltyPoints } from '../../../../lib/loyalty';
 
 export async function POST(req) {
     let connection;
@@ -109,10 +110,15 @@ export async function POST(req) {
             // Tất cả thành công -> Commit transaction
             await connection.commit();
 
+            const loyalty = guestBooking.status === 'confirmed'
+                ? await awardLoyaltyPoints(db, bookingId)
+                : null;
+
             return NextResponse.json({
                 message: 'Xác nhận thành công! Tài khoản đã được tạo.',
                 booking_id: bookingId,
-                email: guestBooking.email
+                email: guestBooking.email,
+                loyalty
             }, { status: 200 });
 
         } catch (dbError) {

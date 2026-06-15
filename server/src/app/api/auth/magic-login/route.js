@@ -28,7 +28,7 @@ export async function POST(req) {
 
         // 2. Fetch User
         const [users] = await db.execute(
-            'SELECT id, name, email, phone, role FROM users WHERE id = ?',
+            'SELECT id, name, email, phone, role, loyalty_points, membership_tier FROM users WHERE id = ?',
             [userId]
         );
 
@@ -56,7 +56,9 @@ export async function POST(req) {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                role: user.role
+                role: user.role,
+                loyalty_points: Number(user.loyalty_points) || 0,
+                membership_tier: user.membership_tier || 'classic'
             },
             needsPasswordSetup: !!decoded.needsPasswordSetup, // Pass the flag to frontend
             message: 'Đăng nhập thành công!'

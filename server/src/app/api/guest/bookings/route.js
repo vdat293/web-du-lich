@@ -6,6 +6,7 @@ import db from '../../../../lib/db';
 import { sendVirtualSMS } from '../../../../lib/sms';
 import { sendVirtualEmail } from '../../../../lib/email';
 import { BRAND_LOGO_URL } from '../../../../lib/brand';
+import { awardLoyaltyPoints } from '../../../../lib/loyalty';
 
 export async function POST(req) {
     let connection;
@@ -119,6 +120,10 @@ export async function POST(req) {
                 
                 await connection.commit();
 
+                const loyalty = finalPaymentStatus === 'completed'
+                    ? await awardLoyaltyPoints(db, bookingId)
+                    : null;
+
                 const origin = req.headers.get('origin');
                 const referer = req.headers.get('referer');
                 const baseUrl = origin || (referer ? new URL(referer).origin : null) || process.env.BASE_URL || 'http://localhost:5173';
@@ -167,6 +172,7 @@ export async function POST(req) {
                 return NextResponse.json({
                     status: 'pending',
                     booking_id: bookingId,
+                    loyalty,
                     message: 'Đặt phòng thành công! Link quản lý đã được gửi qua SMS.'
                 }, { status: 201 });
             } else {
@@ -228,6 +234,10 @@ export async function POST(req) {
 
                 await connection.commit();
 
+                const loyalty = finalPaymentStatus === 'completed'
+                    ? await awardLoyaltyPoints(db, bookingId)
+                    : null;
+
                 const origin = req.headers.get('origin');
                 const referer = req.headers.get('referer');
                 const baseUrl = origin || (referer ? new URL(referer).origin : null) || process.env.BASE_URL || 'http://localhost:5173';
@@ -278,6 +288,7 @@ export async function POST(req) {
                 return NextResponse.json({
                     status: 'pending',
                     booking_id: bookingId,
+                    loyalty,
                     message: 'Đặt phòng thành công! Link đăng nhập quản lý đã được gửi qua SMS.'
                 }, { status: 201 });
             }
