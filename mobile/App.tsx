@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,6 +28,7 @@ import './src/i18n';
 void SplashScreen.preventAutoHideAsync();
 
 const STORAGE_KEY = 'aoklevart_language';
+const MIN_STARTUP_MS = 1700;
 
 function AppContent() {
   const { loading, user, refreshNotifications } = useAuth();
@@ -47,6 +48,7 @@ function AppContent() {
 }
 
 export default function App() {
+  const [startupDelayDone, setStartupDelayDone] = useState(false);
   const [dmLoaded] = useDmSans({
     DMSans_400Regular,
     DMSans_500Medium,
@@ -57,7 +59,15 @@ export default function App() {
     PlayfairDisplay_700Bold,
   });
 
-  const ready = dmLoaded && playfairLoaded;
+  const ready = dmLoaded && playfairLoaded && startupDelayDone;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setStartupDelayDone(true);
+    }, MIN_STARTUP_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (ready) {

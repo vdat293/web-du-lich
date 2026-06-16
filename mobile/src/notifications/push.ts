@@ -27,7 +27,11 @@ async function loadNotifications() {
 }
 
 function getProjectId() {
-  return Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
+  return (
+    process.env.EXPO_PUBLIC_EAS_PROJECT_ID?.trim()
+    || Constants.easConfig?.projectId
+    || Constants.expoConfig?.extra?.eas?.projectId
+  );
 }
 
 export async function registerDeviceForPushNotifications() {
@@ -52,7 +56,12 @@ export async function registerDeviceForPushNotifications() {
   if (finalStatus !== 'granted') return null;
 
   const projectId = getProjectId();
-  if (!projectId) return null;
+  if (!projectId) {
+    console.warn(
+      '[push] Missing Expo project id. Set EXPO_PUBLIC_EAS_PROJECT_ID in mobile/.env or extra.eas.projectId in app config.',
+    );
+    return null;
+  }
 
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
   await setStoredValue(PUSH_TOKEN_KEY, token);

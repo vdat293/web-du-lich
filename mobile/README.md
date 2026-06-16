@@ -21,6 +21,16 @@ Quét QR bằng Expo Go. Điện thoại và máy tính cần cùng mạng Wi-Fi
 
 Mobile mặc định sử dụng backend Render tại `https://web-du-lich-4pjb.onrender.com`. Có thể ghi đè `EXPO_PUBLIC_API_URL` trong `mobile/.env` khi cần dùng backend khác.
 
+## Push notification
+
+Khi build IPA local, thêm Expo project ID vào `mobile/.env` để app lấy được Expo push token:
+
+```bash
+EXPO_PUBLIC_EAS_PROJECT_ID=your-eas-project-id
+```
+
+Project ID có trong `extra.eas.projectId` sau khi cấu hình EAS project. iOS production IPA cần App ID/provisioning profile đã bật Push Notifications capability.
+
 ## Luồng đã nối backend
 
 - Tải và tìm kiếm chỗ nghỉ từ `/api/properties`.

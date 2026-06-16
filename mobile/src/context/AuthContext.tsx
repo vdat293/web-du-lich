@@ -132,7 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     void refreshNotifications().catch(() => undefined);
-    void registerDeviceForPushNotifications().catch(() => undefined);
+    void registerDeviceForPushNotifications().catch((reason) => {
+      console.warn('[push] Unable to register device for push notifications:', reason);
+    });
   }, [locked, refreshNotifications, token, user]);
 
   const unlockWithBiometrics = useCallback(async () => {

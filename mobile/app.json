@@ -9,7 +9,10 @@
     "scheme": "aoklevart",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aoklevart.mobile"
+      "bundleIdentifier": "com.aoklevart.mobile",
+      "entitlements": {
+        "aps-environment": "production"
+      }
     },
     "android": {
       "package": "com.aoklevart.mobile",
@@ -17,7 +20,11 @@
         "foregroundImage": "./assets/logo-aoklevart-icon.png",
         "backgroundColor": "#FAF8F5"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -41,8 +48,19 @@
           "backgroundColor": "#FAF8F5"
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "mode": "production"
+        }
+      ],
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cf595dc4-dfcb-4d64-8f9f-0e3b162ee06c"
+      }
+    },
+    "owner": "nexpodev293"
   }
 }

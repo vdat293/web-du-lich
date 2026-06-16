@@ -346,8 +346,13 @@ export const adminService = {
       success: boolean;
       campaign_id: number;
       recipients: number;
+      push_tokens: number;
       sent: number;
       failed: number;
+      push_errors?: Array<{
+        error?: string;
+        message?: string;
+      }>;
     }>('/api/admin/notifications/send', {
       method: 'POST',
       authenticated: true,

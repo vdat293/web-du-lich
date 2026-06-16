@@ -102,9 +102,13 @@ export function AdminNotifications() {
       setBody('');
       setUserIdsText('');
       await loadCampaigns();
+      const firstPushError = result.push_errors?.[0];
+      const pushErrorText = firstPushError
+        ? `\nLy do loi: ${firstPushError.error || 'Unknown'} - ${firstPushError.message || 'Khong co chi tiet'}`
+        : '';
       Alert.alert(
         'Da gui thong bao',
-        `Recipients: ${result.recipients}\nPush ok: ${result.sent}\nPush loi: ${result.failed}`,
+        `Recipients: ${result.recipients}\nThiet bi push: ${result.push_tokens}\nPush ok: ${result.sent}\nPush loi: ${result.failed}${pushErrorText}`,
       );
     } catch (err) {
       Alert.alert('Khong the gui', err instanceof Error ? err.message : 'Da xay ra loi.');

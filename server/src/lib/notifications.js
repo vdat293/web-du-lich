@@ -171,10 +171,11 @@ async function deactivateToken(token) {
 }
 
 async function sendExpoMessages(messages) {
-    if (!messages.length) return { sent: 0, failed: 0 };
+    if (!messages.length) return { sent: 0, failed: 0, push_errors: [] };
 
     let sent = 0;
     let failed = 0;
+    const pushErrors = [];
     for (let i = 0; i < messages.length; i += 100) {
         const chunk = messages.slice(i, i + 100);
         const headers = {
@@ -201,28 +202,41 @@ async function sendExpoMessages(messages) {
                     return;
                 }
                 failed += 1;
+                pushErrors.push({
+                    error: ticket.details?.error || ticket.status || 'ExpoPushError',
+                    message: ticket.message || 'Expo push ticket failed.',
+                });
                 if (ticket.details?.error === 'DeviceNotRegistered') {
                     void deactivateToken(chunk[index].to);
                 }
             });
 
             if (!response.ok || result.errors) {
-                failed += Math.max(0, chunk.length - tickets.length);
+                const missingTickets = Math.max(0, chunk.length - tickets.length);
+                failed += missingTickets;
+                pushErrors.push({
+                    error: `ExpoHTTP${response.status}`,
+                    message: result.errors?.[0]?.message || result.message || response.statusText || 'Expo push request failed.',
+                });
             }
         } catch (err) {
             console.error('[push] Expo send failed:', err);
             failed += chunk.length;
+            pushErrors.push({
+                error: 'NetworkError',
+                message: err instanceof Error ? err.message : String(err),
+            });
         }
     }
 
-    return { sent, failed };
+    return { sent, failed, push_errors: pushErrors.slice(0, 5) };
 }
 
 export async function createNotificationForUsers(userIds, notification) {
     await ensureNotificationTables();
 
     const uniqueUserIds = [...new Set(userIds.map(Number).filter(Boolean))];
-    if (!uniqueUserIds.length) return { sent: 0, failed: 0, recipients: 0 };
+    if (!uniqueUserIds.length) return { sent: 0, failed: 0, recipients: 0, push_tokens: 0, push_errors: [] };
 
     const values = uniqueUserIds.map((userId) => [
         userId,
@@ -263,7 +277,7 @@ export async function createNotificationForUsers(userIds, notification) {
         });
     }
 
-    return { ...result, recipients: uniqueUserIds.length };
+    return { ...result, recipients: uniqueUserIds.length, push_tokens: tokens.length };
 }
 
 export async function sendBookingStatusNotification(bookingId, status, sentBy = null) {
