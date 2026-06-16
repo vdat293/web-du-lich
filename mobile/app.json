@@ -11,7 +11,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.aoklevart.mobile",
       "entitlements": {
-        "aps-environment": "production"
+        "aps-environment": "development"
       }
     },
     "android": {
