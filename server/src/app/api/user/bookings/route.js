@@ -6,6 +6,7 @@ import { sendVirtualEmail } from '../../../../lib/email';
 import { toAbsoluteMediaUrl } from '../../../../lib/http';
 import { BRAND_LOGO_URL } from '../../../../lib/brand';
 import { awardLoyaltyPoints } from '../../../../lib/loyalty';
+import { createNotificationForUsers } from '../../../../lib/notifications';
 
 export async function GET(req) {
     try {
@@ -273,6 +274,13 @@ export async function POST(req) {
                     checkOut: check_out,
                 });
             }
+
+            await createNotificationForUsers([userId], {
+                title: `Booking #${bookingId} da duoc tao`,
+                body: `Don dat phong tai ${propertyName} dang o trang thai ${finalStatus}.`,
+                type: 'booking_created',
+                data: { bookingId, status: finalStatus },
+            });
 
             return NextResponse.json({
                 message: 'Đặt phòng thành công',

@@ -21,6 +21,7 @@ import { LoadingState } from './src/components/ScreenState';
 import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
 import { useAuth } from './src/context/AuthContext';
+import { subscribeToPushNotifications } from './src/notifications/push';
 import i18n from './src/i18n';
 import './src/i18n';
 
@@ -29,7 +30,14 @@ void SplashScreen.preventAutoHideAsync();
 const STORAGE_KEY = 'aoklevart_language';
 
 function AppContent() {
-  const { loading } = useAuth();
+  const { loading, user, refreshNotifications } = useAuth();
+
+  useEffect(() => {
+    if (!user) return undefined;
+    return subscribeToPushNotifications(() => {
+      void refreshNotifications().catch(() => undefined);
+    });
+  }, [refreshNotifications, user]);
 
   if (loading) {
     return <LoadingState />;

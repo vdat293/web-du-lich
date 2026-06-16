@@ -13,6 +13,7 @@
     "db:import": "node import-db.js",
     "db:init": "node init-db.js",
     "db:migrate-loyalty": "node migrate-loyalty.js",
+    "db:migrate-notifications": "node migrate-notifications.js",
     "media:migrate": "node migrate-assets-to-cloudinary.js"
   },
   "keywords": [],

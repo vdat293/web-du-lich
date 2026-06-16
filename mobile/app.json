@@ -41,6 +41,7 @@
           "backgroundColor": "#FAF8F5"
         }
       ],
+      "expo-notifications",
       "@react-native-community/datetimepicker"
     ]
   }

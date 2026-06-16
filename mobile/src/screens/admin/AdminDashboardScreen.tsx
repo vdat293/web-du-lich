@@ -12,8 +12,9 @@ import { colors, fonts } from '../../theme';
 import { AdminOverview } from './AdminOverview';
 import { AdminPromotions } from './AdminPromotions';
 import { AdminUsers } from './AdminUsers';
+import { AdminNotifications } from './AdminNotifications';
 
-type AdminTab = 'dashboard' | 'users' | 'promotions';
+type AdminTab = 'dashboard' | 'users' | 'promotions' | 'notifications';
 
 const TABS: Array<{
   key: AdminTab;
@@ -21,6 +22,7 @@ const TABS: Array<{
   icon: keyof typeof Ionicons.glyphMap;
 }> = [
   { key: 'dashboard', label: 'Dashboard', icon: 'grid-outline' },
+  { key: 'notifications', label: 'Push', icon: 'notifications-outline' },
   { key: 'users', label: 'Người dùng', icon: 'people-outline' },
   { key: 'promotions', label: 'Khuyến mãi', icon: 'pricetags-outline' },
 ];
@@ -30,6 +32,7 @@ export function AdminDashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
 
+  // Future staff role: replace this with a shared admin-or-staff permission helper.
   if (user?.role !== 'admin') {
     return (
       <SafeAreaView style={styles.screen}>
@@ -88,6 +91,7 @@ export function AdminDashboardScreen() {
 
       <View style={styles.body}>
         {activeTab === 'dashboard' ? <AdminOverview /> : null}
+        {activeTab === 'notifications' ? <AdminNotifications /> : null}
         {activeTab === 'users' ? <AdminUsers currentUserId={user.id} /> : null}
         {activeTab === 'promotions' ? <AdminPromotions /> : null}
       </View>

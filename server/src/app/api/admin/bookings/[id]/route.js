@@ -6,6 +6,7 @@ import { sendVirtualEmail } from '../../../../../lib/email';
 import { logActivity } from '../../../../../lib/logger';
 import { BRAND_LOGO_URL } from '../../../../../lib/brand';
 import { awardLoyaltyPoints } from '../../../../../lib/loyalty';
+import { sendBookingStatusNotification } from '../../../../../lib/notifications';
 
 
 export async function GET(req, { params }) {
@@ -221,6 +222,10 @@ export async function PUT(req, { params }) {
         const ip_address = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
         await logActivity(authResult.userId, 'Cập nhật Booking', `Admin đã cập nhật trạng thái Booking #${id} sang ${status || oldStatus}`, ip_address);
 
+        if (status && updatedBooking) {
+            await sendBookingStatusNotification(id, status, authResult.userId);
+        }
+
         return NextResponse.json({
             message: 'Cập nhật booking thành công',
             booking: updatedBooking
@@ -285,6 +290,10 @@ export async function DELETE(req, { params }) {
 
         const ip_address = req.headers.get('x-forwarded-for') || req.ip || 'unknown';
         await logActivity(authResult.userId, 'Hủy Booking', `Admin đã hủy Booking #${id}`, ip_address);
+
+        if (cancelledBooking) {
+            await sendBookingStatusNotification(id, 'cancelled', authResult.userId);
+        }
 
         return NextResponse.json({ message: 'Hủy booking thành công' });
 
