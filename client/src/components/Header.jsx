@@ -229,7 +229,7 @@ export default function Header() {
             setIsLoginOpen(false);
             window.dispatchEvent(new Event('userUpdated'));
             setLoginPassword('');
-        } catch (err) { setLoginError(err.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác.'); }
+        } catch (err) { setLoginError(err.response?.data?.message || t('header.loginError')); }
         finally { setLoginLoading(false); }
     };
 
@@ -239,7 +239,7 @@ export default function Header() {
         setRegSuccess('');
 
         if (!regFirstName || !regLastName || !regEmail || !regPassword) {
-            setRegError('Vui lòng điền đầy đủ thông tin.');
+            setRegError(t('header.fillRequired'));
             return;
         }
 
@@ -251,14 +251,14 @@ export default function Header() {
                 email: regEmail,
                 password: regPassword
             });
-            setRegSuccess('Đăng ký thành công! Vui lòng đăng nhập.');
+            setRegSuccess(t('header.regSuccess'));
             setTimeout(() => {
                 setIsRegisterOpen(false);
                 setIsLoginOpen(true);
                 setRegSuccess('');
             }, 1500);
         } catch (error) {
-            setRegError(error.response?.data?.message || 'Có lỗi xảy ra.');
+            setRegError(error.response?.data?.message || t('header.errorOccurred'));
         } finally {
             setRegLoading(false);
         }
@@ -307,7 +307,7 @@ export default function Header() {
                 }
             } catch (err) {
                 setForgotLoading(false);
-                setForgotError(err.response?.data?.message || 'Lỗi kết nối máy chủ');
+                setForgotError(err.response?.data?.message || t('header.errorOccurred'));
             }
         }
     };
@@ -350,7 +350,7 @@ export default function Header() {
             }
         } catch (err) {
             setForgotLoading(false);
-            setForgotError(err.response?.data?.message || 'Lỗi kết nối máy chủ');
+            setForgotError(err.response?.data?.message || t('header.errorOccurred'));
         }
     };
 
@@ -361,7 +361,7 @@ export default function Header() {
 
         const otpCode = forgotOtp.join('');
         if (otpCode.length !== 6) {
-            setForgotError('Vui lòng nhập đủ 6 số OTP');
+            setForgotError(t('header.otpLengthError'));
             return;
         }
 
@@ -380,7 +380,7 @@ export default function Header() {
             }
         } catch (err) {
             setForgotLoading(false);
-            setForgotError(err.response?.data?.message || 'Lỗi kết nối máy chủ');
+            setForgotError(err.response?.data?.message || t('header.errorOccurred'));
         }
     };
 
@@ -390,11 +390,11 @@ export default function Header() {
         setForgotError('');
 
         if (!forgotNewPassword || forgotNewPassword.length < 6) {
-            setForgotError('Mật khẩu mới phải có ít nhất 6 ký tự');
+            setForgotError(t('header.minPasswordLength'));
             return;
         }
         if (forgotNewPassword !== forgotConfirmPassword) {
-            setForgotError('Mật khẩu xác nhận không khớp');
+            setForgotError(t('header.passwordMismatch'));
             return;
         }
 
@@ -419,7 +419,7 @@ export default function Header() {
             }
         } catch (err) {
             setForgotLoading(false);
-            setForgotError(err.response?.data?.message || 'Lỗi kết nối máy chủ');
+            setForgotError(err.response?.data?.message || t('header.errorOccurred'));
         }
     };
 
@@ -642,8 +642,8 @@ export default function Header() {
                                     <img src={BRAND_LOGO_URL} alt="Aoklevart" className="w-11 h-11 rounded-xl object-cover" />
                                     <span className="font-display text-lg font-semibold tracking-tight">Aoklevart</span>
                                 </div>
-                                <h3 className="text-[26px] font-bold leading-tight mb-4">Khám phá kỳ nghỉ<br />hoàn hảo của bạn</h3>
-                                <p className="text-white/70 text-sm leading-relaxed">Hàng nghìn chỗ ở cao cấp đang chờ bạn. Đăng nhập để nhận ưu đãi độc quyền.</p>
+                                <h3 className="text-[26px] font-bold leading-tight mb-4">{t('header.brandTitle')}</h3>
+                                <p className="text-white/70 text-sm leading-relaxed">{t('header.brandSub')}</p>
                             </div>
                             <div className="relative z-10 flex items-center gap-3 pt-6 border-t border-white/15">
                                 <div className="flex -space-x-2">
@@ -651,7 +651,7 @@ export default function Header() {
                                     <div className="w-7 h-7 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-[10px] font-bold">T</div>
                                     <div className="w-7 h-7 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center text-[10px] font-bold">A</div>
                                 </div>
-                                <p className="text-white/60 text-xs"><span className="text-white font-semibold">2,400+</span> khách hàng tin tưởng</p>
+                                <p className="text-white/60 text-xs"><span className="text-white font-semibold">2,400+</span> {t('header.trustedCustomers')}</p>
                             </div>
                         </div>
 
@@ -672,14 +672,14 @@ export default function Header() {
                                 )}
 
                                 <h2 className="text-xl font-bold text-neutral-900 mb-1">
-                                    {loginMode === 'identifier' && 'Đăng nhập nhanh'}
-                                    {loginMode === 'otp' && 'Nhập mã xác thực'}
-                                    {loginMode === 'password' && 'Đăng nhập'}
+                                    {loginMode === 'identifier' && t('header.loginQuick')}
+                                    {loginMode === 'otp' && t('header.verifyCode')}
+                                    {loginMode === 'password' && t('header.login')}
                                 </h2>
                                 <p className="text-neutral-500 text-sm mb-6">
-                                    {loginMode === 'identifier' && 'Nhập SĐT hoặc email để tiếp tục'}
-                                    {loginMode === 'otp' && (<>Mã 6 chữ số đã gửi đến <strong className="text-neutral-800">{otpIdentifier}</strong></>)}
-                                    {loginMode === 'password' && (<>Nhập mật khẩu cho <strong className="text-neutral-800">{otpIdentifier}</strong></>)}
+                                    {loginMode === 'identifier' && t('header.identifierHint')}
+                                    {loginMode === 'otp' && (<>{t('header.otpSentTo')} <strong className="text-neutral-800">{otpIdentifier}</strong></>)}
+                                    {loginMode === 'password' && (<>{t('header.passwordFor')} <strong className="text-neutral-800">{otpIdentifier}</strong></>)}
                                 </p>
 
                                 {/* Step 1: Identifier Input & Social Login */}
@@ -691,20 +691,20 @@ export default function Header() {
                                                 <div className="relative">
                                                     <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 !text-lg">person</span>
                                                     <input type="text" value={otpIdentifier} onChange={e => setOtpIdentifier(e.target.value)}
-                                                        placeholder="Email hoặc số điện thoại"
+                                                        placeholder={t('header.emailOrPhone')}
                                                         className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-neutral-200 focus:border-primary focus:outline-none transition-all bg-white text-sm placeholder:text-neutral-400"
                                                         autoFocus />
                                                 </div>
                                             </div>
                                             <button type="submit" disabled={otpLoading}
                                                 className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 text-sm">
-                                                {otpLoading ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Đang xử lý...</> : <>Tiếp tục <span className="material-symbols-outlined !text-base">east</span></>}
+                                                {otpLoading ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{t('header.processing')}</> : <>{t('header.continue')} <span className="material-symbols-outlined !text-base">east</span></>}
                                             </button>
                                         </form>
 
                                         <div className="flex items-center gap-4 mb-5">
                                             <div className="flex-1 h-px bg-neutral-200"></div>
-                                            <span className="text-[11px] text-neutral-400 font-medium uppercase tracking-wider">hoặc</span>
+                                            <span className="text-[11px] text-neutral-400 font-medium uppercase tracking-wider">{t('header.or')}</span>
                                             <div className="flex-1 h-px bg-neutral-200"></div>
                                         </div>
 
@@ -718,7 +718,7 @@ export default function Header() {
                                         </div>
 
                                         <p className="mt-5 text-center text-xs text-neutral-500">
-                                            Chưa có tài khoản? <button onClick={openRegister} className="text-primary font-bold hover:underline">Đăng ký miễn phí</button>
+                                            {t('header.noAccount')} <button onClick={openRegister} className="text-primary font-bold hover:underline">{t('header.freeRegister')}</button>
                                         </p>
                                     </>
                                 )}
@@ -737,18 +737,18 @@ export default function Header() {
                                         <div className="flex items-center justify-between px-2">
                                             <p className="text-xs text-neutral-500">
                                                 {otpCanResend
-                                                    ? <button type="button" onClick={handleSendOtp} className="text-primary font-semibold hover:underline">Gửi lại mã OTP</button>
-                                                    : <>Gửi lại sau <span className="font-bold text-neutral-800">{otpTimer}s</span></>}
+                                                    ? <button type="button" onClick={handleSendOtp} className="text-primary font-semibold hover:underline">{t('header.resendOtp')}</button>
+                                                    : <>{t('header.resendAfter')} <span className="font-bold text-neutral-800">{otpTimer}s</span></>}
                                             </p>
-                                            <button type="button" onClick={() => { setLoginMode('password'); setLoginError(''); setOtpError(''); }} className="text-xs text-primary font-semibold hover:underline">Đăng nhập bằng mật khẩu</button>
+                                            <button type="button" onClick={() => { setLoginMode('password'); setLoginError(''); setOtpError(''); }} className="text-xs text-primary font-semibold hover:underline">{t('header.loginByPassword')}</button>
                                         </div>
                                         <button type="submit" disabled={otpLoading}
                                             className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 text-sm">
-                                            {otpLoading ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />Đang xác thực...</> : <>Xác nhận & Đăng nhập</>}
+                                            {otpLoading ? <><div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{t('header.verifying')}</> : <>{t('header.verify')}</>}
                                         </button>
                                         <div className="text-center mt-3">
                                             <button type="button" onClick={() => setLoginMode('identifier')} className="text-xs text-neutral-500 hover:text-neutral-800 hover:underline">
-                                                <span className="material-symbols-outlined !text-[14px] align-middle mr-1">arrow_back</span>Thay đổi SĐT / Email
+                                                <span className="material-symbols-outlined !text-[14px] align-middle mr-1">arrow_back</span>{t('header.changeIdentifier')}
                                             </button>
                                         </div>
                                     </form>
@@ -760,7 +760,7 @@ export default function Header() {
                                         {loginError && <p className="text-red-600 text-xs bg-red-50 p-3 rounded-xl text-center font-medium">{loginError}</p>}
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
-                                                <label className="text-[13px] font-semibold text-neutral-700">Mật khẩu</label>
+                                                <label className="text-[13px] font-semibold text-neutral-700">{t('header.password')}</label>
                                             </div>
                                             <div className="relative">
                                                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 !text-lg">lock</span>
@@ -768,18 +768,18 @@ export default function Header() {
                                                     className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-neutral-200 focus:border-primary focus:outline-none transition-all bg-white text-sm" autoFocus />
                                             </div>
                                             <div className="text-right mt-2">
-                                                <button type="button" onClick={openForgotPassword} className="text-xs text-primary font-medium hover:underline">Quên mật khẩu?</button>
+                                                <button type="button" onClick={openForgotPassword} className="text-xs text-primary font-medium hover:underline">{t('header.forgotPassword')}</button>
                                             </div>
                                         </div>
                                         <button type="submit" className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 text-sm">
-                                            Đăng nhập
+                                            {t('header.login')}
                                         </button>
                                         <div className="flex items-center justify-between px-2 mt-4">
                                             <button type="button" onClick={() => setLoginMode('identifier')} className="text-xs text-neutral-500 hover:text-neutral-800 hover:underline">
-                                                <span className="material-symbols-outlined !text-[14px] align-middle mr-1">arrow_back</span>Thay đổi tài khoản
+                                                <span className="material-symbols-outlined !text-[14px] align-middle mr-1">arrow_back</span>{t('header.changeAccount')}
                                             </button>
                                             <button type="button" onClick={() => { setLoginMode('otp'); setLoginError(''); setOtpError(''); }} className="text-xs text-primary font-semibold hover:underline">
-                                                Đăng nhập bằng mã OTP
+                                                {t('header.loginByOtp')}
                                             </button>
                                         </div>
                                     </form>
@@ -787,7 +787,7 @@ export default function Header() {
                             </div>
 
                             <div className="px-8 py-3 border-t border-neutral-100 bg-neutral-50/60">
-                                <p className="text-[10px] text-neutral-400 text-center">Bằng việc tiếp tục, bạn đồng ý với <a href="#" className="underline hover:text-neutral-600">Điều khoản dịch vụ</a> & <a href="#" className="underline hover:text-neutral-600">Chính sách bảo mật</a></p>
+                                <p className="text-[10px] text-neutral-400 text-center">{t('header.consent')} <a href="#" className="underline hover:text-neutral-600">{t('header.terms')}</a> & <a href="#" className="underline hover:text-neutral-600">{t('header.privacy')}</a></p>
                             </div>
                         </div>
                     </div>
@@ -805,8 +805,8 @@ export default function Header() {
 
                         <div className="p-8">
                             <div className="text-center mb-8">
-                                <h2 className="font-display text-2xl font-bold text-charcoal mb-2">Tạo tài khoản mới</h2>
-                                <p className="text-warm-gray text-sm">Tham gia cộng đồng Aoklevart ngay hôm nay</p>
+                                <h2 className="font-display text-2xl font-bold text-charcoal mb-2">{t('header.createAccount')}</h2>
+                                <p className="text-warm-gray text-sm">{t('header.joinNow')}</p>
                             </div>
 
                             <form className="space-y-4" onSubmit={handleRegister}>
@@ -814,11 +814,11 @@ export default function Header() {
                                 {regSuccess && <p className="text-green-500 text-sm text-center">{regSuccess}</p>}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1.5">Họ</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.firstName')}</label>
                                         <input type="text" value={regFirstName} onChange={e => setRegFirstName(e.target.value)} required placeholder="Nguyễn" className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1.5">Tên</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.lastName')}</label>
                                         <input type="text" value={regLastName} onChange={e => setRegLastName(e.target.value)} required placeholder="Văn A" className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50" />
                                     </div>
                                 </div>
@@ -827,22 +827,22 @@ export default function Header() {
                                     <input type="email" value={regEmail} onChange={e => setRegEmail(e.target.value)} required placeholder="name@example.com" className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-charcoal mb-1.5">Mật khẩu</label>
+                                    <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.password')}</label>
                                     <input type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} required placeholder="••••••••" className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50" />
                                 </div>
 
                                 <button type="submit" className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20">
-                                    Đăng ký tài khoản
+                                    {t('header.newAccount')}
                                 </button>
                             </form>
 
                             <p className="mt-6 text-center text-xs text-warm-gray px-4">
-                                Bằng việc đăng ký, bạn đồng ý với <a href="#" className="text-primary hover:underline">Điều khoản dịch vụ</a> & <a href="#" className="text-primary hover:underline">Chính sách bảo mật</a> của chúng tôi.
+                                {t('header.consent')} <a href="#" className="text-primary hover:underline">{t('header.terms')}</a> & <a href="#" className="text-primary hover:underline">{t('header.privacy')}</a>
                             </p>
 
                             <p className="mt-8 text-center text-sm text-warm-gray">
-                                Đã có tài khoản?{' '}
-                                <button onClick={openLogin} className="text-primary font-bold hover:underline">Đăng nhập</button>
+                                {t('header.alreadyAccount')}{' '}
+                                <button onClick={openLogin} className="text-primary font-bold hover:underline">{t('header.login')}</button>
                             </p>
                         </div>
                     </div>
@@ -873,16 +873,16 @@ export default function Header() {
                                     </span>
                                 </div>
                                 <h2 className="font-display text-2xl font-bold text-charcoal mb-1">
-                                    {forgotStep === 1 ? 'Quên mật khẩu' : forgotStep === 2 ? 'Nhập mã OTP' : 'Tạo mật khẩu mới'}
+                                    {forgotStep === 1 ? t('header.forgotTitle') : forgotStep === 2 ? t('header.enterOtp') : t('header.createNewPassword')}
                                 </h2>
                                 <p className="text-warm-gray text-sm">
                                     {forgotStep === 1
-                                        ? 'Nhập Email hoặc Số điện thoại để nhận mã OTP'
+                                        ? t('header.enterEmailPhone')
                                         : forgotStep === 2
                                             ? (forgotEmail.includes('@') 
-                                                ? 'Vui lòng kiểm tra hộp thư email của bạn để lấy mã OTP' 
-                                                : 'Vui lòng kiểm tra tin nhắn SMS trên điện thoại của bạn')
-                                            : 'Nhập mật khẩu mới cho tài khoản của bạn'}
+                                                ? t('header.checkEmail') 
+                                                : t('header.checkSms'))
+                                            : t('header.enterNewPassword')}
                                 </p>
                             </div>
 
@@ -893,13 +893,13 @@ export default function Header() {
                             {forgotStep === 1 && (
                                 <form onSubmit={handleForgotSubmitEmail} className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1.5">Email hoặc Số điện thoại</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.emailPhoneLabel')}</label>
                                         <input
                                             type="text"
                                             value={forgotEmail}
                                             onChange={e => setForgotEmail(e.target.value)}
                                             required
-                                            placeholder="Nhập email hoặc SĐT"
+                                            placeholder={t('header.enterEmailPhonePlaceholder')}
                                             className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:border-primary focus:ring-primary transition-colors bg-neutral-50"
                                         />
                                     </div>
@@ -909,9 +909,9 @@ export default function Header() {
                                         className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {forgotLoading ? (
-                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Đang xử lý...</>
+                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> {t('header.processing')}</>
                                         ) : (
-                                            <><span className="material-symbols-outlined !text-lg">send</span> Gửi mã OTP</>
+                                            <><span className="material-symbols-outlined !text-lg">send</span> {t('header.sendOtp')}</>
                                         )}
                                     </button>
                                     <button
@@ -919,7 +919,7 @@ export default function Header() {
                                         onClick={() => { setIsForgotOpen(false); setIsLoginOpen(true); }}
                                         className="w-full py-2 text-warm-gray hover:text-charcoal text-sm font-medium"
                                     >
-                                        ← Quay lại đăng nhập
+                                        {t('header.backToLogin')}
                                     </button>
                                 </form>
                             )}
@@ -928,7 +928,7 @@ export default function Header() {
                             {forgotStep === 2 && (
                                 <form onSubmit={handleForgotVerifyOtp} className="space-y-5">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-2 text-center">Mã OTP</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-2 text-center">{t('header.otpLabel')}</label>
                                         <div className="flex justify-center gap-2">
                                             {forgotOtp.map((val, i) => (
                                                 <input
@@ -945,7 +945,7 @@ export default function Header() {
                                             ))}
                                         </div>
                                         <p className="text-xs text-center mt-2 text-warm-gray">
-                                            Hết hạn sau: <span className={`font-bold ${forgotCountdown < 60 ? 'text-red-500' : 'text-primary'}`}>
+                                            {t('header.expiresIn')} <span className={`font-bold ${forgotCountdown < 60 ? 'text-red-500' : 'text-primary'}`}>
                                                 {Math.floor(forgotCountdown / 60)}:{(forgotCountdown % 60).toString().padStart(2, '0')}
                                             </span>
                                         </p>
@@ -957,9 +957,9 @@ export default function Header() {
                                         className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {forgotLoading ? (
-                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Đang kiểm tra...</>
+                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> {t('header.checking')}</>
                                         ) : (
-                                            <><span className="material-symbols-outlined !text-lg">check_circle</span> Xác nhận OTP</>
+                                            <><span className="material-symbols-outlined !text-lg">check_circle</span> {t('header.verifyOtp')}</>
                                         )}
                                     </button>
 
@@ -968,7 +968,7 @@ export default function Header() {
                                         onClick={() => { setForgotStep(1); setForgotError(''); }}
                                         className="w-full py-2 text-warm-gray hover:text-charcoal text-sm font-medium"
                                     >
-                                        ← Quay lại nhập email
+                                        {t('header.backToEmail')}
                                     </button>
                                 </form>
                             )}
@@ -977,7 +977,7 @@ export default function Header() {
                             {forgotStep === 3 && (
                                 <form onSubmit={handleForgotResetPassword} className="space-y-5">
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1.5">Mật khẩu mới</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.newPassword')}</label>
                                         <input
                                             type="password"
                                             value={forgotNewPassword}
@@ -988,7 +988,7 @@ export default function Header() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-charcoal mb-1.5">Xác nhận mật khẩu</label>
+                                        <label className="block text-sm font-medium text-charcoal mb-1.5">{t('header.confirmPassword')}</label>
                                         <input
                                             type="password"
                                             value={forgotConfirmPassword}
@@ -1005,9 +1005,9 @@ export default function Header() {
                                         className="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-light transition-all shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
                                         {forgotLoading ? (
-                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> Đang xử lý...</>
+                                            <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> {t('header.processing')}</>
                                         ) : (
-                                            <><span className="material-symbols-outlined !text-lg">lock_reset</span> Đổi mật khẩu</>
+                                            <><span className="material-symbols-outlined !text-lg">lock_reset</span> {t('header.changePassword')}</>
                                         )}
                                     </button>
                                 </form>

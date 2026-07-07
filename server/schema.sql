@@ -1,6 +1,7 @@
 -- Drop tables in reverse order of creation to avoid foreign key constraints
 DROP TABLE IF EXISTS site_visits;
 DROP TABLE IF EXISTS activity_logs;
+DROP TABLE IF EXISTS notification_deliveries;
 DROP TABLE IF EXISTS notifications;
 DROP TABLE IF EXISTS notification_campaigns;
 DROP TABLE IF EXISTS push_tokens;
@@ -48,9 +49,15 @@ CREATE TABLE push_tokens (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   expo_push_token VARCHAR(255) NOT NULL UNIQUE,
+  provider VARCHAR(30) NOT NULL DEFAULT 'expo',
+  expo_project_id VARCHAR(120),
   platform VARCHAR(30),
   device_id VARCHAR(120),
+  app_version VARCHAR(40),
+  permission_status VARCHAR(30),
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  disabled_at TIMESTAMP NULL,
+  last_error TEXT,
   last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -67,6 +74,8 @@ CREATE TABLE notification_campaigns (
   created_by INT,
   sent_count INT NOT NULL DEFAULT 0,
   failed_count INT NOT NULL DEFAULT 0,
+  delivered_count INT NOT NULL DEFAULT 0,
+  opened_count INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -80,6 +89,11 @@ CREATE TABLE notifications (
   type VARCHAR(50) NOT NULL DEFAULT 'general',
   data_json TEXT,
   is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  read_at TIMESTAMP NULL,
+  opened_at TIMESTAMP NULL,
+  deep_link VARCHAR(255),
+  priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+  channel VARCHAR(50) NOT NULL DEFAULT 'default',
   sent_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -87,6 +101,26 @@ CREATE TABLE notifications (
   FOREIGN KEY (sent_by) REFERENCES users(id) ON DELETE SET NULL,
   INDEX idx_notifications_user_created (user_id, created_at),
   INDEX idx_notifications_user_read (user_id, is_read)
+);
+
+CREATE TABLE notification_deliveries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  notification_id INT NOT NULL,
+  push_token_id INT NULL,
+  status VARCHAR(30) NOT NULL DEFAULT 'pending',
+  expo_ticket_id VARCHAR(120),
+  expo_receipt_id VARCHAR(120),
+  error_code VARCHAR(120),
+  error_message TEXT,
+  sent_at TIMESTAMP NULL,
+  received_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+  FOREIGN KEY (push_token_id) REFERENCES push_tokens(id) ON DELETE SET NULL,
+  INDEX idx_notification_deliveries_notification (notification_id),
+  INDEX idx_notification_deliveries_token_status (push_token_id, status),
+  INDEX idx_notification_deliveries_ticket (expo_ticket_id)
 );
 
 CREATE TABLE properties (

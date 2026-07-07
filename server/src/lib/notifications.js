@@ -2,11 +2,48 @@ import db from './db';
 
 const PUSH_ENDPOINT = 'https://exp.host/--/api/v2/push/send';
 const TOKEN_PREFIXES = ['ExponentPushToken[', 'ExpoPushToken['];
+const DEFAULT_CHANNEL = 'default';
 
 let tablesReady = false;
 
 export function isExpoPushToken(token) {
     return typeof token === 'string' && TOKEN_PREFIXES.some((prefix) => token.startsWith(prefix));
+}
+
+async function columnExists(table, column) {
+    const [rows] = await db.execute(
+        `SELECT 1
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND COLUMN_NAME = ?
+         LIMIT 1`,
+        [table, column]
+    );
+    return rows.length > 0;
+}
+
+async function indexExists(table, indexName) {
+    const [rows] = await db.execute(
+        `SELECT 1
+         FROM INFORMATION_SCHEMA.STATISTICS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = ?
+           AND INDEX_NAME = ?
+         LIMIT 1`,
+        [table, indexName]
+    );
+    return rows.length > 0;
+}
+
+async function addColumn(table, column, definition) {
+    if (await columnExists(table, column)) return;
+    await db.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
+}
+
+async function addIndex(table, indexName, columns) {
+    if (await indexExists(table, indexName)) return;
+    await db.query(`ALTER TABLE \`${table}\` ADD INDEX \`${indexName}\` (${columns})`);
 }
 
 export async function ensureNotificationTables() {
@@ -17,9 +54,15 @@ export async function ensureNotificationTables() {
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
             expo_push_token VARCHAR(255) NOT NULL UNIQUE,
+            provider VARCHAR(30) NOT NULL DEFAULT 'expo',
+            expo_project_id VARCHAR(120),
             platform VARCHAR(30),
             device_id VARCHAR(120),
+            app_version VARCHAR(40),
+            permission_status VARCHAR(30),
             is_active BOOLEAN NOT NULL DEFAULT TRUE,
+            disabled_at TIMESTAMP NULL,
+            last_error TEXT,
             last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -38,6 +81,8 @@ export async function ensureNotificationTables() {
             created_by INT,
             sent_count INT NOT NULL DEFAULT 0,
             failed_count INT NOT NULL DEFAULT 0,
+            delivered_count INT NOT NULL DEFAULT 0,
+            opened_count INT NOT NULL DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
         )
@@ -53,6 +98,11 @@ export async function ensureNotificationTables() {
             type VARCHAR(50) NOT NULL DEFAULT 'general',
             data_json TEXT,
             is_read BOOLEAN NOT NULL DEFAULT FALSE,
+            read_at TIMESTAMP NULL,
+            opened_at TIMESTAMP NULL,
+            deep_link VARCHAR(255),
+            priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+            channel VARCHAR(50) NOT NULL DEFAULT 'default',
             sent_by INT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -62,6 +112,49 @@ export async function ensureNotificationTables() {
             INDEX idx_notifications_user_read (user_id, is_read)
         )
     `);
+
+    await addColumn('push_tokens', 'provider', "VARCHAR(30) NOT NULL DEFAULT 'expo' AFTER expo_push_token");
+    await addColumn('push_tokens', 'expo_project_id', 'VARCHAR(120) NULL AFTER provider');
+    await addColumn('push_tokens', 'app_version', 'VARCHAR(40) NULL AFTER device_id');
+    await addColumn('push_tokens', 'permission_status', 'VARCHAR(30) NULL AFTER app_version');
+    await addColumn('push_tokens', 'disabled_at', 'TIMESTAMP NULL AFTER is_active');
+    await addColumn('push_tokens', 'last_error', 'TEXT NULL AFTER disabled_at');
+    await addColumn('notification_campaigns', 'delivered_count', 'INT NOT NULL DEFAULT 0 AFTER failed_count');
+    await addColumn('notification_campaigns', 'opened_count', 'INT NOT NULL DEFAULT 0 AFTER delivered_count');
+    await addColumn('notifications', 'read_at', 'TIMESTAMP NULL AFTER is_read');
+    await addColumn('notifications', 'opened_at', 'TIMESTAMP NULL AFTER read_at');
+    await addColumn('notifications', 'deep_link', 'VARCHAR(255) NULL AFTER opened_at');
+    await addColumn('notifications', 'priority', "VARCHAR(20) NOT NULL DEFAULT 'normal' AFTER deep_link");
+    await addColumn('notifications', 'channel', "VARCHAR(50) NOT NULL DEFAULT 'default' AFTER priority");
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS notification_deliveries (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            notification_id INT NOT NULL,
+            push_token_id INT NULL,
+            status VARCHAR(30) NOT NULL DEFAULT 'pending',
+            expo_ticket_id VARCHAR(120),
+            expo_receipt_id VARCHAR(120),
+            error_code VARCHAR(120),
+            error_message TEXT,
+            sent_at TIMESTAMP NULL,
+            received_at TIMESTAMP NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+            FOREIGN KEY (push_token_id) REFERENCES push_tokens(id) ON DELETE SET NULL,
+            INDEX idx_notification_deliveries_notification (notification_id),
+            INDEX idx_notification_deliveries_token_status (push_token_id, status),
+            INDEX idx_notification_deliveries_ticket (expo_ticket_id)
+        )
+    `);
+
+    await addIndex('push_tokens', 'idx_push_tokens_user_active', 'user_id, is_active');
+    await addIndex('notifications', 'idx_notifications_user_created', 'user_id, created_at');
+    await addIndex('notifications', 'idx_notifications_user_read', 'user_id, is_read');
+    await addIndex('notification_deliveries', 'idx_notification_deliveries_notification', 'notification_id');
+    await addIndex('notification_deliveries', 'idx_notification_deliveries_token_status', 'push_token_id, status');
+    await addIndex('notification_deliveries', 'idx_notification_deliveries_ticket', 'expo_ticket_id');
 
     tablesReady = true;
 }
@@ -80,26 +173,75 @@ function parseJson(value) {
     }
 }
 
-export async function registerPushToken(userId, payload) {
+function normalizeString(value, fallback = null) {
+    if (value === undefined || value === null) return fallback;
+    const trimmed = String(value).trim();
+    return trimmed || fallback;
+}
+
+function buildDeepLink(notification) {
+    return normalizeString(
+        notification.deep_link || notification.deepLink || notification.url || notification.data?.deepLink || notification.data?.url
+    );
+}
+
+function serializeNotification(row) {
+    return {
+        id: Number(row.id),
+        title: row.title,
+        body: row.body,
+        type: row.type,
+        data: parseJson(row.data_json),
+        unread: !row.is_read,
+        read_at: row.read_at,
+        opened_at: row.opened_at,
+        deep_link: row.deep_link,
+        priority: row.priority || 'normal',
+        channel: row.channel || DEFAULT_CHANNEL,
+        created_at: row.created_at,
+    };
+}
+
+export async function registerPushToken(userId, payload = {}) {
     await ensureNotificationTables();
 
-    const token = payload?.expo_push_token || payload?.expoPushToken;
+    const token = payload.expo_push_token || payload.expoPushToken;
     if (!isExpoPushToken(token)) {
         const error = new Error('Expo push token khong hop le.');
         error.status = 400;
         throw error;
     }
 
+    const values = [
+        userId,
+        token,
+        normalizeString(payload.provider, 'expo'),
+        normalizeString(payload.expo_project_id || payload.expoProjectId),
+        normalizeString(payload.platform),
+        normalizeString(payload.device_id || payload.deviceId),
+        normalizeString(payload.app_version || payload.appVersion),
+        normalizeString(payload.permission_status || payload.permissionStatus),
+    ];
+
     await db.execute(
-        `INSERT INTO push_tokens (user_id, expo_push_token, platform, device_id, is_active)
-         VALUES (?, ?, ?, ?, TRUE)
+        `INSERT INTO push_tokens (
+            user_id, expo_push_token, provider, expo_project_id, platform, device_id,
+            app_version, permission_status, is_active, disabled_at, last_error
+         )
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, NULL, NULL)
          ON DUPLICATE KEY UPDATE
             user_id = VALUES(user_id),
+            provider = VALUES(provider),
+            expo_project_id = VALUES(expo_project_id),
             platform = VALUES(platform),
             device_id = VALUES(device_id),
+            app_version = VALUES(app_version),
+            permission_status = VALUES(permission_status),
             is_active = TRUE,
+            disabled_at = NULL,
+            last_error = NULL,
             last_seen_at = CURRENT_TIMESTAMP`,
-        [userId, token, payload?.platform || null, payload?.device_id || payload?.deviceId || null]
+        values
     );
 
     return { expo_push_token: token };
@@ -107,10 +249,14 @@ export async function registerPushToken(userId, payload) {
 
 export async function unregisterPushToken(userId, token) {
     await ensureNotificationTables();
-
     if (!token) return;
+
     await db.execute(
-        'UPDATE push_tokens SET is_active = FALSE WHERE user_id = ? AND expo_push_token = ?',
+        `UPDATE push_tokens
+         SET is_active = FALSE,
+             disabled_at = CURRENT_TIMESTAMP,
+             permission_status = COALESCE(permission_status, 'disabled')
+         WHERE user_id = ? AND expo_push_token = ?`,
         [userId, token]
     );
 }
@@ -119,38 +265,86 @@ export async function listNotifications(userId) {
     await ensureNotificationTables();
 
     const [rows] = await db.execute(
-        `SELECT id, title, body, type, data_json, is_read, created_at
+        `SELECT id, title, body, type, data_json, is_read, read_at, opened_at,
+                deep_link, priority, channel, created_at
          FROM notifications
          WHERE user_id = ?
          ORDER BY created_at DESC
          LIMIT 100`,
         [userId]
     );
+    const [[countRow]] = await db.execute(
+        'SELECT COUNT(*) AS unread_count FROM notifications WHERE user_id = ? AND is_read = FALSE',
+        [userId]
+    );
 
-    return rows.map((row) => ({
-        id: row.id,
-        title: row.title,
-        body: row.body,
-        type: row.type,
-        data: parseJson(row.data_json),
-        unread: !row.is_read,
-        created_at: row.created_at,
-    }));
+    return {
+        notifications: rows.map(serializeNotification),
+        unread_count: Number(countRow?.unread_count || 0),
+    };
 }
 
 export async function markNotificationsRead(userId, ids = []) {
     await ensureNotificationTables();
 
-    if (Array.isArray(ids) && ids.length > 0) {
-        const placeholders = ids.map(() => '?').join(',');
+    const cleanIds = Array.isArray(ids) ? ids.map(Number).filter(Boolean) : [];
+    if (cleanIds.length > 0) {
+        const placeholders = cleanIds.map(() => '?').join(',');
         await db.execute(
-            `UPDATE notifications SET is_read = TRUE WHERE user_id = ? AND id IN (${placeholders})`,
-            [userId, ...ids.map(Number)]
+            `UPDATE notifications
+             SET is_read = TRUE,
+                 read_at = COALESCE(read_at, CURRENT_TIMESTAMP)
+             WHERE user_id = ? AND id IN (${placeholders})`,
+            [userId, ...cleanIds]
         );
         return;
     }
 
-    await db.execute('UPDATE notifications SET is_read = TRUE WHERE user_id = ?', [userId]);
+    await db.execute(
+        `UPDATE notifications
+         SET is_read = TRUE,
+             read_at = COALESCE(read_at, CURRENT_TIMESTAMP)
+         WHERE user_id = ?`,
+        [userId]
+    );
+}
+
+export async function markNotificationOpened(userId, notificationId) {
+    await ensureNotificationTables();
+
+    const cleanId = Number(notificationId);
+    if (!cleanId) {
+        const error = new Error('notificationId khong hop le.');
+        error.status = 400;
+        throw error;
+    }
+
+    const [rows] = await db.execute(
+        'SELECT id, campaign_id, opened_at FROM notifications WHERE user_id = ? AND id = ?',
+        [userId, cleanId]
+    );
+    const notification = rows[0];
+    if (!notification) {
+        const error = new Error('Thong bao khong ton tai.');
+        error.status = 404;
+        throw error;
+    }
+
+    await db.execute(
+        `UPDATE notifications
+         SET is_read = TRUE,
+             read_at = COALESCE(read_at, CURRENT_TIMESTAMP),
+             opened_at = COALESCE(opened_at, CURRENT_TIMESTAMP)
+         WHERE user_id = ? AND id = ?`,
+        [userId, cleanId]
+    );
+
+    if (!notification.opened_at && notification.campaign_id) {
+        await db.execute(
+            'UPDATE notification_campaigns SET opened_count = opened_count + 1 WHERE id = ?',
+            [notification.campaign_id]
+        );
+    }
 }
 
 async function getActiveTokens(userIds) {
@@ -158,16 +352,47 @@ async function getActiveTokens(userIds) {
 
     const placeholders = userIds.map(() => '?').join(',');
     const [tokens] = await db.execute(
-        `SELECT user_id, expo_push_token
+        `SELECT id, user_id, expo_push_token, platform
          FROM push_tokens
          WHERE is_active = TRUE AND user_id IN (${placeholders})`,
         userIds
     );
-    return tokens.filter((row) => isExpoPushToken(row.expo_push_token));
+
+    const validTokens = [];
+    await Promise.all(tokens.map(async (row) => {
+        if (isExpoPushToken(row.expo_push_token)) {
+            validTokens.push(row);
+            return;
+        }
+        await deactivateToken(row.expo_push_token, 'InvalidExpoPushToken');
+    }));
+    return validTokens;
 }
 
-async function deactivateToken(token) {
-    await db.execute('UPDATE push_tokens SET is_active = FALSE WHERE expo_push_token = ?', [token]);
+async function deactivateToken(token, reason = 'DeviceNotRegistered') {
+    await db.execute(
+        `UPDATE push_tokens
+         SET is_active = FALSE,
+             disabled_at = CURRENT_TIMESTAMP,
+             last_error = ?
+         WHERE expo_push_token = ?`,
+        [reason, token]
+    );
+}
+
+async function updateDelivery(deliveryId, patch) {
+    if (!deliveryId) return;
+    const fields = [];
+    const values = [];
+
+    Object.entries(patch).forEach(([key, value]) => {
+        fields.push(`${key} = ?`);
+        values.push(value);
+    });
+    if (!fields.length) return;
+
+    values.push(deliveryId);
+    await db.execute(`UPDATE notification_deliveries SET ${fields.join(', ')} WHERE id = ?`, values);
 }
 
 async function sendExpoMessages(messages) {
@@ -176,8 +401,10 @@ async function sendExpoMessages(messages) {
     let sent = 0;
     let failed = 0;
     const pushErrors = [];
+
     for (let i = 0; i < messages.length; i += 100) {
         const chunk = messages.slice(i, i + 100);
+        const payload = chunk.map(({ deliveryId, pushTokenId, token, ...message }) => message);
         const headers = {
             Accept: 'application/json',
             'Accept-Encoding': 'gzip, deflate',
@@ -191,41 +418,55 @@ async function sendExpoMessages(messages) {
             const response = await fetch(PUSH_ENDPOINT, {
                 method: 'POST',
                 headers,
-                body: JSON.stringify(chunk),
+                body: JSON.stringify(payload),
             });
             const result = await response.json().catch(() => ({}));
             const tickets = Array.isArray(result.data) ? result.data : [];
 
-            tickets.forEach((ticket, index) => {
-                if (ticket.status === 'ok') {
+            await Promise.all(chunk.map(async (message, index) => {
+                const ticket = tickets[index];
+                if (ticket?.status === 'ok') {
                     sent += 1;
+                    await updateDelivery(message.deliveryId, {
+                        status: 'ticketed',
+                        expo_ticket_id: ticket.id || null,
+                        sent_at: new Date(),
+                    });
                     return;
                 }
+
                 failed += 1;
-                pushErrors.push({
-                    error: ticket.details?.error || ticket.status || 'ExpoPushError',
-                    message: ticket.message || 'Expo push ticket failed.',
+                const errorCode = ticket?.details?.error || ticket?.status || `ExpoHTTP${response.status}`;
+                const errorMessage = ticket?.message || result.errors?.[0]?.message || result.message || 'Expo push ticket failed.';
+                pushErrors.push({ error: errorCode, message: errorMessage });
+                await updateDelivery(message.deliveryId, {
+                    status: 'failed',
+                    error_code: errorCode,
+                    error_message: errorMessage,
+                    sent_at: new Date(),
                 });
-                if (ticket.details?.error === 'DeviceNotRegistered') {
-                    void deactivateToken(chunk[index].to);
+                if (errorCode === 'DeviceNotRegistered') {
+                    await deactivateToken(message.token, errorCode);
                 }
-            });
+            }));
 
             if (!response.ok || result.errors) {
-                const missingTickets = Math.max(0, chunk.length - tickets.length);
-                failed += missingTickets;
                 pushErrors.push({
                     error: `ExpoHTTP${response.status}`,
                     message: result.errors?.[0]?.message || result.message || response.statusText || 'Expo push request failed.',
                 });
             }
         } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
             console.error('[push] Expo send failed:', err);
             failed += chunk.length;
-            pushErrors.push({
-                error: 'NetworkError',
-                message: err instanceof Error ? err.message : String(err),
-            });
+            pushErrors.push({ error: 'NetworkError', message: errorMessage });
+            await Promise.all(chunk.map((message) => updateDelivery(message.deliveryId, {
+                status: 'failed',
+                error_code: 'NetworkError',
+                error_message: errorMessage,
+                sent_at: new Date(),
+            })));
         }
     }
 
@@ -236,48 +477,115 @@ export async function createNotificationForUsers(userIds, notification) {
     await ensureNotificationTables();
 
     const uniqueUserIds = [...new Set(userIds.map(Number).filter(Boolean))];
-    if (!uniqueUserIds.length) return { sent: 0, failed: 0, recipients: 0, push_tokens: 0, push_errors: [] };
+    if (!uniqueUserIds.length) {
+        return { sent: 0, failed: 0, recipients: 0, push_tokens: 0, push_errors: [] };
+    }
+
+    const data = notification.data || {};
+    const deepLink = buildDeepLink(notification);
+    const type = normalizeString(notification.type, 'general');
+    const priority = normalizeString(notification.priority, 'normal');
+    const channel = normalizeString(notification.channel, DEFAULT_CHANNEL);
+    const title = normalizeString(notification.title, 'Aoklevart');
+    const body = normalizeString(notification.body, '');
 
     const values = uniqueUserIds.map((userId) => [
         userId,
         notification.campaign_id || null,
-        notification.title,
-        notification.body,
-        notification.type || 'general',
-        safeJson(notification.data),
+        title,
+        body,
+        type,
+        safeJson(data),
+        deepLink,
+        priority,
+        channel,
         notification.sent_by || null,
     ]);
 
-    await db.query(
-        `INSERT INTO notifications (user_id, campaign_id, title, body, type, data_json, sent_by)
+    const [insertResult] = await db.query(
+        `INSERT INTO notifications (
+            user_id, campaign_id, title, body, type, data_json, deep_link, priority, channel, sent_by
+         )
          VALUES ?`,
         [values]
     );
 
-    const tokens = await getActiveTokens(uniqueUserIds);
-    const messages = tokens.map((row) => ({
-        to: row.expo_push_token,
-        sound: 'default',
-        title: notification.title,
-        body: notification.body,
-        data: {
-            type: notification.type || 'general',
-            ...(notification.data || {}),
-        },
+    const notificationRows = uniqueUserIds.map((userId, index) => ({
+        id: insertResult.insertId + index,
+        userId,
     }));
+    const notificationByUserId = new Map(notificationRows.map((row) => [row.userId, row]));
+    const tokens = await getActiveTokens(uniqueUserIds);
+    const tokenTargets = tokens
+        .map((tokenRow) => ({
+            tokenRow,
+            notificationRow: notificationByUserId.get(Number(tokenRow.user_id)),
+        }))
+        .filter((target) => target.notificationRow);
+    const deliveryValues = tokenTargets.map((target) => [
+        target.notificationRow.id,
+        target.tokenRow.id,
+        'pending',
+    ]);
+
+    let deliveryRows = [];
+    if (deliveryValues.length) {
+        const [deliveryResult] = await db.query(
+            `INSERT INTO notification_deliveries (notification_id, push_token_id, status)
+             VALUES ?`,
+            [deliveryValues]
+        );
+        deliveryRows = deliveryValues.map((value, index) => ({
+            deliveryId: deliveryResult.insertId + index,
+            notificationId: value[0],
+            pushTokenId: value[1],
+        }));
+    }
+
+    const deliveryByTokenId = new Map(deliveryRows.map((row) => [row.pushTokenId, row]));
+    const messages = tokenTargets.map(({ tokenRow: row }) => {
+        const notifRow = notificationByUserId.get(Number(row.user_id));
+        const delivery = deliveryByTokenId.get(row.id);
+        const pushData = {
+            ...data,
+            notificationId: notifRow?.id,
+            type,
+            deepLink,
+            url: deepLink,
+        };
+
+        return {
+            to: row.expo_push_token,
+            sound: 'default',
+            title,
+            body,
+            data: pushData,
+            channelId: channel,
+            deliveryId: delivery?.deliveryId,
+            pushTokenId: row.id,
+            token: row.expo_push_token,
+        };
+    });
     const result = await sendExpoMessages(messages);
 
     if (global.io) {
-        uniqueUserIds.forEach((userId) => {
-            global.io.to(`user_${userId}`).emit('notificationCreated', {
-                title: notification.title,
-                body: notification.body,
-                type: notification.type || 'general',
+        notificationRows.forEach((row) => {
+            global.io.to(`user_${row.userId}`).emit('notificationCreated', {
+                id: row.id,
+                title,
+                body,
+                type,
+                data,
+                deep_link: deepLink,
             });
         });
     }
 
-    return { ...result, recipients: uniqueUserIds.length, push_tokens: tokens.length };
+    return {
+        ...result,
+        recipients: uniqueUserIds.length,
+        push_tokens: tokens.length,
+    };
 }
 
 export async function sendBookingStatusNotification(bookingId, status, sentBy = null) {
@@ -299,6 +607,8 @@ export async function sendBookingStatusNotification(bookingId, status, sentBy = 
         body: `Trang thai dat phong tai ${booking.property_name || 'Aoklevart'}: ${statusLabel}.`,
         type: 'booking_status',
         data: { bookingId: Number(booking.id), status: statusLabel },
+        deep_link: 'aoklevart://trips',
+        channel: 'bookings',
         sent_by: sentBy,
     });
 }
@@ -332,12 +642,18 @@ export async function sendAdminNotification({ title, body, audience = 'all', use
         body,
         type: 'admin_broadcast',
         data: { campaignId: campaign.insertId, audience },
+        deep_link: 'aoklevart://notifications',
+        channel: 'promotions',
         sent_by: sentBy,
     });
 
     await db.execute(
-        'UPDATE notification_campaigns SET sent_count = ?, failed_count = ? WHERE id = ?',
-        [result.sent, result.failed, campaign.insertId]
+        `UPDATE notification_campaigns
+         SET sent_count = ?,
+             failed_count = ?,
+             delivered_count = ?
+         WHERE id = ?`,
+        [result.recipients, result.failed, result.sent, campaign.insertId]
     );
 
     return { ...result, campaign_id: campaign.insertId };

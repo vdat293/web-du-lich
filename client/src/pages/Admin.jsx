@@ -471,8 +471,8 @@ export default function Admin() {
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
                             <div className="flex items-center gap-4">
-                                <select 
-                                    value={timeRange} 
+                                <select
+                                    value={timeRange}
                                     onChange={(e) => setTimeRange(e.target.value)}
                                     className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg outline-none focus:border-primary focus:ring-1 focus:ring-primary text-gray-600 bg-white"
                                 >
@@ -1261,8 +1261,8 @@ function BookingModal({ booking, onClose }) {
                         <div>
                             <p className="text-sm text-gray-500">Liên hệ</p>
                             <p className="font-medium">
-                                {booking.user_contact?.includes('@phone.system') 
-                                    ? booking.user_contact.split('@')[0] 
+                                {booking.user_contact?.includes('@phone.system')
+                                    ? booking.user_contact.split('@')[0]
                                     : booking.user_contact}
                             </p>
                         </div>

@@ -1,6 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, View, StyleSheet, Pressable } from 'react-native';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DefaultTheme,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import {
   BottomTabBar,
   type BottomTabBarProps,
@@ -27,11 +31,13 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { AppLockScreen } from '../screens/AppLockScreen';
 import { AdminDashboardScreen } from '../screens/admin/AdminDashboardScreen';
 import { useAuth } from '../context/AuthContext';
+import { addPushResponseListener, getLastPushResponseData } from '../notifications/push';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const TAB_TRANSITION_DURATION = 260;
 const tabTransitionEasing = Easing.bezier(0.22, 1, 0.36, 1);
 
@@ -188,8 +194,52 @@ function TabNavigator() {
 }
 
 export function AppNavigator() {
+  const { markNotificationOpened, refreshNotifications } = useAuth();
+  const handledNotificationKeys = useRef(new Set<string>());
+  const pendingPushData = useRef<Record<string, unknown> | null>(null);
+
+  const navigateFromPushData = useCallback((data: Record<string, unknown>) => {
+    if (!navigationRef.isReady()) {
+      pendingPushData.current = data;
+      return;
+    }
+
+    const type = String(data.type || '');
+    const target = type.includes('booking') || data.bookingId ? 'Trips' : 'Notifications';
+    navigationRef.navigate('Tabs', { screen: target });
+  }, []);
+
+  useEffect(() => {
+    const handlePushData = (data?: Record<string, unknown>) => {
+      if (!data) return;
+
+      const notificationId = Number(data.notificationId);
+      const key = notificationId ? `id:${notificationId}` : JSON.stringify(data);
+      if (handledNotificationKeys.current.has(key)) return;
+      handledNotificationKeys.current.add(key);
+
+      if (notificationId) {
+        void markNotificationOpened(notificationId);
+      }
+      void refreshNotifications();
+
+      navigateFromPushData(data);
+    };
+
+    void getLastPushResponseData().then(handlePushData);
+    const subscription = addPushResponseListener(handlePushData);
+    return () => subscription.remove();
+  }, [markNotificationOpened, navigateFromPushData, refreshNotifications]);
+
   return (
     <NavigationContainer
+      ref={navigationRef}
+      onReady={() => {
+        if (!pendingPushData.current) return;
+        const data = pendingPushData.current;
+        pendingPushData.current = null;
+        navigateFromPushData(data);
+      }}
       theme={{
         ...DefaultTheme,
         colors: { ...DefaultTheme.colors, background: colors.surface, card: colors.surface },

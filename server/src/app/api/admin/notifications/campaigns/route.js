@@ -13,7 +13,7 @@ export async function GET(req) {
         await ensureNotificationTables();
         const [campaigns] = await db.execute(`
             SELECT c.id, c.title, c.body, c.audience, c.status, c.sent_count, c.failed_count,
-                   c.created_at, u.name AS created_by_name
+                   c.delivered_count, c.opened_count, c.created_at, u.name AS created_by_name
             FROM notification_campaigns c
             LEFT JOIN users u ON c.created_by = u.id
             ORDER BY c.created_at DESC

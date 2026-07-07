@@ -1,104 +1,159 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
 
-import { notificationService } from '../api/services';
-import { getStoredValue, removeStoredValue, setStoredValue } from '../storage';
+import { getStoredValue, setStoredValue } from '../storage';
 
-const PUSH_TOKEN_KEY = 'aoklevart_expo_push_token';
-const isExpoGo = Constants.appOwnership === 'expo';
-let notificationHandlerConfigured = false;
+const PUSH_REGISTRATION_KEY = 'aoklevart_push_registration';
+const EXPO_GO_PUSH_ERROR = 'Thông báo đẩy chỉ bật được trong development build hoặc bản app đã build. Expo Go không hỗ trợ đầy đủ push notification từ xa.';
 
-async function loadNotifications() {
-  if (Platform.OS === 'web' || isExpoGo) return null;
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
-  const Notifications = await import('expo-notifications');
-  if (!notificationHandlerConfigured) {
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
-    });
-    notificationHandlerConfigured = true;
-  }
-  return Notifications;
-}
+export type PushRegistration = {
+  expo_push_token: string;
+  provider: 'expo';
+  platform: string;
+  device_id?: string;
+  expo_project_id?: string;
+  app_version?: string;
+  permission_status?: string;
+};
 
-function getProjectId() {
+export type PushInitResult = {
+  registration: PushRegistration | null;
+  permissionStatus: string;
+  error?: string;
+};
+
+function getExpoProjectId() {
   return (
-    process.env.EXPO_PUBLIC_EAS_PROJECT_ID?.trim()
+    Constants.expoConfig?.extra?.eas?.projectId
     || Constants.easConfig?.projectId
-    || Constants.expoConfig?.extra?.eas?.projectId
+    || process.env.EXPO_PUBLIC_EAS_PROJECT_ID
   );
 }
 
-export async function registerDeviceForPushNotifications() {
-  const Notifications = await loadNotifications();
-  if (!Notifications) return null;
+function getDeviceId() {
+  const constants = Constants as typeof Constants & { sessionId?: string };
+  return constants.sessionId;
+}
 
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Aoklevart',
+async function configureAndroidChannels() {
+  if (Platform.OS !== 'android') return;
+
+  await Promise.all([
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'Thông báo chung',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#0b4b4f',
-    });
-  }
+      lightColor: '#012425',
+    }),
+    Notifications.setNotificationChannelAsync('bookings', {
+      name: 'Đặt phòng',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#012425',
+    }),
+    Notifications.setNotificationChannelAsync('promotions', {
+      name: 'Khuyến mãi',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250, 250],
+      lightColor: '#745b1c',
+    }),
+  ]);
+}
 
-  const existing = await Notifications.getPermissionsAsync();
-  let finalStatus = existing.status;
-  if (finalStatus !== 'granted') {
-    const requested = await Notifications.requestPermissionsAsync();
-    finalStatus = requested.status;
-  }
-  if (finalStatus !== 'granted') return null;
+export async function getStoredPushRegistration() {
+  const raw = await getStoredValue(PUSH_REGISTRATION_KEY);
+  if (!raw) return null;
 
-  const projectId = getProjectId();
-  if (!projectId) {
-    console.warn(
-      '[push] Missing Expo project id. Set EXPO_PUBLIC_EAS_PROJECT_ID in mobile/.env or extra.eas.projectId in app config.',
-    );
+  try {
+    return JSON.parse(raw) as PushRegistration;
+  } catch {
     return null;
   }
-
-  const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-  await setStoredValue(PUSH_TOKEN_KEY, token);
-  await notificationService.registerPushToken({
-    expo_push_token: token,
-    platform: Platform.OS,
-  });
-  return token;
 }
 
-export async function unregisterStoredPushToken() {
-  const token = await getStoredValue(PUSH_TOKEN_KEY);
-  if (!token) return;
+export async function initializePushNotifications(): Promise<PushInitResult> {
+  if (Platform.OS === 'web') {
+    return { registration: null, permissionStatus: 'unsupported' };
+  }
 
-  await notificationService.unregisterPushToken(token).catch(() => undefined);
-  await removeStoredValue(PUSH_TOKEN_KEY);
-}
-
-export function subscribeToPushNotifications(onChange: () => void) {
-  if (Platform.OS === 'web' || isExpoGo) return () => undefined;
-
-  let active = true;
-  let cleanup = () => undefined;
-
-  void loadNotifications().then((Notifications) => {
-    if (!active || !Notifications) return;
-
-    const received = Notifications.addNotificationReceivedListener(onChange);
-    const response = Notifications.addNotificationResponseReceivedListener(onChange);
-    cleanup = () => {
-      received.remove();
-      response.remove();
+  if (Constants.appOwnership === 'expo') {
+    return {
+      registration: null,
+      permissionStatus: 'unsupported',
+      error: EXPO_GO_PUSH_ERROR,
     };
-  });
+  }
 
-  return () => {
-    active = false;
-    cleanup();
-  };
+  try {
+    await configureAndroidChannels();
+
+    const existing = await Notifications.getPermissionsAsync();
+    let permissionStatus = existing.status;
+    if (permissionStatus !== 'granted') {
+      const requested = await Notifications.requestPermissionsAsync();
+      permissionStatus = requested.status;
+    }
+
+    if (permissionStatus !== 'granted') {
+      return { registration: null, permissionStatus };
+    }
+
+    const projectId = getExpoProjectId();
+    if (!projectId) {
+      return {
+        registration: null,
+        permissionStatus,
+        error: 'Missing Expo projectId. Set EXPO_PUBLIC_EAS_PROJECT_ID or app.json extra.eas.projectId.',
+      };
+    }
+
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    const registration: PushRegistration = {
+      expo_push_token: token,
+      provider: 'expo',
+      platform: Platform.OS,
+      device_id: getDeviceId(),
+      expo_project_id: projectId,
+      app_version: Constants.expoConfig?.version,
+      permission_status: permissionStatus,
+    };
+
+    await setStoredValue(PUSH_REGISTRATION_KEY, JSON.stringify(registration));
+    return { registration, permissionStatus };
+  } catch (error) {
+    return {
+      registration: await getStoredPushRegistration(),
+      permissionStatus: 'error',
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
+export function addPushReceivedListener(listener: (data: Record<string, unknown>) => void) {
+  return Notifications.addNotificationReceivedListener((notification) => {
+    listener(notification.request.content.data as Record<string, unknown>);
+  });
+}
+
+export function addPushResponseListener(listener: (data: Record<string, unknown>) => void) {
+  return Notifications.addNotificationResponseReceivedListener((response) => {
+    listener(response.notification.request.content.data as Record<string, unknown>);
+  });
+}
+
+export async function getLastPushResponseData() {
+  const getLastResponse = Notifications.getLastNotificationResponseAsync
+    || (async () => Notifications.getLastNotificationResponse());
+  const response = await getLastResponse();
+  return response?.notification.request.content.data as Record<string, unknown> | undefined;
 }

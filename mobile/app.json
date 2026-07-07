@@ -9,10 +9,7 @@
     "scheme": "aoklevart",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aoklevart.mobile",
-      "entitlements": {
-        "aps-environment": "development"
-      }
+      "bundleIdentifier": "com.aoklevart.mobile"
     },
     "android": {
       "package": "com.aoklevart.mobile",
@@ -20,15 +17,16 @@
         "foregroundImage": "./assets/logo-aoklevart-icon.png",
         "backgroundColor": "#FAF8F5"
       },
-      "predictiveBackGestureEnabled": false,
-      "permissions": [
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
-      ]
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/logo-aoklevart-icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cf595dc4-dfcb-4d64-8f9f-0e3b162ee06c"
+      }
     },
     "plugins": [
       "expo-font",
@@ -48,19 +46,8 @@
           "backgroundColor": "#FAF8F5"
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "mode": "production"
-        }
-      ],
-      "@react-native-community/datetimepicker"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "cf595dc4-dfcb-4d64-8f9f-0e3b162ee06c"
-      }
-    },
-    "owner": "nexpodev293"
+      "@react-native-community/datetimepicker",
+      "expo-notifications"
+    ]
   }
 }

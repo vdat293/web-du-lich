@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { listNotifications, markNotificationsRead } from '../../../../lib/notifications';
+import { markNotificationOpened } from '../../../../../lib/notifications';
 
 async function verifyUser(req) {
     const authHeader = req.headers.get('authorization');
@@ -17,21 +17,7 @@ async function verifyUser(req) {
     }
 }
 
-export async function GET(req) {
-    try {
-        const auth = await verifyUser(req);
-        if (auth.error) {
-            return NextResponse.json({ message: auth.error }, { status: auth.status });
-        }
-
-        const result = await listNotifications(auth.userId);
-        return NextResponse.json(result);
-    } catch (err) {
-        return NextResponse.json({ message: 'Khong the tai thong bao.', error: String(err) }, { status: 500 });
-    }
-}
-
-export async function PATCH(req) {
+export async function POST(req) {
     try {
         const auth = await verifyUser(req);
         if (auth.error) {
@@ -39,10 +25,13 @@ export async function PATCH(req) {
         }
 
         const body = await req.json().catch(() => ({}));
-        await markNotificationsRead(auth.userId, body.ids);
+        await markNotificationOpened(auth.userId, body.id || body.notificationId);
         return NextResponse.json({ success: true });
     } catch (err) {
-        return NextResponse.json({ message: 'Khong the cap nhat thong bao.', error: String(err) }, { status: 500 });
+        return NextResponse.json(
+            { message: err.message || 'Khong the cap nhat thong bao.', error: String(err) },
+            { status: err.status || 500 }
+        );
     }
 }
 
@@ -51,7 +40,7 @@ export async function OPTIONS() {
         status: 204,
         headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         },
     });

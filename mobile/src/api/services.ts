@@ -142,6 +142,63 @@ export const userService = {
   }),
 };
 
+export type AppNotification = {
+  id: number;
+  title: string;
+  body: string;
+  type: string;
+  data?: Record<string, unknown> | null;
+  unread: boolean;
+  read_at?: string | null;
+  opened_at?: string | null;
+  deep_link?: string | null;
+  priority?: string;
+  channel?: string;
+  created_at: string;
+};
+
+export type PushTokenPayload = {
+  expo_push_token: string;
+  provider?: 'expo';
+  platform?: string;
+  device_id?: string;
+  expo_project_id?: string;
+  app_version?: string;
+  permission_status?: string;
+};
+
+export const notificationService = {
+  list: () =>
+    apiRequest<{ notifications: AppNotification[]; unread_count: number }>(
+      '/api/user/notifications',
+      { authenticated: true },
+    ),
+  markRead: (ids?: number[]) =>
+    apiRequest<{ success: boolean }>('/api/user/notifications', {
+      method: 'PATCH',
+      authenticated: true,
+      body: JSON.stringify(ids?.length ? { ids } : {}),
+    }),
+  markOpened: (notificationId: number) =>
+    apiRequest<{ success: boolean }>('/api/user/notifications/opened', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify({ notificationId }),
+    }),
+  registerPushToken: (payload: PushTokenPayload) =>
+    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+  unregisterPushToken: (expoPushToken: string) =>
+    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
+      method: 'DELETE',
+      authenticated: true,
+      body: JSON.stringify({ expo_push_token: expoPushToken }),
+    }),
+};
+
 export const rewardService = {
   list: () =>
     apiRequest<{
@@ -202,45 +259,6 @@ export const couponService = {
         min_order_amount?: number | null;
       };
     }>(`/api/coupons?code=${encodeURIComponent(code)}`, { authenticated: true }),
-};
-
-export type AppNotification = {
-  id: number;
-  title: string;
-  body: string;
-  type?: string;
-  data?: Record<string, unknown> | null;
-  unread: boolean;
-  created_at: string;
-};
-
-export const notificationService = {
-  list: () =>
-    apiRequest<{ notifications: AppNotification[] }>('/api/user/notifications', {
-      authenticated: true,
-    }),
-  markAllRead: () =>
-    apiRequest<{ success: boolean }>('/api/user/notifications', {
-      method: 'PATCH',
-      authenticated: true,
-      body: JSON.stringify({}),
-    }),
-  registerPushToken: (payload: {
-    expo_push_token: string;
-    platform: string;
-    device_id?: string;
-  }) =>
-    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
-      method: 'POST',
-      authenticated: true,
-      body: JSON.stringify(payload),
-    }),
-  unregisterPushToken: (expoPushToken: string) =>
-    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
-      method: 'DELETE',
-      authenticated: true,
-      body: JSON.stringify({ expo_push_token: expoPushToken }),
-    }),
 };
 
 export type AdminTimeRange = 'today' | '7days' | 'month' | 'quarter' | 'year' | 'all';
@@ -336,40 +354,4 @@ export const adminService = {
       method: 'DELETE',
       authenticated: true,
     }),
-  sendNotification: (payload: {
-    title: string;
-    body: string;
-    audience: 'all' | 'customers' | 'hosts' | 'selected';
-    userIds?: number[];
-  }) =>
-    apiRequest<{
-      success: boolean;
-      campaign_id: number;
-      recipients: number;
-      push_tokens: number;
-      sent: number;
-      failed: number;
-      push_errors?: Array<{
-        error?: string;
-        message?: string;
-      }>;
-    }>('/api/admin/notifications/send', {
-      method: 'POST',
-      authenticated: true,
-      body: JSON.stringify(payload),
-    }),
-  getNotificationCampaigns: () =>
-    apiRequest<{
-      campaigns: Array<{
-        id: number;
-        title: string;
-        body: string;
-        audience: string;
-        status: string;
-        sent_count: number;
-        failed_count: number;
-        created_at: string;
-        created_by_name?: string;
-      }>;
-    }>('/api/admin/notifications/campaigns', { authenticated: true }),
 };

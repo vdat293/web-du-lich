@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -21,24 +21,15 @@ import { LoadingState } from './src/components/ScreenState';
 import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
 import { useAuth } from './src/context/AuthContext';
-import { subscribeToPushNotifications } from './src/notifications/push';
 import i18n from './src/i18n';
 import './src/i18n';
 
 void SplashScreen.preventAutoHideAsync();
 
 const STORAGE_KEY = 'aoklevart_language';
-const MIN_STARTUP_MS = 1700;
 
 function AppContent() {
-  const { loading, user, refreshNotifications } = useAuth();
-
-  useEffect(() => {
-    if (!user) return undefined;
-    return subscribeToPushNotifications(() => {
-      void refreshNotifications().catch(() => undefined);
-    });
-  }, [refreshNotifications, user]);
+  const { loading } = useAuth();
 
   if (loading) {
     return <LoadingState />;
@@ -48,7 +39,6 @@ function AppContent() {
 }
 
 export default function App() {
-  const [startupDelayDone, setStartupDelayDone] = useState(false);
   const [dmLoaded] = useDmSans({
     DMSans_400Regular,
     DMSans_500Medium,
@@ -59,15 +49,7 @@ export default function App() {
     PlayfairDisplay_700Bold,
   });
 
-  const ready = dmLoaded && playfairLoaded && startupDelayDone;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setStartupDelayDone(true);
-    }, MIN_STARTUP_MS);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const ready = dmLoaded && playfairLoaded;
 
   useEffect(() => {
     if (ready) {

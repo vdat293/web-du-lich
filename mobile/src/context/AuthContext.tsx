@@ -2,19 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
-import { authService, notificationService } from '../api/services';
-import { registerDeviceForPushNotifications, unregisterStoredPushToken } from '../notifications/push';
+import { authService, notificationService, type AppNotification } from '../api/services';
+import {
+  addPushReceivedListener,
+  getStoredPushRegistration,
+  initializePushNotifications,
+  type PushRegistration,
+} from '../notifications/push';
 import { getStoredValue, removeStoredValue, setStoredValue } from '../storage';
 import type { User } from '../types';
 
-export type NotificationItem = {
-  id: number;
-  title: string;
-  body: string;
+export type NotificationItem = AppNotification & {
   time: string;
-  unread: boolean;
-  type?: string;
-  data?: Record<string, unknown> | null;
 };
 
 type AuthContextValue = {
@@ -32,8 +31,13 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   updateUser: (updatedUser: User) => Promise<void>;
   notifications: NotificationItem[];
-  markAllNotificationsAsRead: () => void;
+  notificationsLoading: boolean;
+  notificationsError: string;
+  pushPermissionStatus: string;
+  pushRegistrationError: string;
   refreshNotifications: () => Promise<void>;
+  markAllNotificationsAsRead: () => Promise<void>;
+  markNotificationOpened: (notificationId: number) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -53,12 +57,25 @@ async function getBiometricAvailability() {
 function formatNotificationTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+
+  const diffMinutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (diffMinutes < 1) return 'Vừa xong';
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} giờ trước`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+
+  return date.toLocaleDateString('vi-VN');
+}
+
+function normalizeNotification(notification: AppNotification): NotificationItem {
+  return {
+    ...notification,
+    time: formatNotificationTime(notification.created_at),
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -69,25 +86,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [biometricsEnabled, setBiometricsEnabledState] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState('');
+  const [pushPermissionStatus, setPushPermissionStatus] = useState('unknown');
+  const [pushRegistrationError, setPushRegistrationError] = useState('');
+  const [pushRegistration, setPushRegistration] = useState<PushRegistration | null>(null);
 
-  const markAllNotificationsAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    void notificationService.markAllRead().catch(() => undefined);
-  };
+  useEffect(() => {
+    void initializePushNotifications().then((result) => {
+      setPushPermissionStatus(result.permissionStatus);
+      setPushRegistration(result.registration);
+      setPushRegistrationError(result.error || '');
+    });
+  }, []);
 
   const refreshNotifications = useCallback(async () => {
-    if (!user || locked) return;
-    const response = await notificationService.list();
-    setNotifications(response.notifications.map((item) => ({
-      id: item.id,
-      title: item.title,
-      body: item.body,
-      time: formatNotificationTime(item.created_at),
-      unread: item.unread,
-      type: item.type,
-      data: item.data,
-    })));
-  }, [locked, user]);
+    if (!user || !token || locked) {
+      setNotifications([]);
+      return;
+    }
+
+    setNotificationsLoading(true);
+    setNotificationsError('');
+    try {
+      const result = await notificationService.list();
+      setNotifications(result.notifications.map(normalizeNotification));
+    } catch (error) {
+      setNotificationsError(error instanceof Error ? error.message : 'Không thể tải thông báo.');
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [locked, token, user]);
+
+  const registerPushToken = useCallback(async () => {
+    if (!user || !token || locked) return;
+
+    const registration = pushRegistration || await getStoredPushRegistration();
+    if (!registration?.expo_push_token) return;
+
+    try {
+      await notificationService.registerPushToken(registration);
+      setPushRegistrationError('');
+    } catch (error) {
+      setPushRegistrationError(error instanceof Error ? error.message : 'Không thể đăng ký push token.');
+    }
+  }, [locked, pushRegistration, token, user]);
 
   useEffect(() => {
     void Promise.all([
@@ -115,6 +158,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  useEffect(() => {
+    void refreshNotifications();
+    void registerPushToken();
+  }, [refreshNotifications, registerPushToken]);
+
+  useEffect(() => {
+    if (!user || !token || locked) return undefined;
+
+    const subscription = addPushReceivedListener(() => {
+      void refreshNotifications();
+    });
+
+    return () => subscription.remove();
+  }, [locked, refreshNotifications, token, user]);
+
   const persistSession = useCallback(async (nextToken: string, nextUser: User) => {
     await Promise.all([
       setStoredValue(TOKEN_KEY, nextToken),
@@ -124,18 +182,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(nextUser);
     setLocked(false);
   }, []);
-
-  useEffect(() => {
-    if (!user || !token || locked) {
-      setNotifications([]);
-      return;
-    }
-
-    void refreshNotifications().catch(() => undefined);
-    void registerDeviceForPushNotifications().catch((reason) => {
-      console.warn('[push] Unable to register device for push notifications:', reason);
-    });
-  }, [locked, refreshNotifications, token, user]);
 
   const unlockWithBiometrics = useCallback(async () => {
     if (Platform.OS === 'web' || !biometricsEnabled) return false;
@@ -184,6 +230,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setBiometricsEnabledState(enabled);
   }, []);
 
+  const markAllNotificationsAsRead = useCallback(async () => {
+    if (!user) return;
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false, read_at: n.read_at || new Date().toISOString() })));
+    try {
+      await notificationService.markRead();
+    } catch (error) {
+      setNotificationsError(error instanceof Error ? error.message : 'Không thể cập nhật thông báo.');
+      await refreshNotifications();
+    }
+  }, [refreshNotifications, user]);
+
+  const markNotificationOpened = useCallback(async (notificationId: number) => {
+    if (!user || !notificationId) return;
+
+    const timestamp = new Date().toISOString();
+    setNotifications((prev) => prev.map((n) => (
+      n.id === notificationId
+        ? { ...n, unread: false, read_at: n.read_at || timestamp, opened_at: n.opened_at || timestamp }
+        : n
+    )));
+
+    try {
+      await notificationService.markOpened(notificationId);
+    } catch (error) {
+      setNotificationsError(error instanceof Error ? error.message : 'Không thể cập nhật thông báo.');
+    }
+  }, [user]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -206,7 +281,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unlockWithBiometrics,
       setBiometricsEnabled,
       logout: async () => {
-        await unregisterStoredPushToken();
+        const registration = await getStoredPushRegistration();
+        if (registration?.expo_push_token) {
+          await notificationService.unregisterPushToken(registration.expo_push_token).catch(() => undefined);
+        }
         await Promise.all([
           removeStoredValue(TOKEN_KEY),
           removeStoredValue(USER_KEY),
@@ -221,16 +299,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(updatedUser);
       },
       notifications,
-      markAllNotificationsAsRead,
+      notificationsLoading,
+      notificationsError,
+      pushPermissionStatus,
+      pushRegistrationError,
       refreshNotifications,
+      markAllNotificationsAsRead,
+      markNotificationOpened,
     }),
     [
       biometricAvailable,
       biometricsEnabled,
       loading,
       locked,
+      markAllNotificationsAsRead,
+      markNotificationOpened,
       notifications,
+      notificationsError,
+      notificationsLoading,
       persistSession,
+      pushPermissionStatus,
+      pushRegistrationError,
       refreshNotifications,
       setBiometricsEnabled,
       token,
