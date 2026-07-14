@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   Modal,
+  Platform,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -11,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -162,7 +163,11 @@ export function SearchScreen({ navigation, route }: Props) {
     : t('search.flexibleDates');
   const extraFilterCount = Number(Boolean(minPrice || maxPrice)) + Number(Boolean(propertyType)) + amenityIds.length;
 
-  function selectDate(event: DateTimePickerChangeEvent, date?: Date) {
+  function selectDate(event: DateTimePickerEvent, date?: Date) {
+    if (event.type === 'dismissed') {
+      setActiveDateField(null);
+      return;
+    }
     if (!date || !activeDateField) return;
     const value = toDateInput(date);
     if (activeDateField === 'checkIn') {
@@ -296,7 +301,17 @@ export function SearchScreen({ navigation, route }: Props) {
         />
       )}
 
-      {activeDateField ? (
+      {activeDateField && Platform.OS === 'android' ? (
+        <DateTimePicker
+          value={activeDateField === 'checkOut' && checkOut ? parseDate(checkOut) : activeDateField === 'checkIn' && checkIn ? parseDate(checkIn) : activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+          mode="date"
+          display="default"
+          minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+          onChange={selectDate}
+          locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
+          accentColor={colors.primary}
+        />
+      ) : activeDateField ? (
         <Modal transparent animationType="fade" onRequestClose={() => setActiveDateField(null)}>
           <Pressable style={styles.backdrop} onPress={() => setActiveDateField(null)}>
             <Pressable style={styles.modalCard} onPress={event => event.stopPropagation()}>
@@ -311,7 +326,7 @@ export function SearchScreen({ navigation, route }: Props) {
                 mode="date"
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
-                onValueChange={selectDate}
+                onChange={selectDate}
                 onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}

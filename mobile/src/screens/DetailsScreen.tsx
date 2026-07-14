@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Share,
@@ -12,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import DateTimePicker, { type DateTimePickerChangeEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -96,7 +97,11 @@ export function DetailsScreen({ navigation, route }: Props) {
     setActiveDateField(field);
   }
 
-  function selectDate(event: DateTimePickerChangeEvent, date?: Date) {
+  function selectDate(event: DateTimePickerEvent, date?: Date) {
+    if (event.type === 'dismissed') {
+      setActiveDateField(null);
+      return;
+    }
     if (!date || !activeDateField) return;
 
     const value = toDateInput(date);
@@ -304,7 +309,17 @@ export function DetailsScreen({ navigation, route }: Props) {
         </Pressable>
       </View>
 
-      {activeDateField ? (
+      {activeDateField && Platform.OS === 'android' ? (
+        <DateTimePicker
+          value={activeDateField === 'checkOut' && checkOut ? parseDate(checkOut) : activeDateField === 'checkIn' && checkIn ? parseDate(checkIn) : activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+          mode="date"
+          display="default"
+          minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
+          onChange={selectDate}
+          locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
+          accentColor={colors.primary}
+        />
+      ) : activeDateField ? (
         <Modal transparent animationType="fade" onRequestClose={() => setActiveDateField(null)}>
           <Pressable style={styles.datePickerBackdrop} onPress={() => setActiveDateField(null)}>
             <Pressable style={styles.datePickerCard} onPress={(event) => event.stopPropagation()}>
@@ -321,7 +336,7 @@ export function DetailsScreen({ navigation, route }: Props) {
                 mode="date"
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
-                onValueChange={selectDate}
+                onChange={selectDate}
                 onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}

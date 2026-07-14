@@ -1,20 +1,20 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import * as Notifications from 'expo-notifications';
+// import * as Notifications from 'expo-notifications';
 
 import { getStoredValue, setStoredValue } from '../storage';
 
 const PUSH_REGISTRATION_KEY = 'aoklevart_push_registration';
 const EXPO_GO_PUSH_ERROR = 'Thông báo đẩy chỉ bật được trong development build hoặc bản app đã build. Expo Go không hỗ trợ đầy đủ push notification từ xa.';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Notifications.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldPlaySound: true,
+//     shouldSetBadge: true,
+//     shouldShowBanner: true,
+//     shouldShowList: true,
+//   }),
+// });
 
 export type PushRegistration = {
   expo_push_token: string;
@@ -46,28 +46,28 @@ function getDeviceId() {
 }
 
 async function configureAndroidChannels() {
-  if (Platform.OS !== 'android') return;
+  // if (Platform.OS !== 'android') return;
 
-  await Promise.all([
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'Thông báo chung',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#012425',
-    }),
-    Notifications.setNotificationChannelAsync('bookings', {
-      name: 'Đặt phòng',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#012425',
-    }),
-    Notifications.setNotificationChannelAsync('promotions', {
-      name: 'Khuyến mãi',
-      importance: Notifications.AndroidImportance.DEFAULT,
-      vibrationPattern: [0, 250, 250],
-      lightColor: '#745b1c',
-    }),
-  ]);
+  // await Promise.all([
+  //   Notifications.setNotificationChannelAsync('default', {
+  //     name: 'Thông báo chung',
+  //     importance: Notifications.AndroidImportance.MAX,
+  //     vibrationPattern: [0, 250, 250, 250],
+  //     lightColor: '#012425',
+  //   }),
+  //   Notifications.setNotificationChannelAsync('bookings', {
+  //     name: 'Đặt phòng',
+  //     importance: Notifications.AndroidImportance.MAX,
+  //     vibrationPattern: [0, 250, 250, 250],
+  //     lightColor: '#012425',
+  //   }),
+  //   Notifications.setNotificationChannelAsync('promotions', {
+  //     name: 'Khuyến mãi',
+  //     importance: Notifications.AndroidImportance.DEFAULT,
+  //     vibrationPattern: [0, 250, 250],
+  //     lightColor: '#745b1c',
+  //   }),
+  // ]);
 }
 
 export async function getStoredPushRegistration() {
@@ -82,6 +82,8 @@ export async function getStoredPushRegistration() {
 }
 
 export async function initializePushNotifications(): Promise<PushInitResult> {
+  return { registration: null, permissionStatus: 'undetermined' };
+  /*
   if (Platform.OS === 'web') {
     return { registration: null, permissionStatus: 'unsupported' };
   }
@@ -137,23 +139,39 @@ export async function initializePushNotifications(): Promise<PushInitResult> {
       error: error instanceof Error ? error.message : String(error),
     };
   }
+  */
 }
 
 export function addPushReceivedListener(listener: (data: Record<string, unknown>) => void) {
+  return { remove: () => {} };
+  /*
   return Notifications.addNotificationReceivedListener((notification) => {
     listener(notification.request.content.data as Record<string, unknown>);
   });
+  */
 }
 
 export function addPushResponseListener(listener: (data: Record<string, unknown>) => void) {
+  return { remove: () => {} };
+  /*
   return Notifications.addNotificationResponseReceivedListener((response) => {
     listener(response.notification.request.content.data as Record<string, unknown>);
   });
+  */
 }
 
 export async function getLastPushResponseData() {
-  const getLastResponse = Notifications.getLastNotificationResponseAsync
-    || (async () => Notifications.getLastNotificationResponse());
-  const response = await getLastResponse();
-  return response?.notification.request.content.data as Record<string, unknown> | undefined;
+  return undefined;
+  /*
+  if (Platform.OS === 'web') return undefined;
+  try {
+    const getLastResponse = Notifications.getLastNotificationResponseAsync
+      || (async () => Notifications.getLastNotificationResponse());
+    const response = await getLastResponse();
+    return response?.notification.request.content.data as Record<string, unknown> | undefined;
+  } catch (error) {
+    console.warn('Failed to get last push response data:', error);
+    return undefined;
+  }
+  */
 }
