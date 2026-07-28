@@ -12,18 +12,33 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 
+import { authService } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 import { colors, fonts } from '../theme';
 
-type LoginMode = 'identifier' | 'otp' | 'password';
+type LoginMode =
+  | 'identifier'
+  | 'otp'
+  | 'password'
+  | 'register'
+  | 'forgotIdentifier'
+  | 'forgotOtp'
+  | 'forgotReset';
 
 const EMPTY_OTP = ['', '', '', '', '', ''];
 
-export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
+export function LoginForm({
+  onSuccess,
+  allowAccountActions = true,
+}: {
+  onSuccess?: () => void;
+  allowAccountActions?: boolean;
+}) {
   const { login, loginWithOtp, sendLoginOtp } = useAuth();
   const { t } = useTranslation();
   const otpInputs = useRef<Array<TextInput | null>>([]);
   const lastAutoSubmittedOtp = useRef('');
+  const lastAutoSubmittedForgotOtp = useRef('');
   const [mode, setMode] = useState<LoginMode>('identifier');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -33,12 +48,30 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   const [secure, setSecure] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [registerFirstName, setRegisterFirstName] = useState('');
+  const [registerLastName, setRegisterLastName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotTransactionId, setForgotTransactionId] = useState('');
+  const [forgotOtp, setForgotOtp] = useState([...EMPTY_OTP]);
+  const [forgotTimer, setForgotTimer] = useState(300);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [secureNewPassword, setSecureNewPassword] = useState(true);
 
   useEffect(() => {
     if (mode !== 'otp' || timer <= 0) return;
     const timeout = setTimeout(() => setTimer((value) => value - 1), 1000);
     return () => clearTimeout(timeout);
   }, [mode, timer]);
+
+  useEffect(() => {
+    if (mode !== 'forgotOtp' || forgotTimer <= 0) return;
+    const timeout = setTimeout(() => setForgotTimer((value) => value - 1), 1000);
+    return () => clearTimeout(timeout);
+  }, [forgotTimer, mode]);
 
   useEffect(() => {
     const code = otp.join('');
@@ -52,6 +85,19 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
       void verifyOtp(code);
     }
   }, [mode, otp, submitting]);
+
+  useEffect(() => {
+    const code = forgotOtp.join('');
+    if (
+      mode === 'forgotOtp'
+      && !submitting
+      && code.length === 6
+      && code !== lastAutoSubmittedForgotOtp.current
+    ) {
+      lastAutoSubmittedForgotOtp.current = code;
+      void verifyForgotOtp(code);
+    }
+  }, [forgotOtp, mode, submitting]);
 
   async function requestOtp() {
     if (submitting) return;
@@ -117,6 +163,116 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   }
 
+  async function submitRegister() {
+    if (submitting) return;
+    const payload = {
+      firstName: registerFirstName.trim(),
+      lastName: registerLastName.trim(),
+      email: registerEmail.trim(),
+      password: registerPassword,
+    };
+    if (!payload.firstName || !payload.lastName || !payload.email || !payload.password) {
+      setError(t('login.registerRequired'));
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await authService.register(payload);
+      setIdentifier(payload.email);
+      setPassword('');
+      setSuccess(result.message || t('login.registerSuccess'));
+      setMode('password');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t('login.registerFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function requestForgotOtp() {
+    if (submitting) return;
+    const normalizedIdentifier = forgotIdentifier.trim();
+    if (!normalizedIdentifier) {
+      setError(t('login.identifierRequired'));
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await authService.forgotPassword(normalizedIdentifier);
+      setForgotTransactionId(result.transaction_id);
+      setForgotOtp([...EMPTY_OTP]);
+      setForgotTimer(300);
+      lastAutoSubmittedForgotOtp.current = '';
+      setMode('forgotOtp');
+      setTimeout(() => otpInputs.current[0]?.focus(), 100);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t('login.forgotSendFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function verifyForgotOtp(code = forgotOtp.join('')) {
+    if (submitting) return;
+    if (code.length !== 6) {
+      setError(t('login.otpRequired'));
+      return;
+    }
+
+    lastAutoSubmittedForgotOtp.current = code;
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await authService.verifyResetOtp(forgotTransactionId, code);
+      setSuccess(result.message);
+      setMode('forgotReset');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t('login.otpVerifyFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function submitResetPassword() {
+    if (submitting) return;
+    if (newPassword.length < 6) {
+      setError(t('login.passwordMinLength'));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError(t('login.passwordMismatch'));
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+    try {
+      const result = await authService.resetPassword(
+        forgotTransactionId,
+        forgotOtp.join(''),
+        newPassword,
+      );
+      setIdentifier(forgotIdentifier.trim());
+      setPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setSuccess(result.message || t('login.resetSuccess'));
+      setMode('password');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : t('login.resetFailed'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   function updateOtp(index: number, value: string) {
     const digit = value.replace(/\D/g, '').slice(-1);
     const nextOtp = [...otp];
@@ -142,7 +298,194 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
     setPassword('');
     setTimer(60);
     setError('');
+    setSuccess('');
     lastAutoSubmittedOtp.current = '';
+  }
+
+  function openRegister() {
+    setRegisterFirstName('');
+    setRegisterLastName('');
+    setRegisterEmail('');
+    setRegisterPassword('');
+    setError('');
+    setSuccess('');
+    setMode('register');
+  }
+
+  function openForgotPassword() {
+    setForgotIdentifier(identifier.trim());
+    setForgotTransactionId('');
+    setForgotOtp([...EMPTY_OTP]);
+    setForgotTimer(300);
+    setNewPassword('');
+    setConfirmPassword('');
+    setError('');
+    setSuccess('');
+    lastAutoSubmittedForgotOtp.current = '';
+    setMode('forgotIdentifier');
+  }
+
+  function backToLogin() {
+    setMode(identifier.trim() ? 'password' : 'identifier');
+    setError('');
+    setSuccess('');
+  }
+
+  if (mode === 'register') {
+    return (
+      <View>
+        <Text style={styles.title}>{t('login.registerTitle')}</Text>
+        <Text style={styles.subtitle}>{t('login.registerSubtitle')}</Text>
+        <View style={styles.nameRow}>
+          <TextField
+            icon="person-outline"
+            placeholder={t('login.firstName')}
+            value={registerFirstName}
+            onChangeText={setRegisterFirstName}
+            containerStyle={styles.nameField}
+          />
+          <TextField
+            placeholder={t('login.lastName')}
+            value={registerLastName}
+            onChangeText={setRegisterLastName}
+            containerStyle={styles.nameField}
+          />
+        </View>
+        <TextField
+          icon="mail-outline"
+          placeholder={t('login.email')}
+          value={registerEmail}
+          onChangeText={setRegisterEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <PasswordField
+          placeholder={t('login.password')}
+          value={registerPassword}
+          onChangeText={setRegisterPassword}
+          secure={secure}
+          onToggleSecure={() => setSecure((value) => !value)}
+          onSubmitEditing={() => void submitRegister()}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <PrimaryButton
+          label={t('login.createAccount')}
+          loading={submitting}
+          onPress={() => void submitRegister()}
+        />
+        <View style={styles.centerLink}>
+          <Text style={styles.inlinePrompt}>
+            {t('login.alreadyAccount')}{' '}
+            <Text style={styles.link} onPress={backToLogin}>{t('login.submit')}</Text>
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (mode === 'forgotIdentifier') {
+    return (
+      <View>
+        <StepIndicator step={1} />
+        <Text style={styles.title}>{t('login.forgotTitle')}</Text>
+        <Text style={styles.subtitle}>{t('login.forgotSubtitle')}</Text>
+        <IdentifierField value={forgotIdentifier} onChangeText={setForgotIdentifier} />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <PrimaryButton
+          label={t('login.sendResetOtp')}
+          loading={submitting}
+          onPress={() => void requestForgotOtp()}
+        />
+        <View style={styles.centerLink}>
+          <LinkButton label={t('login.backToLogin')} onPress={backToLogin} />
+        </View>
+      </View>
+    );
+  }
+
+  if (mode === 'forgotOtp') {
+    return (
+      <View>
+        <StepIndicator step={2} />
+        <Text style={styles.title}>{t('login.resetOtpTitle')}</Text>
+        <Text style={styles.subtitle}>
+          {t('login.resetOtpSubtitle', { identifier: forgotIdentifier.trim() })}
+        </Text>
+        <OtpFields
+          otp={forgotOtp}
+          inputs={otpInputs}
+          submitting={submitting}
+          onChange={(index, value) => {
+            const digit = value.replace(/\D/g, '').slice(-1);
+            const nextOtp = [...forgotOtp];
+            nextOtp[index] = digit;
+            lastAutoSubmittedForgotOtp.current = '';
+            setForgotOtp(nextOtp);
+            if (digit && index < nextOtp.length - 1) otpInputs.current[index + 1]?.focus();
+          }}
+          onKeyPress={(index, event) => {
+            if (event.nativeEvent.key === 'Backspace' && !forgotOtp[index] && index > 0) {
+              otpInputs.current[index - 1]?.focus();
+            }
+          }}
+        />
+        <Text style={styles.expiry}>
+          {t('login.expiresIn', {
+            time: `${Math.floor(forgotTimer / 60)}:${String(forgotTimer % 60).padStart(2, '0')}`,
+          })}
+        </Text>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <PrimaryButton
+          label={t('login.verifyResetOtp')}
+          loading={submitting}
+          onPress={() => void verifyForgotOtp()}
+        />
+        <View style={styles.linkRowAfterButton}>
+          <LinkButton
+            label={t('login.changeIdentifier')}
+            onPress={() => {
+              setMode('forgotIdentifier');
+              setError('');
+            }}
+          />
+          {forgotTimer === 0 ? (
+            <LinkButton label={t('login.resendOtp')} onPress={() => void requestForgotOtp()} />
+          ) : null}
+        </View>
+      </View>
+    );
+  }
+
+  if (mode === 'forgotReset') {
+    return (
+      <View>
+        <StepIndicator step={3} />
+        <Text style={styles.title}>{t('login.newPasswordTitle')}</Text>
+        <Text style={styles.subtitle}>{t('login.newPasswordSubtitle')}</Text>
+        {success ? <Text style={styles.success}>{success}</Text> : null}
+        <PasswordField
+          placeholder={t('login.newPassword')}
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secure={secureNewPassword}
+          onToggleSecure={() => setSecureNewPassword((value) => !value)}
+        />
+        <PasswordField
+          placeholder={t('login.confirmPassword')}
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secure={secureNewPassword}
+          onToggleSecure={() => setSecureNewPassword((value) => !value)}
+          onSubmitEditing={() => void submitResetPassword()}
+        />
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        <PrimaryButton
+          label={t('login.changePassword')}
+          loading={submitting}
+          onPress={() => void submitResetPassword()}
+        />
+      </View>
+    );
   }
 
   if (mode === 'identifier') {
@@ -169,6 +512,14 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             setError('');
           }}
         />
+        {allowAccountActions ? (
+          <View style={styles.centerLink}>
+            <Text style={styles.inlinePrompt}>
+              {t('login.noAccount')}{' '}
+              <Text style={styles.link} onPress={openRegister}>{t('login.createAccount')}</Text>
+            </Text>
+          </View>
+        ) : null}
       </View>
     );
   }
@@ -183,26 +534,15 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             : t('login.passwordSubtitleEmpty')}
         </Text>
         <IdentifierField value={identifier} onChangeText={setIdentifier} />
-        <View style={styles.field}>
-          <Ionicons name="lock-closed-outline" size={19} color={colors.textMuted} />
-          <TextInput
-            autoCapitalize="none"
-            placeholder={t('login.password')}
-            placeholderTextColor={colors.textMuted}
-            secureTextEntry={secure}
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            onSubmitEditing={() => void submitPassword()}
-          />
-          <Pressable onPress={() => setSecure((value) => !value)}>
-            <Ionicons
-              name={secure ? 'eye-outline' : 'eye-off-outline'}
-              size={20}
-              color={colors.textMuted}
-            />
-          </Pressable>
-        </View>
+        <PasswordField
+          placeholder={t('login.password')}
+          value={password}
+          onChangeText={setPassword}
+          secure={secure}
+          onToggleSecure={() => setSecure((value) => !value)}
+          onSubmitEditing={() => void submitPassword()}
+        />
+        {success ? <Text style={styles.success}>{success}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <PrimaryButton
           label={t('login.submit')}
@@ -224,6 +564,12 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
             }}
           />
         </View>
+        {allowAccountActions ? (
+          <View style={styles.accountActions}>
+            <LinkButton label={t('login.forgotPassword')} onPress={openForgotPassword} />
+            <LinkButton label={t('login.createAccount')} onPress={openRegister} />
+          </View>
+        ) : null}
       </View>
     );
   }
@@ -280,6 +626,45 @@ export function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
   );
 }
 
+function OtpFields({
+  otp,
+  inputs,
+  submitting,
+  onChange,
+  onKeyPress,
+}: {
+  otp: string[];
+  inputs: React.MutableRefObject<Array<TextInput | null>>;
+  submitting: boolean;
+  onChange: (index: number, value: string) => void;
+  onKeyPress: (
+    index: number,
+    event: NativeSyntheticEvent<TextInputKeyPressEventData>,
+  ) => void;
+}) {
+  return (
+    <View style={styles.otpRow}>
+      {otp.map((digit, index) => (
+        <TextInput
+          key={index}
+          ref={(input) => {
+            inputs.current[index] = input;
+          }}
+          autoFocus={index === 0}
+          keyboardType="number-pad"
+          maxLength={1}
+          editable={!submitting}
+          selectTextOnFocus
+          style={styles.otpInput}
+          value={digit}
+          onChangeText={(value) => onChange(index, value)}
+          onKeyPress={(event) => onKeyPress(index, event)}
+        />
+      ))}
+    </View>
+  );
+}
+
 function IdentifierField({
   value,
   onChangeText,
@@ -301,6 +686,66 @@ function IdentifierField({
         value={value}
         onChangeText={onChangeText}
       />
+    </View>
+  );
+}
+
+function TextField({
+  icon,
+  containerStyle,
+  ...inputProps
+}: React.ComponentProps<typeof TextInput> & {
+  icon?: keyof typeof Ionicons.glyphMap;
+  containerStyle?: object;
+}) {
+  return (
+    <View style={[styles.field, containerStyle]}>
+      {icon ? <Ionicons name={icon} size={19} color={colors.textMuted} /> : null}
+      <TextInput
+        {...inputProps}
+        autoCorrect={false}
+        placeholderTextColor={colors.textMuted}
+        style={styles.input}
+      />
+    </View>
+  );
+}
+
+function PasswordField({
+  secure,
+  onToggleSecure,
+  ...inputProps
+}: React.ComponentProps<typeof TextInput> & {
+  secure: boolean;
+  onToggleSecure: () => void;
+}) {
+  return (
+    <View style={styles.field}>
+      <Ionicons name="lock-closed-outline" size={19} color={colors.textMuted} />
+      <TextInput
+        {...inputProps}
+        autoCapitalize="none"
+        placeholderTextColor={colors.textMuted}
+        secureTextEntry={secure}
+        style={styles.input}
+      />
+      <Pressable onPress={onToggleSecure}>
+        <Ionicons
+          name={secure ? 'eye-outline' : 'eye-off-outline'}
+          size={20}
+          color={colors.textMuted}
+        />
+      </Pressable>
+    </View>
+  );
+}
+
+function StepIndicator({ step }: { step: 1 | 2 | 3 }) {
+  return (
+    <View style={styles.stepRow}>
+      {[1, 2, 3].map((value) => (
+        <View key={value} style={[styles.stepLine, value <= step && styles.stepLineActive]} />
+      ))}
     </View>
   );
 }
@@ -390,6 +835,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
+  success: {
+    color: colors.success,
+    backgroundColor: '#eef8f1',
+    borderRadius: 10,
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
   button: {
     height: 54,
     alignItems: 'center',
@@ -431,4 +887,37 @@ const styles = StyleSheet.create({
   link: { color: colors.primaryLight, fontFamily: fonts.bold, fontSize: 12 },
   timer: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 12 },
   centerLink: { alignItems: 'center', marginTop: 16 },
+  inlinePrompt: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 12 },
+  nameRow: { flexDirection: 'row', gap: 10 },
+  nameField: { flex: 1 },
+  accountActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  stepRow: { flexDirection: 'row', gap: 7, marginBottom: 20 },
+  stepLine: {
+    flex: 1,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceVariant,
+  },
+  stepLineActive: { backgroundColor: colors.primary },
+  expiry: {
+    color: colors.textMuted,
+    fontFamily: fonts.body,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: -4,
+    marginBottom: 14,
+  },
+  linkRowAfterButton: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 10,
+  },
 });

@@ -27,11 +27,12 @@ export async function GET(req) {
             const [coupons] = await db.execute(`
                 SELECT c.* FROM coupons c
                 LEFT JOIN reward_redemptions rr ON rr.coupon_id = c.id
+                LEFT JOIN rewards r ON r.\`key\` = rr.reward_key
                 WHERE c.code = ?
                 AND c.valid_from <= CURDATE()
                 AND c.valid_until >= CURDATE()
                 AND (c.max_uses IS NULL OR c.used_count < c.max_uses)
-                AND (rr.id IS NULL OR rr.user_id = ?)
+                AND (rr.id IS NULL OR (rr.user_id = ? AND r.category = 'booking'))
             `, [code, userId]);
 
             if (coupons.length === 0) {

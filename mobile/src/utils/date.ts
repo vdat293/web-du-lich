@@ -21,7 +21,16 @@ export function countNights(checkIn: string, checkOut: string) {
 }
 
 export function formatDate(value: string) {
-  const date = new Date(`${value}T00:00:00`);
+  const normalizedValue = value.trim();
+  const dateParts = /^(\d{4})-(\d{2})-(\d{2})/.exec(normalizedValue);
+  const date = dateParts
+    ? new Date(
+        Number(dateParts[1]),
+        Number(dateParts[2]) - 1,
+        Number(dateParts[3]),
+      )
+    : new Date(normalizedValue);
+
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',

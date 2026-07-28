@@ -89,6 +89,38 @@ export const authService = {
       method: 'POST',
       body: JSON.stringify({ identifier, otp }),
     }),
+  register: (payload: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }) =>
+    apiRequest<{ message: string }>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  forgotPassword: (identifier: string) =>
+    apiRequest<{ success: boolean; transaction_id: string; message: string }>(
+      '/api/auth/forgot-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email: identifier }),
+      },
+    ),
+  verifyResetOtp: (transactionId: string, otp: string) =>
+    apiRequest<{ success: boolean; message: string }>('/api/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ transaction_id: transactionId, otp }),
+    }),
+  resetPassword: (transactionId: string, otp: string, newPassword: string) =>
+    apiRequest<{ success: boolean; message: string }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        transaction_id: transactionId,
+        otp,
+        new_password: newPassword,
+      }),
+    }),
 };
 
 export const bookingService = {

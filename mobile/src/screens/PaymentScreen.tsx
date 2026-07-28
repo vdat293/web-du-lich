@@ -22,18 +22,13 @@ import { BrandLogo } from '../components/BrandLogo';
 import { LoginForm } from '../components/LoginForm';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
+import { getStoredValue, removeStoredValue } from '../storage';
 import { colors, fonts, shadow } from '../theme';
 import { formatCurrency, formatDate } from '../utils/date';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Payment'>;
 type PaymentMethod = 'card' | 'momo' | 'cash';
-
-const TEST_CARD = {
-  holder: 'NGUYEN VAN A',
-  number: '9704 0000 0000 0018',
-  expiry: '12/28',
-  cvv: '123',
-};
+const PENDING_BOOKING_COUPON_KEY = 'aoklevart_pending_booking_coupon';
 
 export function PaymentScreen({ navigation, route }: Props) {
   const { t, i18n } = useTranslation();
@@ -98,7 +93,7 @@ export function PaymentScreen({ navigation, route }: Props) {
           setMomoBookingId(null);
         }
       } catch {
-        // Keep the test payment open and retry on the next poll.
+        // Giữ màn hình thanh toán và thử cập nhật lại ở lần kiểm tra tiếp theo.
       }
     }
     void refreshStatus();
@@ -111,13 +106,23 @@ export function PaymentScreen({ navigation, route }: Props) {
     void cancelMomo(i18n.language === 'en' ? 'MoMo transaction expired after 15 minutes' : 'Giao dịch MoMo quá hạn 15 phút');
   }, [momoBookingId, momoSeconds, momoStatus]);
 
-  function fillTestCard() {
-    setCardHolder(TEST_CARD.holder);
-    setCardNumber(TEST_CARD.number);
-    setExpiry(TEST_CARD.expiry);
-    setCvv(TEST_CARD.cvv);
-    setError('');
-  }
+  useEffect(() => {
+    if (!user?.id) return;
+
+    let active = true;
+    void getStoredValue(PENDING_BOOKING_COUPON_KEY).then((savedCode) => {
+      if (!active || !savedCode) return;
+      const normalizedCode = savedCode.trim().toUpperCase();
+      setCouponCode(normalizedCode);
+      void applyCoupon(normalizedCode);
+    }).catch(() => {
+      // Người dùng vẫn có thể nhập coupon thủ công nếu SecureStore không khả dụng.
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id, draft.subtotal]);
 
   function formatCardNumber(value: string) {
     return value.replace(/\D/g, '').slice(0, 19).replace(/(.{4})/g, '$1 ').trim();
@@ -158,11 +163,18 @@ export function PaymentScreen({ navigation, route }: Props) {
           phone: guestPhone.trim(),
           email: guestEmail.trim() || null,
         });
+    if (user && appliedCoupon) {
+      try {
+        await removeStoredValue(PENDING_BOOKING_COUPON_KEY);
+      } catch {
+        // Booking đã tạo thành công; lỗi dọn SecureStore không được làm hỏng kết quả.
+      }
+    }
     return result.booking_id;
   }
 
-  async function applyCoupon() {
-    const code = couponCode.trim().toUpperCase();
+  async function applyCoupon(codeOverride?: string) {
+    const code = (codeOverride ?? couponCode).trim().toUpperCase();
     if (!code) return;
 
     setApplyingCoupon(true);
@@ -225,7 +237,7 @@ export function PaymentScreen({ navigation, route }: Props) {
         return;
       }
       if (!cardHolder.trim() || !cardNumber.trim() || !expiry.trim() || !cvv.trim()) {
-        setError(i18n.language === 'en' ? 'Please enter all sandbox card details.' : 'Vui lòng nhập đầy đủ thông tin thẻ sandbox.');
+        setError(i18n.language === 'en' ? 'Please enter all card details.' : 'Vui lòng nhập đầy đủ thông tin thẻ.');
         return;
       }
       if (cardNumber.replace(/\D/g, '').length < 16) {
@@ -324,8 +336,8 @@ export function PaymentScreen({ navigation, route }: Props) {
                 <Text style={styles.momoTimer}>{minutes}:{seconds}</Text>
               </View>
               <View style={styles.momoHint}>
-                <Ionicons name="sync-outline" size={20} color={colors.primary} />
-                <Text style={styles.momoHintText}>{i18n.language === 'en' ? 'The app checks status every 3 seconds. Use the admin page to confirm bookings while testing.' : 'Ứng dụng tự kiểm tra trạng thái mỗi 3 giây. Dùng trang quản trị để xác nhận booking khi test.'}</Text>
+                <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
+                <Text style={styles.momoHintText}>{t('payment.momoStatusHint')}</Text>
               </View>
             </>
           )}
@@ -441,18 +453,11 @@ export function PaymentScreen({ navigation, route }: Props) {
           <PaymentOption active={method === 'card'} icon="card-outline" title={t('payment.atmCard')} subtitle={t('payment.atmSubtitle')} onPress={() => { setMethod('card'); setError(''); }} />
           {method === 'card' ? (
             <View style={styles.cardFields}>
-              <Field icon="person-outline" placeholder={t('payment.guestName')} autoCapitalize="characters" value={cardHolder} onChangeText={(value) => setCardHolder(value.toUpperCase())} />
-              <Field icon="card-outline" placeholder={t('payment.atmCard')} keyboardType="number-pad" maxLength={23} value={cardNumber} onChangeText={(value) => setCardNumber(formatCardNumber(value))} />
+              <Field icon="person-outline" placeholder={t('payment.cardHolder')} autoCapitalize="characters" value={cardHolder} onChangeText={(value) => setCardHolder(value.toUpperCase())} />
+              <Field icon="card-outline" placeholder={t('payment.cardNumber')} keyboardType="number-pad" maxLength={23} value={cardNumber} onChangeText={(value) => setCardNumber(formatCardNumber(value))} />
               <View style={styles.halfRow}>
                 <View style={styles.half}><Field placeholder="MM/YY" keyboardType="number-pad" maxLength={5} value={expiry} onChangeText={(value) => setExpiry(formatExpiry(value))} /></View>
                 <View style={styles.half}><Field placeholder="CVV" keyboardType="number-pad" maxLength={4} secureTextEntry value={cvv} onChangeText={(value) => setCvv(value.replace(/\D/g, ''))} /></View>
-              </View>
-              <View style={styles.testCardBox}>
-                <View style={styles.testCardCopy}>
-                  <Text style={styles.testCardTitle}>Sandbox test card</Text>
-                  <Text style={styles.testCardText}>9704 0000 0000 0018 · 12/28 · CVV 123</Text>
-                </View>
-                <Pressable style={styles.testCardButton} onPress={fillTestCard}><Text style={styles.testCardButtonText}>{t('common.save')}</Text></Pressable>
               </View>
             </View>
           ) : null}
@@ -475,7 +480,15 @@ export function PaymentScreen({ navigation, route }: Props) {
 
           <View style={styles.securityNote}>
             <Ionicons name="shield-checkmark-outline" size={21} color={colors.primary} />
-            <Text style={styles.securityText}>{t('payment.security')}</Text>
+            <Text style={styles.securityText}>
+              {t(
+                method === 'card'
+                  ? 'payment.cardSecurity'
+                  : method === 'momo'
+                    ? 'payment.momoSecurity'
+                    : 'payment.cashSecurity',
+              )}
+            </Text>
           </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Pressable disabled={processing} style={[styles.primaryButton, processing && styles.disabled]} onPress={() => void submit()}>
@@ -607,12 +620,6 @@ const styles = StyleSheet.create({
   paymentTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 13 },
   paymentSubtitle: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 11, marginTop: 4 },
   cardFields: { borderRadius: 16, backgroundColor: colors.surfaceLow, padding: 12, marginTop: -4, marginBottom: 11 },
-  testCardBox: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, backgroundColor: '#fff5dc', borderWidth: 1, borderColor: '#ead39a', padding: 12 },
-  testCardCopy: { flex: 1, paddingRight: 8 },
-  testCardTitle: { color: '#785c16', fontFamily: fonts.bold, fontSize: 12 },
-  testCardText: { color: '#8a6b20', fontFamily: fonts.body, fontSize: 10, marginTop: 3 },
-  testCardButton: { borderRadius: 9, backgroundColor: colors.primary, paddingHorizontal: 13, paddingVertical: 9 },
-  testCardButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 11 },
   field: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: colors.border, borderRadius: 12, backgroundColor: colors.surface, paddingHorizontal: 13, marginBottom: 10 },
   input: { flex: 1, color: colors.text, fontFamily: fonts.body, fontSize: 14, paddingVertical: 12 },
   halfRow: { flexDirection: 'row', gap: 10 },

@@ -45,11 +45,14 @@ export async function POST(req) {
             return NextResponse.json({ success: false, message: 'Mã OTP đã hết hạn (5 phút). Vui lòng thử lại.' }, { status: 400 });
         }
 
-        // Email nằm trong card_number field
-        const email = log.card_number;
+        // Email hoặc số điện thoại nằm trong card_number field.
+        const identifier = log.card_number;
 
         // Tìm user
-        const [users] = await db.execute('SELECT id FROM users WHERE email = ?', [email]);
+        const [users] = await db.execute(
+            'SELECT id FROM users WHERE email = ? OR phone = ?',
+            [identifier, identifier]
+        );
         if (users.length === 0) {
             return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản' }, { status: 400 });
         }
@@ -67,9 +70,9 @@ export async function POST(req) {
         await db.execute('UPDATE sandbox_otp_logs SET status = ? WHERE id = ?', ['USED', log.id]);
 
         // Log activity
-        await logActivity(user.id, 'Đổi mật khẩu', `Đổi mật khẩu thành công cho email: ${email}`, ip_address);
+        await logActivity(user.id, 'Đổi mật khẩu', `Đổi mật khẩu thành công cho tài khoản: ${identifier}`, ip_address);
 
-        console.log(`[Reset Password] Password reset successfully for: ${email}`);
+        console.log(`[Reset Password] Password reset successfully for: ${identifier}`);
 
         // Emit Socket.IO
         if (global.io) {

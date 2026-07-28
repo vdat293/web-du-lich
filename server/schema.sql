@@ -325,6 +325,18 @@ CREATE TABLE rewards (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+INSERT INTO rewards
+  (`key`, title, description, points, discount_type, discount_value, min_order_amount, category, image_url, partner_name)
+VALUES
+  ('stay-fixed-50k', 'Giảm trực tiếp 50.000 VNĐ khi đặt phòng', 'Coupon dùng cho mọi khách sạn, villa và homestay trên Aoklevart. Đơn đặt phòng tối thiểu 500.000đ.', 5, 'fixed', 50000, 500000, 'booking', 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-percent-5', 'Giảm 5% giá phòng cho chuyến đi tiếp theo', 'Giảm trực tiếp 5% trên tiền phòng cho đơn từ 600.000đ.', 6, 'percent', 5, 600000, 'booking', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-fixed-100k', 'Giảm trực tiếp 100.000 VNĐ khi đặt phòng', 'Coupon áp dụng cho đơn đặt phòng từ 1.000.000đ trên Aoklevart.', 9, 'fixed', 100000, 1000000, 'booking', 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-percent-10', 'Giảm 10% giá phòng trên toàn hệ thống', 'Giảm trực tiếp 10% trên tiền phòng cho đơn từ 1.200.000đ.', 13, 'percent', 10, 1200000, 'booking', 'https://images.unsplash.com/photo-1568084680786-a84f91d1153c?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('voucher-aoklevart', 'Giảm trực tiếp 200.000 VNĐ khi đặt phòng nghỉ dưỡng', 'Áp dụng cho mọi khách sạn, villa và homestay trên Aoklevart với đơn từ 800.000đ.', 15, 'fixed', 200000, 800000, 'booking', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-percent-15', 'Giảm 15% giá phòng cho kỳ nghỉ dài ngày', 'Giảm trực tiếp 15% trên tiền phòng cho đơn từ 2.000.000đ.', 22, 'percent', 15, 2000000, 'booking', 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-fixed-300k', 'Giảm trực tiếp 300.000 VNĐ khi đặt phòng', 'Coupon ưu đãi lớn dành cho đơn đặt phòng từ 3.000.000đ.', 25, 'fixed', 300000, 3000000, 'booking', 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY'),
+  ('stay-percent-20', 'Giảm 20% giá phòng cho kỳ nghỉ cao cấp', 'Giảm trực tiếp 20% trên tiền phòng cho đơn từ 4.000.000đ.', 35, 'percent', 20, 4000000, 'booking', 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=500&auto=format&fit=crop&q=70', 'AOKLEVART STAY');
+
 CREATE TABLE reward_redemptions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,

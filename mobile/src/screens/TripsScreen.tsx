@@ -75,7 +75,7 @@ export function TripsScreen() {
                 <View style={styles.cardTop}><Text style={styles.bookingCode}>#{booking.id}</Text><View style={styles.status}><Text style={styles.statusText}>{t(statusLabels[booking.displayStatus || booking.status] || booking.status)}</Text></View></View>
                 <Text style={styles.propertyName}>{booking.property_name}</Text>
                 <Text style={styles.location}>{booking.property_location}</Text>
-                <View style={styles.metaRow}><Ionicons name="calendar-outline" size={15} color={colors.textMuted} /><Text style={styles.meta}>{formatDate(booking.check_in)} - {formatDate(booking.check_out)}</Text></View>
+                <View style={styles.metaRow}><Ionicons name="calendar-outline" size={15} color={colors.textMuted} /><Text style={styles.meta}>{formatDate(booking.check_in)} – {formatDate(booking.check_out)}</Text></View>
                 <View style={styles.cardBottom}><Text style={styles.room}>{booking.room_type_name}</Text><Text style={styles.price}>{formatCurrency(Number(booking.total_price))}</Text></View>
               </View>
             </View>

@@ -10,7 +10,10 @@ import {
   View,
   Image,
   ImageBackground,
+  Keyboard,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   TextInput,
   type NativeSyntheticEvent,
   type TextInputKeyPressEventData,
@@ -30,12 +33,20 @@ import { colors, fonts } from '../theme';
 import type { Reward, RewardRedemption } from '../types';
 import type { RootStackParamList } from '../navigation/types';
 
+const PENDING_BOOKING_COUPON_KEY = 'aoklevart_pending_booking_coupon';
+
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }).format(new Date(value));
+}
+
+function formatDiscount(type: 'fixed' | 'percent', value: number) {
+  return type === 'percent'
+    ? `Giảm ${Number(value)}%`
+    : `Giảm ${Number(value).toLocaleString('vi-VN')}đ`;
 }
 
 export function RewardsScreen() {
@@ -90,10 +101,31 @@ export function RewardsScreen() {
       const response = await rewardService.redeem(reward.key, enteredPin);
       setPoints(response.loyalty_points);
       if (user) await updateUser({ ...user, loyalty_points: response.loyalty_points });
+      if (reward.category === 'booking') {
+        try {
+          await setStoredValue(PENDING_BOOKING_COUPON_KEY, response.coupon_code);
+        } catch (storageError) {
+          console.log('Failed to cache redeemed coupon:', storageError);
+        }
+      }
       await load(true);
       Alert.alert(
         t('rewards.successTitle'),
-        t('rewards.successMessage', { code: response.coupon_code }),
+        t(
+          reward.category === 'booking'
+            ? 'rewards.bookingSuccessMessage'
+            : 'rewards.successMessage',
+          { code: response.coupon_code },
+        ),
+        reward.category === 'booking'
+          ? [
+              { text: t('common.close'), style: 'cancel' },
+              {
+                text: t('rewards.bookNow'),
+                onPress: () => navigation.navigate('Explore' as any),
+              },
+            ]
+          : [{ text: t('common.close'), style: 'cancel' }],
       );
       setPinModalVisible(false);
       if (enteredPin) {
@@ -132,6 +164,11 @@ export function RewardsScreen() {
     if (event.nativeEvent.key === 'Backspace' && !inputPin[index] && index > 0) {
       pinInputs.current[index - 1]?.focus();
     }
+  };
+
+  const closePinModal = () => {
+    Keyboard.dismiss();
+    setPinModalVisible(false);
   };
 
   // Watch PIN completion inside modal
@@ -211,8 +248,12 @@ export function RewardsScreen() {
     );
   }
 
-  // Filter rewards based on selected category (voucher or shopping)
-  const filteredRewards = rewards;
+  // Đưa coupon đặt phòng lên đầu để người dùng dễ tìm thấy trên mobile.
+  const filteredRewards = [...rewards].sort((first, second) => {
+    const firstPriority = first.category === 'booking' ? 0 : 1;
+    const secondPriority = second.category === 'booking' ? 0 : 1;
+    return firstPriority - secondPriority || first.points - second.points;
+  });
 
   return (
     <View style={styles.screen}>
@@ -294,6 +335,21 @@ export function RewardsScreen() {
                   />
                   <View style={styles.rewardRowBody}>
                     <Text style={styles.rewardRowPartner}>{reward.partner_name || 'AOKLEVART'}</Text>
+                    {reward.category === 'booking' || reward.discount_value > 0 ? (
+                      <View style={styles.rewardOfferRow}>
+                        {reward.category === 'booking' ? (
+                          <View style={styles.bookingBadge}>
+                            <Ionicons name="bed-outline" size={11} color={colors.primary} />
+                            <Text style={styles.bookingBadgeText}>ĐẶT PHÒNG</Text>
+                          </View>
+                        ) : null}
+                        {reward.discount_value > 0 ? (
+                          <Text style={styles.rewardDiscount}>
+                            {formatDiscount(reward.discount_type, reward.discount_value)}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ) : null}
                     <Text style={styles.rewardRowTitle} numberOfLines={2}>{reward.title}</Text>
                     <View style={styles.rewardRowFooter}>
                       <Text style={styles.rewardRowPoints}>{reward.points} Điểm</Text>
@@ -354,6 +410,12 @@ export function RewardsScreen() {
                       </View>
                       <View style={styles.couponDetails}>
                         <Text selectable style={styles.couponCodeText}>{redemption.code}</Text>
+                        <Text style={styles.couponBenefitText}>
+                          {formatDiscount(redemption.discount_type, redemption.discount_value)}
+                          {Number(redemption.min_order_amount) > 0
+                            ? ` · Đơn từ ${Number(redemption.min_order_amount).toLocaleString('vi-VN')}đ`
+                            : ''}
+                        </Text>
                         <Text style={styles.couponDateText}>
                           Hạn dùng: {formatDate(redemption.valid_until)}
                         </Text>
@@ -377,50 +439,55 @@ export function RewardsScreen() {
         visible={pinModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setPinModalVisible(false)}
+        onRequestClose={closePinModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { paddingBottom: 40 }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('security.pinModalTitle')}</Text>
-              <Pressable onPress={() => setPinModalVisible(false)} style={styles.modalCloseBtn}>
-                <Ionicons name="close" size={24} color={colors.primary} />
-              </Pressable>
-            </View>
-
-            <View style={styles.pinModalBody}>
-              <Text style={styles.pinModalDesc}>{t('security.pinModalRedeeming')}</Text>
-              <Text style={styles.pinModalRewardName} numberOfLines={1}>
-                {selectedReward?.title}
-              </Text>
-              <Text style={styles.pinModalPoints}>
-                {t('security.pinModalCost', { count: selectedReward?.points })}
-              </Text>
-
-              <View style={styles.codeRow}>
-                {inputPin.map((digit, idx) => (
-                  <TextInput
-                    key={idx}
-                    ref={(input) => { pinInputs.current[idx] = input; }}
-                    keyboardType="number-pad"
-                    secureTextEntry
-                    maxLength={1}
-                    editable={redeemingKey === null}
-                    selectTextOnFocus
-                    style={styles.codeInput}
-                    value={digit}
-                    onChangeText={(val) => handlePinDigitChange(idx, val)}
-                    onKeyPress={(e) => handlePinKeyPress(idx, e)}
-                  />
-                ))}
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoider}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, styles.pinModalContent]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{t('security.pinModalTitle')}</Text>
+                <Pressable onPress={closePinModal} style={styles.modalCloseBtn}>
+                  <Ionicons name="close" size={24} color={colors.primary} />
+                </Pressable>
               </View>
 
-              {redeemingKey !== null && (
-                <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
-              )}
+              <View style={styles.pinModalBody}>
+                <Text style={styles.pinModalDesc}>{t('security.pinModalRedeeming')}</Text>
+                <Text style={styles.pinModalRewardName} numberOfLines={1}>
+                  {selectedReward?.title}
+                </Text>
+                <Text style={styles.pinModalPoints}>
+                  {t('security.pinModalCost', { count: selectedReward?.points })}
+                </Text>
+
+                <View style={styles.codeRow}>
+                  {inputPin.map((digit, idx) => (
+                    <TextInput
+                      key={idx}
+                      ref={(input) => { pinInputs.current[idx] = input; }}
+                      keyboardType="number-pad"
+                      secureTextEntry
+                      maxLength={1}
+                      editable={redeemingKey === null}
+                      selectTextOnFocus
+                      style={styles.codeInput}
+                      value={digit}
+                      onChangeText={(val) => handlePinDigitChange(idx, val)}
+                      onKeyPress={(e) => handlePinKeyPress(idx, e)}
+                    />
+                  ))}
+                </View>
+
+                {redeemingKey !== null && (
+                  <ActivityIndicator color={colors.primary} style={{ marginTop: 24 }} />
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -443,7 +510,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   headerOverlay: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 36, 37, 0.45)',
   },
   backButton: {
@@ -658,6 +725,32 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginBottom: 4,
   },
+  rewardOfferRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    marginBottom: 5,
+  },
+  bookingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceContainer,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  bookingBadgeText: {
+    color: colors.primary,
+    fontFamily: fonts.bold,
+    fontSize: 8,
+    letterSpacing: 0.4,
+  },
+  rewardDiscount: {
+    color: colors.success,
+    fontFamily: fonts.bold,
+    fontSize: 10,
+  },
   rewardRowTitle: {
     fontFamily: fonts.medium,
     fontSize: 13,
@@ -700,6 +793,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
+  keyboardAvoider: {
+    flex: 1,
+  },
   modalContent: {
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
@@ -707,6 +803,10 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     minHeight: '40%',
     paddingBottom: 30,
+  },
+  pinModalContent: {
+    minHeight: 0,
+    paddingBottom: 40,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -775,6 +875,12 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.textMuted,
     marginTop: 2,
+  },
+  couponBenefitText: {
+    fontFamily: fonts.medium,
+    fontSize: 10,
+    color: colors.success,
+    marginTop: 3,
   },
   statusBadge: {
     paddingHorizontal: 10,

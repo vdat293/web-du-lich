@@ -42,7 +42,11 @@ export async function GET(req) {
     try {
         const [[users], [dbRewards], redemptions] = await Promise.all([
             db.execute('SELECT loyalty_points FROM users WHERE id = ?', [userId]),
-            db.execute('SELECT * FROM rewards ORDER BY points ASC'),
+            db.execute(`
+                SELECT *
+                FROM rewards
+                ORDER BY CASE WHEN category = 'booking' THEN 0 ELSE 1 END, points ASC
+            `),
             listRedemptions(db, userId),
         ]);
         if (!users[0]) {

@@ -67,7 +67,7 @@ export type Reward = {
   discount_type: 'fixed' | 'percent';
   discount_value: number;
   min_order_amount: number;
-  category?: 'voucher' | 'shopping';
+  category?: 'booking' | 'voucher' | 'shopping';
   image_url?: string;
   partner_name?: string;
 };

@@ -91,7 +91,7 @@ export function AppLockScreen() {
           </View>
         ) : (
           <View style={styles.loginCard}>
-            <LoginForm />
+            <LoginForm allowAccountActions={false} />
             <Pressable onPress={() => setShowLogin(false)} style={styles.backToBiometrics}>
               <Ionicons name="scan-outline" size={17} color={colors.primary} />
               <Text style={styles.secondaryButtonText}>{t('appLock.backToBiometrics')}</Text>

@@ -115,10 +115,6 @@ export function DetailsScreen({ navigation, route }: Props) {
     setActiveDateField(null);
   }
 
-  function dismissDatePicker() {
-    setActiveDateField(null);
-  }
-
   async function continueToPayment() {
     if (!selectedRoom) {
       setError(t('details.unavailableRoomType'));
@@ -337,9 +333,9 @@ export function DetailsScreen({ navigation, route }: Props) {
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
                 onChange={selectDate}
-                onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}
+                themeVariant="light"
               />
             </Pressable>
           </Pressable>

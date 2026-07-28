@@ -180,10 +180,6 @@ export function SearchScreen({ navigation, route }: Props) {
     setActiveDateField(null);
   }
 
-  function dismissDatePicker() {
-    setActiveDateField(null);
-  }
-
   function openFilters() {
     setDraftMinPrice(minPrice == null ? '' : String(minPrice));
     setDraftMaxPrice(maxPrice == null ? '' : String(maxPrice));
@@ -327,9 +323,9 @@ export function SearchScreen({ navigation, route }: Props) {
                 display="inline"
                 minimumDate={activeDateField === 'checkOut' && checkIn ? addDays(parseDate(checkIn), 1) : startOfToday()}
                 onChange={selectDate}
-                onDismiss={dismissDatePicker}
                 locale={i18n.language === 'en' ? 'en-US' : 'vi-VN'}
                 accentColor={colors.primary}
+                themeVariant="light"
               />
               {checkIn || checkOut ? (
                 <Pressable style={styles.clearButton} onPress={() => { setCheckIn(''); setCheckOut(''); setActiveDateField(null); }}>

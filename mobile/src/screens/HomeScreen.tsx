@@ -55,7 +55,7 @@ const destinations = [
     titleKey: 'home.destinationDaLat',
     subtitleKey: 'home.destinationDaLatSubtitle',
     image:
-      'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=900&q=85',
+      'https://images.unsplash.com/photo-1741524427564-0173c980c432?auto=format&fit=crop&w=900&q=85',
   },
   {
     titleKey: 'home.destinationPhuQuoc',
