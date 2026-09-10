@@ -58,6 +58,12 @@ export async function GET(req) {
             .split(',')
             .filter(Boolean)
             .map(Number);
+        const propertyIds = (params.get('ids') || '')
+            .split(',')
+            .filter(Boolean)
+            .map(Number);
+        const requestedLimit = parseOptionalNumber(params.get('limit'), 'Gioi han');
+        const limit = requestedLimit === null ? null : Math.min(50, requestedLimit);
 
         if ((checkIn || checkOut) && (!checkIn || !checkOut || !DATE_PATTERN.test(checkIn) || !DATE_PATTERN.test(checkOut) || checkOut <= checkIn)) {
             return NextResponse.json({ message: 'Khoang ngay khong hop le.' }, { status: 400 });
@@ -67,6 +73,12 @@ export async function GET(req) {
         }
         if (amenityIds.some(id => !Number.isInteger(id) || id < 1)) {
             return NextResponse.json({ message: 'Tien nghi khong hop le.' }, { status: 400 });
+        }
+        if (propertyIds.some(id => !Number.isInteger(id) || id < 1)) {
+            return NextResponse.json({ message: 'Danh sach cho nghi khong hop le.' }, { status: 400 });
+        }
+        if (requestedLimit !== null && (!Number.isInteger(requestedLimit) || requestedLimit < 1)) {
+            return NextResponse.json({ message: 'Gioi han khong hop le.' }, { status: 400 });
         }
         if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
             return NextResponse.json({ message: 'Gia toi thieu khong duoc lon hon gia toi da.' }, { status: 400 });
@@ -78,6 +90,10 @@ export async function GET(req) {
             propertyWhere.push('p.type = ?');
             propertyValues.push(type);
         }
+        if (propertyIds.length) {
+            propertyWhere.push(`p.id IN (${propertyIds.map(() => '?').join(',')})`);
+            propertyValues.push(...propertyIds);
+        }
 
         const [properties] = await db.execute(`
             SELECT p.*, u.name as host_name, u.avatar as host_avatar, u.role as host_role
@@ -85,6 +101,7 @@ export async function GET(req) {
             LEFT JOIN users u ON p.host_id = u.id
             WHERE ${propertyWhere.join(' AND ')}
             ORDER BY p.is_hot DESC, p.created_at DESC
+            ${limit === null ? '' : `LIMIT ${limit}`}
         `, propertyValues);
 
         const detailedProperties = await Promise.all(properties.map(async (property) => {

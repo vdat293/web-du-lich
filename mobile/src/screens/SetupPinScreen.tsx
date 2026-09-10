@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   NativeSyntheticEvent,
   Platform,
   Pressable,
@@ -12,7 +11,7 @@ import {
   TextInputKeyPressEventData,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,7 +21,6 @@ import { securityService } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
-import { setStoredValue } from '../storage';
 
 type Mode = 'send_otp' | 'otp' | 'set_pin' | 'confirm_pin' | 'success';
 const EMPTY_CODE = ['', '', '', '', '', ''];
@@ -67,6 +65,8 @@ export function SetupPinScreen() {
     if (mode === 'otp' && codeStr.length === 6 && !submitting) {
       void verifyOtp(codeStr);
     }
+  // Auto-submit only when the OTP digits change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, otp]);
 
   // Handle auto-transitioning to confirm PIN
@@ -84,6 +84,8 @@ export function SetupPinScreen() {
     if (mode === 'confirm_pin' && confirmPinStr.length === 6 && !submitting) {
       void handleSavePin(confirmPinStr);
     }
+  // Auto-submit only when the confirmation PIN digits change.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, confirmPin]);
 
   // Request/Send OTP to Email/SMS on mount or retry
@@ -111,6 +113,8 @@ export function SetupPinScreen() {
   // Trigger send OTP automatically when screen is loaded
   useEffect(() => {
     void sendOtp();
+  // The setup request must run once when this screen mounts.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const verifyOtp = async (codeStr: string) => {
@@ -148,12 +152,6 @@ export function SetupPinScreen() {
       // Update local auth context
       if (user) {
         await updateUser({ ...user, transaction_pin_enabled: true });
-      }
-      // Cache PIN in secure store immediately
-      try {
-        await setStoredValue('aoklevart_transaction_pin', pinStr);
-      } catch (storeErr) {
-        console.log('Failed to save PIN in SecureStore during setup:', storeErr);
       }
       setMode('success');
     } catch (err) {

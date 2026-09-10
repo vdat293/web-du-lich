@@ -23,6 +23,8 @@ export const propertyService = {
     maxPrice?: number;
     type?: string;
     amenityIds?: number[];
+    ids?: number[];
+    limit?: number;
   } = {}) => {
     const params = new URLSearchParams();
     if (filters.checkIn) params.set('check_in', filters.checkIn);
@@ -32,6 +34,8 @@ export const propertyService = {
     if (filters.maxPrice != null) params.set('max_price', String(filters.maxPrice));
     if (filters.type) params.set('type', filters.type);
     if (filters.amenityIds?.length) params.set('amenities', filters.amenityIds.join(','));
+    if (filters.ids?.length) params.set('ids', filters.ids.join(','));
+    if (filters.limit) params.set('limit', String(filters.limit));
 
     const query = params.toString();
     return (await apiRequest<Property[]>(`/api/properties${query ? `?${query}` : ''}`))
@@ -137,6 +141,12 @@ export const bookingService = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  cancel: (bookingId: number, note: string) =>
+    apiRequest<{ status: string }>(`/api/bookings/${bookingId}/status`, {
+      method: 'PATCH',
+      authenticated: true,
+      body: JSON.stringify({ status: 'cancelled', note }),
+    }),
 };
 
 export const paymentService = {
@@ -153,10 +163,12 @@ export const paymentService = {
   getBookingStatus: (bookingId: number) =>
     apiRequest<{ id: number; status: string; total_price: number; room_type_name?: string }>(
       `/api/bookings/${bookingId}/status`,
+      { authenticated: true },
     ),
   cancelBooking: (bookingId: number, note: string) =>
     apiRequest<{ status: string }>(`/api/bookings/${bookingId}/status`, {
       method: 'PATCH',
+      authenticated: true,
       body: JSON.stringify({ status: 'cancelled', note }),
     }),
 };
@@ -250,6 +262,15 @@ export const rewardService = {
 };
 
 export const securityService = {
+  changePassword: (currentPassword: string, newPassword: string) =>
+    apiRequest<{ success: boolean; message: string }>('/api/user/security/password', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    }),
   sendSetupOtp: () =>
     apiRequest<{ success: boolean; message: string; dev_otp?: string }>(
       '/api/user/security/transaction-pin',
@@ -312,6 +333,22 @@ export type AdminUserPayload = {
   role: AdminUser['role'];
   phone?: string;
 };
+
+export type AdminCoupon = {
+  id: number;
+  code: string;
+  discount_type: 'fixed' | 'percent';
+  discount_value: number;
+  min_order_amount: number | null;
+  max_uses: number | null;
+  used_count: number;
+  valid_from: string;
+  valid_until: string;
+  description: string | null;
+  created_at?: string;
+};
+
+export type AdminCouponPayload = Omit<AdminCoupon, 'id' | 'used_count' | 'created_at'>;
 
 export type AdminStats = {
   totalUsers: number;
@@ -383,6 +420,35 @@ export const adminService = {
     }),
   deleteUser: (id: number) =>
     apiRequest<{ message: string }>(`/api/admin/users/${id}`, {
+      method: 'DELETE',
+      authenticated: true,
+    }),
+  getCoupons: async () => {
+    const response = await apiRequest<{ coupons: AdminCoupon[] }>('/api/admin/coupons', {
+      authenticated: true,
+    });
+    return response.coupons.map((coupon) => ({
+      ...coupon,
+      discount_value: Number(coupon.discount_value),
+      min_order_amount: coupon.min_order_amount == null ? null : Number(coupon.min_order_amount),
+      max_uses: coupon.max_uses == null ? null : Number(coupon.max_uses),
+      used_count: Number(coupon.used_count),
+    }));
+  },
+  createCoupon: (payload: AdminCouponPayload) =>
+    apiRequest<{ message: string; id: number }>('/api/admin/coupons', {
+      method: 'POST',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+  updateCoupon: (id: number, payload: AdminCouponPayload) =>
+    apiRequest<{ message: string }>(`/api/admin/coupons/${id}`, {
+      method: 'PUT',
+      authenticated: true,
+      body: JSON.stringify(payload),
+    }),
+  deleteCoupon: (id: number) =>
+    apiRequest<{ message: string }>(`/api/admin/coupons/${id}`, {
       method: 'DELETE',
       authenticated: true,
     }),

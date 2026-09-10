@@ -7,7 +7,7 @@ import path from 'path';
 try {
     const dotenv = await import('dotenv');
     // process.cwd() trong Next.js luôn trỏ tới thư mục chứa package.json (server/)
-    dotenv.config({ path: path.join(process.cwd(), '.env') });
+    dotenv.config({ path: path.join(process.cwd(), '.env'), quiet: true });
 } catch (e) {
     // Nếu dotenv không load được thì Next.js đã lo rồi, bỏ qua.
 }
@@ -39,8 +39,22 @@ const dbConfig = useUri ? process.env.DATABASE_URL : {
 };
 
 // Nếu dùng URI, ta vẫn cần đảm bảo SSL cho Aiven
+let databaseUri = process.env.DATABASE_URL;
+if (useUri) {
+    try {
+        const parsedUri = new URL(process.env.DATABASE_URL);
+        // `ssl-mode` is a MySQL CLI option, not a mysql2 connection option.
+        // SSL is configured explicitly below, so remove it from the URI before
+        // mysql2 parses query parameters and emits a future-breaking warning.
+        parsedUri.searchParams.delete('ssl-mode');
+        databaseUri = parsedUri.toString();
+    } catch {
+        console.error('❌ [DB] DATABASE_URL không đúng định dạng URL.');
+    }
+}
+
 const finalConfig = useUri ? {
-    uri: process.env.DATABASE_URL,
+    uri: databaseUri,
     ssl: { rejectUnauthorized: false }
 } : dbConfig;
 
@@ -54,16 +68,19 @@ if (process.env.NODE_ENV === 'production') {
     pool = global.mysqlPool;
 }
 
-// === Test kết nối khi khởi động ===
-(async () => {
-    try {
-        const connection = await pool.getConnection();
-        console.log('✅ [DB] Kết nối Cloud MySQL (Aiven) thành công!');
-        connection.release();
-    } catch (err) {
-        console.error('❌ [DB] Không thể kết nối Database:', err.message);
-        console.error('👉 Kiểm tra lại: 1) File .env 2) Mật khẩu DB 3) Kết nối mạng Internet');
-    }
-})();
+// Next imports route modules while producing a build. Avoid creating one
+// database connection per build worker; runtime requests will validate the pool.
+if (process.env.NEXT_PHASE !== 'phase-production-build') {
+    (async () => {
+        try {
+            const connection = await pool.getConnection();
+            console.log('✅ [DB] Kết nối Cloud MySQL (Aiven) thành công!');
+            connection.release();
+        } catch (err) {
+            console.error('❌ [DB] Không thể kết nối Database:', err.message);
+            console.error('👉 Kiểm tra lại: 1) File .env 2) Mật khẩu DB 3) Kết nối mạng Internet');
+        }
+    })();
+}
 
 export default pool;

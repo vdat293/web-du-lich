@@ -19,8 +19,8 @@ import {
   type TextInputKeyPressEventData,
 } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { getStoredValue, setStoredValue } from '../storage';
-import { Ionicons } from '@expo/vector-icons';
+import { setStoredValue } from '../storage';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -32,21 +32,16 @@ import { useAuth } from '../context/AuthContext';
 import { colors, fonts } from '../theme';
 import type { Reward, RewardRedemption } from '../types';
 import type { RootStackParamList } from '../navigation/types';
+import { formatNumber, getAppLocale } from '../utils/date';
 
 const PENDING_BOOKING_COUPON_KEY = 'aoklevart_pending_booking_coupon';
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat('vi-VN', {
+  return new Intl.DateTimeFormat(getAppLocale(), {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
   }).format(new Date(value));
-}
-
-function formatDiscount(type: 'fixed' | 'percent', value: number) {
-  return type === 'percent'
-    ? `Giảm ${Number(value)}%`
-    : `Giảm ${Number(value).toLocaleString('vi-VN')}đ`;
 }
 
 export function RewardsScreen() {
@@ -54,6 +49,9 @@ export function RewardsScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const formatDiscount = (type: 'fixed' | 'percent', value: number) => type === 'percent'
+    ? t('rewards.discountPercent', { value: Number(value) })
+    : t('rewards.discountFixed', { value: formatNumber(Number(value)) });
 
   const [points, setPoints] = useState(user?.loyalty_points || 0);
   const [rewards, setRewards] = useState<Reward[]>([]);
@@ -76,7 +74,8 @@ export function RewardsScreen() {
       setLoading(false);
       return;
     }
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError('');
     try {
       const response = await rewardService.list();
@@ -89,7 +88,7 @@ export function RewardsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [t, user?.id]);
+  }, [t, user]);
 
   useEffect(() => {
     void load();
@@ -128,13 +127,6 @@ export function RewardsScreen() {
           : [{ text: t('common.close'), style: 'cancel' }],
       );
       setPinModalVisible(false);
-      if (enteredPin) {
-        try {
-          await setStoredValue('aoklevart_transaction_pin', enteredPin);
-        } catch (err) {
-          console.log('Failed to cache PIN in secure store:', err);
-        }
-      }
     } catch (redeemError) {
       Alert.alert(
         t('rewards.errorTitle'),
@@ -177,28 +169,28 @@ export function RewardsScreen() {
     if (pinStr.length === 6 && selectedReward && redeemingKey === null) {
       void redeem(selectedReward, pinStr);
     }
+  // Completion is driven by the six PIN inputs; the selected reward is set before the modal opens.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputPin]);
 
   const handleRedeemFlow = async (reward: Reward) => {
-    if (biometricsEnabled) {
-      const hasHardware = await LocalAuthentication.hasHardwareAsync();
-      const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-      const pinVal = await getStoredValue('aoklevart_transaction_pin');
+    if (biometricsEnabled && Platform.OS !== 'web') {
+      try {
+        const [hasHardware, isEnrolled] = await Promise.all([
+          LocalAuthentication.hasHardwareAsync(),
+          LocalAuthentication.isEnrolledAsync(),
+        ]);
 
-      if (hasHardware && isEnrolled && pinVal) {
-        try {
+        if (hasHardware && isEnrolled) {
           const result = await LocalAuthentication.authenticateAsync({
             promptMessage: t('security.biometric'),
             cancelLabel: t('security.transactionPin'),
             disableDeviceFallback: true,
           });
-          if (result.success) {
-            await redeem(reward, pinVal);
-            return;
-          }
-        } catch (authErr) {
-          console.log('Biometric auth failed or cancelled:', authErr);
+          if (!result.success) return;
         }
+      } catch (authErr) {
+        console.log('Biometric auth failed or unavailable:', authErr);
       }
     }
 
@@ -228,7 +220,7 @@ export function RewardsScreen() {
 
     Alert.alert(
       t('rewards.confirmTitle'),
-      t('rewards.confirmMessage', { count: reward.points.toLocaleString('vi-VN'), title: reward.title }),
+      t('rewards.confirmMessage', { count: formatNumber(reward.points), title: reward.title }),
       [
         { text: t('common.cancel'), style: 'cancel' },
         { text: t('common.confirm'), onPress: () => void handleRedeemFlow(reward) },
@@ -289,7 +281,7 @@ export function RewardsScreen() {
           <View style={styles.profileStats}>
             <Pressable style={styles.statItem} onPress={() => setCouponsModalVisible(true)}>
               <Ionicons name="ticket-outline" size={20} color={colors.primary} />
-              <Text style={styles.statLabel}>Ưu đãi của tôi</Text>
+              <Text style={styles.statLabel}>{t('rewards.myOffers')}</Text>
             </Pressable>
 
             <View style={styles.statDivider} />
@@ -297,7 +289,7 @@ export function RewardsScreen() {
             <View style={styles.statItem}>
               <Ionicons name="sparkles" size={20} color="#745b1c" />
               <Text style={styles.statLabel}>
-                <Text style={styles.pointsHighlight}>{points.toLocaleString('vi-VN')}</Text> ĐIỂM
+                <Text style={styles.pointsHighlight}>{formatNumber(points)}</Text> {t('rewards.pointsUnitUpper')}
               </Text>
             </View>
           </View>
@@ -305,7 +297,7 @@ export function RewardsScreen() {
 
         {/* Catalog Section */}
         <View style={styles.catalogContainer}>
-          <Text style={styles.sectionTitle}>Phần thưởng dành cho bạn</Text>
+          <Text style={styles.sectionTitle}>{t('rewards.catalog')}</Text>
 
           {loading && !refreshing ? (
             <ActivityIndicator style={styles.loader} color={colors.primary} />
@@ -317,7 +309,7 @@ export function RewardsScreen() {
           ) : filteredRewards.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="cube-outline" size={28} color={colors.outline} />
-              <Text style={styles.emptyText}>Không có phần thưởng nào trong danh mục này.</Text>
+              <Text style={styles.emptyText}>{t('rewards.emptyCatalog')}</Text>
             </View>
           ) : (
             filteredRewards.map((reward) => {
@@ -340,7 +332,7 @@ export function RewardsScreen() {
                         {reward.category === 'booking' ? (
                           <View style={styles.bookingBadge}>
                             <Ionicons name="bed-outline" size={11} color={colors.primary} />
-                            <Text style={styles.bookingBadgeText}>ĐẶT PHÒNG</Text>
+                            <Text style={styles.bookingBadgeText}>{t('rewards.bookingBadge')}</Text>
                           </View>
                         ) : null}
                         {reward.discount_value > 0 ? (
@@ -352,7 +344,7 @@ export function RewardsScreen() {
                     ) : null}
                     <Text style={styles.rewardRowTitle} numberOfLines={2}>{reward.title}</Text>
                     <View style={styles.rewardRowFooter}>
-                      <Text style={styles.rewardRowPoints}>{reward.points} Điểm</Text>
+                      <Text style={styles.rewardRowPoints}>{t('rewards.pointsCost', { count: formatNumber(reward.points) })}</Text>
                       
                       <View style={[
                         styles.redeemActionBtn,
@@ -365,7 +357,7 @@ export function RewardsScreen() {
                             styles.redeemActionText,
                             !canRedeem && styles.redeemActionTextDisabled
                           ]}>
-                            {canRedeem ? 'Đổi' : 'Cần thêm'}
+                            {canRedeem ? t('rewards.redeemShort') : t('rewards.needMoreShort')}
                           </Text>
                         )}
                       </View>
@@ -388,7 +380,7 @@ export function RewardsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Ưu đãi của tôi</Text>
+              <Text style={styles.modalTitle}>{t('rewards.myOffers')}</Text>
               <Pressable onPress={() => setCouponsModalVisible(false)} style={styles.modalCloseBtn}>
                 <Ionicons name="close" size={24} color={colors.primary} />
               </Pressable>
@@ -398,7 +390,7 @@ export function RewardsScreen() {
               {redemptions.length === 0 ? (
                 <View style={styles.modalEmpty}>
                   <Ionicons name="ticket-outline" size={48} color={colors.outline} />
-                  <Text style={styles.modalEmptyText}>Bạn chưa đổi coupon nào.</Text>
+                  <Text style={styles.modalEmptyText}>{t('rewards.noCoupons')}</Text>
                 </View>
               ) : (
                 redemptions.map((redemption) => {
@@ -413,16 +405,16 @@ export function RewardsScreen() {
                         <Text style={styles.couponBenefitText}>
                           {formatDiscount(redemption.discount_type, redemption.discount_value)}
                           {Number(redemption.min_order_amount) > 0
-                            ? ` · Đơn từ ${Number(redemption.min_order_amount).toLocaleString('vi-VN')}đ`
+                            ? ` · ${t('rewards.minimumOrder', { value: formatNumber(Number(redemption.min_order_amount)) })}`
                             : ''}
                         </Text>
                         <Text style={styles.couponDateText}>
-                          Hạn dùng: {formatDate(redemption.valid_until)}
+                          {t('rewards.validUntil', { date: formatDate(redemption.valid_until) })}
                         </Text>
                       </View>
                       <View style={[styles.statusBadge, used ? styles.statusBadgeUsed : styles.statusBadgeUnused]}>
                         <Text style={[styles.statusText, used ? styles.statusTextUsed : styles.statusTextUnused]}>
-                          {used ? 'ĐÃ DÙNG' : 'CÒN HẠN'}
+                          {used ? t('rewards.usedUpper') : t('rewards.availableUpper')}
                         </Text>
                       </View>
                     </View>

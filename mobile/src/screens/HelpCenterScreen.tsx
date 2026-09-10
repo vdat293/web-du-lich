@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { 
   Alert, 
+  Linking,
   Pressable, 
   ScrollView, 
   StyleSheet, 
   Text, 
   View 
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'HelpCenter'>;
 export function HelpCenterScreen({ navigation }: Props) {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const { t } = useTranslation();
+
+  const openContact = async (url: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert(t('help.contactErrorTitle'), t('help.contactErrorMessage'));
+    }
+  };
 
   const faqs = [
     {
@@ -75,9 +84,10 @@ export function HelpCenterScreen({ navigation }: Props) {
 
         <Text style={[styles.sectionHeader, { marginTop: 32 }]}>{t('help.support')}</Text>
 
-        <Pressable 
+        <Pressable
+          accessibilityRole="link"
           style={styles.contactCard} 
-          onPress={() => Alert.alert(t('help.hotlineTitle'), t('help.hotlineMessage'))}
+          onPress={() => void openContact('tel:19001234')}
         >
           <View style={styles.contactIcon}>
             <Ionicons name="call" size={20} color={colors.primary} />
@@ -88,9 +98,10 @@ export function HelpCenterScreen({ navigation }: Props) {
           </View>
         </Pressable>
 
-        <Pressable 
+        <Pressable
+          accessibilityRole="link"
           style={styles.contactCard} 
-          onPress={() => Alert.alert(t('help.emailTitle'), t('help.emailMessage'))}
+          onPress={() => void openContact('mailto:support@aoklevart.com?subject=Aoklevart%20Mobile%20Support')}
         >
           <View style={styles.contactIcon}>
             <Ionicons name="mail" size={20} color={colors.primary} />

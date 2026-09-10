@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +21,7 @@ export function AppLockScreen() {
   const [showLogin, setShowLogin] = useState(!biometricsEnabled || !biometricAvailable);
   const [error, setError] = useState('');
 
-  async function unlock() {
+  const unlock = useCallback(async () => {
     if (authenticating) return;
     setAuthenticating(true);
     setError('');
@@ -33,14 +33,14 @@ export function AppLockScreen() {
     } finally {
       setAuthenticating(false);
     }
-  }
+  }, [authenticating, t, unlockWithBiometrics]);
 
   useEffect(() => {
     if (!attemptedAutomatically.current && biometricsEnabled && biometricAvailable) {
       attemptedAutomatically.current = true;
       void unlock();
     }
-  }, [biometricAvailable, biometricsEnabled]);
+  }, [biometricAvailable, biometricsEnabled, unlock]);
 
   useEffect(() => {
     if (!locked && navigation.canGoBack()) {

@@ -13,7 +13,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
   adminService,
@@ -21,6 +21,7 @@ import {
   type AdminUserPayload,
 } from '../../api/services';
 import { colors, fonts } from '../../theme';
+import { getAppLocale } from '../../utils/date';
 
 type RoleFilter = '' | AdminUser['role'];
 
@@ -52,7 +53,8 @@ export function AdminUsers({ currentUserId }: { currentUserId: number }) {
   }, [search]);
 
   const loadUsers = useCallback(async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError('');
     try {
       const response = await adminService.getUsers({
@@ -401,7 +403,7 @@ function roleColor(role: AdminUser['role']) {
 
 function formatDate(value: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(getAppLocale());
 }
 
 const styles = StyleSheet.create({

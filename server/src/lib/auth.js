@@ -1,6 +1,43 @@
 import jwt from 'jsonwebtoken';
 import db from './db';
 
+export async function verifyUser(req) {
+    try {
+        const authHeader = req.headers.get('authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return { error: 'Không có quyền truy cập', status: 401 };
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(
+                authHeader.slice('Bearer '.length),
+                process.env.JWT_SECRET || 'your_jwt_secret_key_here'
+            );
+        } catch {
+            return { error: 'Token không hợp lệ hoặc đã hết hạn', status: 401 };
+        }
+
+        const userId = Number(decoded?.user?.id);
+        if (!Number.isInteger(userId) || userId <= 0) {
+            return { error: 'Token không hợp lệ', status: 401 };
+        }
+
+        const [users] = await db.execute(
+            'SELECT id, name, email, phone, avatar, role FROM users WHERE id = ? LIMIT 1',
+            [userId]
+        );
+        if (!users[0]) {
+            return { error: 'Người dùng không tồn tại', status: 401 };
+        }
+
+        return { user: users[0], userId };
+    } catch (err) {
+        console.error('Lỗi xác thực người dùng:', err);
+        return { error: 'Lỗi server', status: 500 };
+    }
+}
+
 export async function verifyHost(req) {
     try {
         const authHeader = req.headers.get('authorization');

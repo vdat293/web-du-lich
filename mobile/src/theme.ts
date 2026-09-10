@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export const colors = {
   primary: '#012425',
   primaryContainer: '#1a3a3a',
@@ -39,4 +41,3 @@ export const shadow = {
     },
   }),
 } as const;
-import { Platform } from 'react-native';

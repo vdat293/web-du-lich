@@ -1,27 +1,50 @@
 import { NextResponse } from 'next/server';
 import db from '../../../../../lib/db';
+import { verifyUser } from '../../../../../lib/auth';
+
+async function getAuthorizedBooking(req, id) {
+    const authResult = await verifyUser(req);
+    if (authResult.error) return { authResult };
+
+    const [bookings] = await db.execute(`
+        SELECT b.*, rt.name AS room_type_name, p.host_id
+        FROM bookings b
+        LEFT JOIN room_types rt ON b.room_type_id = rt.id
+        JOIN properties p ON b.property_id = p.id
+        WHERE b.id = ?
+        LIMIT 1
+    `, [id]);
+    const booking = bookings[0];
+    if (!booking) return { notFound: true };
+
+    const isOwner = Number(booking.customer_id) === authResult.userId;
+    const isHost = Number(booking.host_id) === authResult.userId;
+    const isAdmin = authResult.user.role === 'admin';
+    if (!isOwner && !isHost && !isAdmin) return { forbidden: true };
+
+    return { booking, currentUser: authResult.user, isOwner, isHost, isAdmin };
+}
 
 export async function GET(req, { params }) {
     try {
         const { id } = await params;
-        const [bookings] = await db.execute(`
-            SELECT b.*, rt.name as room_type_name 
-            FROM bookings b 
-            LEFT JOIN room_types rt ON b.room_type_id = rt.id 
-            WHERE b.id = ?
-        `, [id]);
-
-        if (bookings.length === 0) {
+        const result = await getAuthorizedBooking(req, id);
+        if (result.authResult) {
+            return NextResponse.json({ message: result.authResult.error }, { status: result.authResult.status });
+        }
+        if (result.notFound) {
             return NextResponse.json({ message: 'Booking không tồn tại' }, { status: 404 });
         }
+        if (result.forbidden) {
+            return NextResponse.json({ message: 'Bạn không có quyền xem booking này' }, { status: 403 });
+        }
 
-        return NextResponse.json(bookings[0]);
+        const { host_id: _hostId, ...booking } = result.booking;
+        return NextResponse.json(booking);
     } catch (err) {
         return NextResponse.json({ message: 'Lỗi server', error: String(err) }, { status: 500 });
     }
 }
-
-import jwt from 'jsonwebtoken';
 
 export async function PATCH(req, { params }) {
     try {
@@ -29,33 +52,23 @@ export async function PATCH(req, { params }) {
         const body = await req.json();
         const { status, note } = body;
 
-        const authHeader = req.headers.get('authorization');
-        let currentUser = null;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.split(' ')[1];
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key_here');
-                currentUser = decoded.user;
-            } catch (err) {
-                console.warn('Token verify failed:', err.message);
-            }
+        const authorization = await getAuthorizedBooking(req, id);
+        if (authorization.authResult) {
+            return NextResponse.json({ message: authorization.authResult.error }, { status: authorization.authResult.status });
         }
-
-        // Kiểm tra xem booking có tồn tại không
-        const [existingBookings] = await db.execute('SELECT * FROM bookings WHERE id = ?', [id]);
-        if (existingBookings.length === 0) {
+        if (authorization.notFound) {
             return NextResponse.json({ message: 'Booking không tồn tại' }, { status: 404 });
         }
+        if (authorization.forbidden) {
+            return NextResponse.json({ message: 'Bạn không có quyền cập nhật booking này' }, { status: 403 });
+        }
 
-        const booking = existingBookings[0];
-        const [properties] = await db.execute('SELECT host_id FROM properties WHERE id = ?', [booking.property_id]);
-        const isHost = currentUser && properties.length > 0 && properties[0].host_id === currentUser.id;
-        const isAdmin = currentUser && currentUser.role === 'admin';
+        const { booking, currentUser, isOwner, isHost, isAdmin } = authorization;
 
         // Logic phân quyền
         if (status === 'cancelled') {
-            // Khách có thể hủy nếu pending
-            if (booking.status !== 'pending' && !isAdmin && !isHost) {
+            // Khách chỉ có thể hủy booking của chính mình khi còn pending.
+            if (isOwner && booking.status !== 'pending') {
                 return NextResponse.json({ message: 'Không thể hủy đơn hàng này' }, { status: 400 });
             }
         } else if (status === 'checked_in' || status === 'checked_out') {
@@ -103,7 +116,7 @@ export async function PATCH(req, { params }) {
         
         await db.execute(
             'INSERT INTO booking_status_history (booking_id, status, note, updated_by) VALUES (?, ?, ?, ?)',
-            [id, status, historyNote, currentUser ? currentUser.id : booking.customer_id]
+            [id, status, historyNote, currentUser.id]
         );
 
         // Bắn sự kiện Socket.io
@@ -127,7 +140,7 @@ export async function OPTIONS() {
         status: 204,
         headers: {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'PATCH, OPTIONS',
+            'Access-Control-Allow-Methods': 'GET, PATCH, OPTIONS',
             'Access-Control-Allow-Headers': 'Content-Type, Authorization',
         },
     });

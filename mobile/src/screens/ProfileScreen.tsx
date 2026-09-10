@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,12 +8,12 @@ import { useTranslation } from 'react-i18next';
 
 import { API_BASE_URL } from '../api/client';
 import { userService } from '../api/services';
-import { LoginForm } from '../components/LoginForm';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
+import { formatNumber } from '../utils/date';
 
 const TIER_LEVELS = [
   { name: 'classic', minPoints: 0 },
@@ -95,13 +95,13 @@ export function ProfileScreen() {
                   <Ionicons name="sparkles" size={17} color={colors.secondary} />
                 </View>
                 <View>
-                  <Text style={styles.loyaltyLabel}>HẠNG THÀNH VIÊN</Text>
+                  <Text style={styles.loyaltyLabel}>{t('profile.membershipTier')}</Text>
                   <Text style={styles.loyaltyTier}>{membershipTier}</Text>
                 </View>
               </View>
               <View style={styles.loyaltyPointsBlock}>
-                <Text style={styles.loyaltyPoints}>{loyaltyPoints.toLocaleString('vi-VN')}</Text>
-                <Text style={styles.loyaltyPointsLabel}>ĐIỂM</Text>
+                <Text style={styles.loyaltyPoints}>{formatNumber(loyaltyPoints)}</Text>
+                <Text style={styles.loyaltyPointsLabel}>{t('profile.pointsUpper')}</Text>
               </View>
             </View>
 
@@ -110,8 +110,8 @@ export function ProfileScreen() {
             <View style={styles.loyaltyProgressHeader}>
               <Text style={styles.loyaltyProgressText}>
                 {loyaltyProgress.nextTier
-                  ? `Còn ${loyaltyProgress.pointsNeeded.toLocaleString('vi-VN')} điểm để lên hạng`
-                  : 'Bạn đang ở hạng cao nhất'}
+                  ? t('profile.pointsToNextTier', { count: formatNumber(loyaltyProgress.pointsNeeded) })
+                  : t('profile.highestTier')}
               </Text>
               <Text style={styles.loyaltyNextTier}>
                 {loyaltyProgress.nextTier?.name || 'diamond'}
@@ -120,14 +120,14 @@ export function ProfileScreen() {
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${loyaltyProgress.progress}%` }]} />
             </View>
-            <Text style={styles.loyaltyRate}>Mỗi 1.000 VND thanh toán = 1 điểm tích lũy</Text>
+            <Text style={styles.loyaltyRate}>{t('profile.earningRate')}</Text>
           </View>
         </View>
         <View style={styles.menuCard}>
           {user.role === 'admin' ? (
             <MenuItem
               icon="grid-outline"
-              label="Quản trị hệ thống"
+              label={t('profile.adminDashboard')}
               onPress={() => navigation.navigate('AdminDashboard')}
             />
           ) : null}

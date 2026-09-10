@@ -6,10 +6,11 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -69,17 +70,27 @@ export function HomeScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { height } = useWindowDimensions();
+  const heroHeight = Math.min(700, Math.max(520, height * 0.82));
   const [query, setQuery] = useState('');
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  const loadFeatured = () => {
+    setLoading(true);
+    setLoadError(false);
     void propertyService
-      .list()
-      .then((items) => setProperties(items.slice(0, 5)))
-      .catch(() => setProperties([]))
+      .list({ limit: 5 })
+      .then(setProperties)
+      .catch(() => {
+        setProperties([]);
+        setLoadError(true);
+      })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(loadFeatured, []);
 
   function search(value = query) {
     navigation.navigate('Search', { query: value.trim() });
@@ -88,7 +99,7 @@ export function HomeScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.hero}>
+        <View style={[styles.hero, { height: heroHeight }]}>
           <ImageBackground source={{ uri: heroImage }} style={styles.heroImage}>
             <LinearGradient
               colors={['rgba(1,36,37,0.52)', 'rgba(1,36,37,0.06)', 'rgba(1,36,37,0.55)']}
@@ -152,7 +163,7 @@ export function HomeScreen() {
           ))}
         </View>
 
-        {loading || properties.length ? (
+        {loading || properties.length || loadError ? (
           <View style={styles.featuredSection}>
             <View style={styles.sectionHeadingRow}>
               <Text style={styles.sectionTitle}>{t('home.featuredTitle')}</Text>
@@ -160,6 +171,12 @@ export function HomeScreen() {
                 <Text style={styles.viewAll}>{t('home.viewAll')}</Text>
               </Pressable>
             </View>
+            {loadError ? (
+              <Pressable accessibilityRole="button" style={styles.retryBox} onPress={loadFeatured}>
+                <Ionicons name="refresh" size={17} color={colors.primary} />
+                <Text style={styles.retryText}>{t('common.retry')}</Text>
+              </Pressable>
+            ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {loading
                 ? Array.from({ length: 3 }, (_, index) => (
@@ -174,6 +191,7 @@ export function HomeScreen() {
                     />
                   ))}
             </ScrollView>
+            )}
           </View>
         ) : null}
 
@@ -201,7 +219,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.surface },
   content: { paddingBottom: 105 },
-  hero: { height: 700, paddingHorizontal: 14, paddingTop: 10 },
+  hero: { width: '100%', maxWidth: 960, alignSelf: 'center', paddingHorizontal: 14, paddingTop: 10 },
   heroImage: { flex: 1, overflow: 'hidden', borderRadius: 24, justifyContent: 'space-between' },
   safeHeader: { width: '100%' },
   header: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 18 },
@@ -225,6 +243,8 @@ const styles = StyleSheet.create({
   collectionTitle: { color: colors.white, fontFamily: fonts.heading, fontSize: 28 },
   collectionSubtitle: { color: 'rgba(255,255,255,0.82)', fontFamily: fonts.body, fontSize: 14, marginTop: 5 },
   featuredSection: { paddingTop: 44, paddingLeft: 20 },
+  retryBox: { height: 58, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderRadius: 14, borderWidth: 1, borderColor: colors.border, marginRight: 20, backgroundColor: colors.white },
+  retryText: { color: colors.primary, fontFamily: fonts.bold, fontSize: 13 },
   sectionHeadingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 20, marginBottom: 20 },
   viewAll: { color: colors.secondary, fontFamily: fonts.bold, fontSize: 13 },
   destinationSection: { paddingTop: 40, paddingBottom: 30, backgroundColor: colors.surfaceLow },

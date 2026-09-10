@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import {
   adminService,
@@ -15,6 +15,7 @@ import {
   type AdminTimeRange,
 } from '../../api/services';
 import { colors, fonts } from '../../theme';
+import { getAppLocale } from '../../utils/date';
 
 const EMPTY_STATS: AdminStats = {
   totalUsers: 0,
@@ -54,7 +55,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('vi-VN', {
+  return new Intl.NumberFormat(getAppLocale(), {
     style: 'currency',
     currency: 'VND',
     maximumFractionDigits: 0,
@@ -63,12 +64,12 @@ function formatCurrency(value: number) {
 
 function formatDate(value: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(getAppLocale());
 }
 
 function formatDateTime(value: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('vi-VN');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(getAppLocale());
 }
 
 export function AdminOverview() {
@@ -79,7 +80,8 @@ export function AdminOverview() {
   const [error, setError] = useState('');
 
   const loadStats = useCallback(async (refresh = false) => {
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError('');
     try {
       setStats(await adminService.getStats(timeRange));
@@ -150,10 +152,10 @@ export function AdminOverview() {
       ) : null}
 
       <View style={styles.statsGrid}>
-        <StatCard icon="people" label="Người dùng" value={stats.totalUsers.toLocaleString('vi-VN')} color="#3276d3" loading={loading} />
-        <StatCard icon="calendar" label="Booking" value={stats.totalBookings.toLocaleString('vi-VN')} color="#26875b" loading={loading} />
-        <StatCard icon="business" label="Chỗ ở" value={stats.totalProperties.toLocaleString('vi-VN')} color="#7056b8" loading={loading} />
-        <StatCard icon="eye" label="Lượt truy cập" value={stats.monthlyVisits.toLocaleString('vi-VN')} color="#b56b20" loading={loading} />
+        <StatCard icon="people" label="Người dùng" value={stats.totalUsers.toLocaleString(getAppLocale())} color="#3276d3" loading={loading} />
+        <StatCard icon="calendar" label="Booking" value={stats.totalBookings.toLocaleString(getAppLocale())} color="#26875b" loading={loading} />
+        <StatCard icon="business" label="Chỗ ở" value={stats.totalProperties.toLocaleString(getAppLocale())} color="#7056b8" loading={loading} />
+        <StatCard icon="eye" label="Lượt truy cập" value={stats.monthlyVisits.toLocaleString(getAppLocale())} color="#b56b20" loading={loading} />
         <StatCard icon="wallet" label="Doanh thu (10%)" value={formatCurrency(stats.totalRevenue)} color="#8d4a7d" compact loading={loading} />
         <StatCard icon="close-circle" label="Tỉ lệ hủy" value={`${cancellationRate}%`} color="#b33f45" loading={loading} />
       </View>

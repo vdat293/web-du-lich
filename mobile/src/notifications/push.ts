@@ -1,20 +1,22 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-// import * as Notifications from 'expo-notifications';
+import * as Notifications from 'expo-notifications';
 
 import { getStoredValue, setStoredValue } from '../storage';
 
 const PUSH_REGISTRATION_KEY = 'aoklevart_push_registration';
 const EXPO_GO_PUSH_ERROR = 'Thông báo đẩy chỉ bật được trong development build hoặc bản app đã build. Expo Go không hỗ trợ đầy đủ push notification từ xa.';
 
-// Notifications.setNotificationHandler({
-//   handleNotification: async () => ({
-//     shouldPlaySound: true,
-//     shouldSetBadge: true,
-//     shouldShowBanner: true,
-//     shouldShowList: true,
-//   }),
-// });
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export type PushRegistration = {
   expo_push_token: string;
@@ -40,34 +42,29 @@ function getExpoProjectId() {
   );
 }
 
-function getDeviceId() {
-  const constants = Constants as typeof Constants & { sessionId?: string };
-  return constants.sessionId;
-}
-
 async function configureAndroidChannels() {
-  // if (Platform.OS !== 'android') return;
+  if (Platform.OS !== 'android') return;
 
-  // await Promise.all([
-  //   Notifications.setNotificationChannelAsync('default', {
-  //     name: 'Thông báo chung',
-  //     importance: Notifications.AndroidImportance.MAX,
-  //     vibrationPattern: [0, 250, 250, 250],
-  //     lightColor: '#012425',
-  //   }),
-  //   Notifications.setNotificationChannelAsync('bookings', {
-  //     name: 'Đặt phòng',
-  //     importance: Notifications.AndroidImportance.MAX,
-  //     vibrationPattern: [0, 250, 250, 250],
-  //     lightColor: '#012425',
-  //   }),
-  //   Notifications.setNotificationChannelAsync('promotions', {
-  //     name: 'Khuyến mãi',
-  //     importance: Notifications.AndroidImportance.DEFAULT,
-  //     vibrationPattern: [0, 250, 250],
-  //     lightColor: '#745b1c',
-  //   }),
-  // ]);
+  await Promise.all([
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'Thông báo chung',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#012425',
+    }),
+    Notifications.setNotificationChannelAsync('bookings', {
+      name: 'Đặt phòng',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#012425',
+    }),
+    Notifications.setNotificationChannelAsync('promotions', {
+      name: 'Khuyến mãi',
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 250, 250],
+      lightColor: '#745b1c',
+    }),
+  ]);
 }
 
 export async function getStoredPushRegistration() {
@@ -81,9 +78,7 @@ export async function getStoredPushRegistration() {
   }
 }
 
-export async function initializePushNotifications(): Promise<PushInitResult> {
-  return { registration: null, permissionStatus: 'undetermined' };
-  /*
+async function initializePushNotificationsInternal(requestPermission: boolean): Promise<PushInitResult> {
   if (Platform.OS === 'web') {
     return { registration: null, permissionStatus: 'unsupported' };
   }
@@ -101,7 +96,7 @@ export async function initializePushNotifications(): Promise<PushInitResult> {
 
     const existing = await Notifications.getPermissionsAsync();
     let permissionStatus = existing.status;
-    if (permissionStatus !== 'granted') {
+    if (requestPermission && permissionStatus !== 'granted') {
       const requested = await Notifications.requestPermissionsAsync();
       permissionStatus = requested.status;
     }
@@ -124,7 +119,6 @@ export async function initializePushNotifications(): Promise<PushInitResult> {
       expo_push_token: token,
       provider: 'expo',
       platform: Platform.OS,
-      device_id: getDeviceId(),
       expo_project_id: projectId,
       app_version: Constants.expoConfig?.version,
       permission_status: permissionStatus,
@@ -139,39 +133,37 @@ export async function initializePushNotifications(): Promise<PushInitResult> {
       error: error instanceof Error ? error.message : String(error),
     };
   }
-  */
+}
+
+export function initializePushNotifications(): Promise<PushInitResult> {
+  return initializePushNotificationsInternal(false);
+}
+
+export function requestPushNotifications(): Promise<PushInitResult> {
+  return initializePushNotificationsInternal(true);
 }
 
 export function addPushReceivedListener(listener: (data: Record<string, unknown>) => void) {
-  return { remove: () => {} };
-  /*
+  if (Platform.OS === 'web') return { remove: () => undefined };
   return Notifications.addNotificationReceivedListener((notification) => {
     listener(notification.request.content.data as Record<string, unknown>);
   });
-  */
 }
 
 export function addPushResponseListener(listener: (data: Record<string, unknown>) => void) {
-  return { remove: () => {} };
-  /*
+  if (Platform.OS === 'web') return { remove: () => undefined };
   return Notifications.addNotificationResponseReceivedListener((response) => {
     listener(response.notification.request.content.data as Record<string, unknown>);
   });
-  */
 }
 
 export async function getLastPushResponseData() {
-  return undefined;
-  /*
   if (Platform.OS === 'web') return undefined;
   try {
-    const getLastResponse = Notifications.getLastNotificationResponseAsync
-      || (async () => Notifications.getLastNotificationResponse());
-    const response = await getLastResponse();
+    const response = await Notifications.getLastNotificationResponseAsync();
     return response?.notification.request.content.data as Record<string, unknown> | undefined;
   } catch (error) {
     console.warn('Failed to get last push response data:', error);
     return undefined;
   }
-  */
 }

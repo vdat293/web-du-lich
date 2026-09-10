@@ -1,14 +1,6 @@
 import { useState } from 'react';
-import { 
-  Alert, 
-  Pressable, 
-  ScrollView, 
-  StyleSheet, 
-  Switch, 
-  Text, 
-  View 
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -26,8 +18,8 @@ export function SecurityScreen({ navigation }: Props) {
     user,
   } = useAuth();
   const { t } = useTranslation();
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [updatingBiometrics, setUpdatingBiometrics] = useState(false);
+  const enabledSecurityLayers = Number(biometricsEnabled) + Number(Boolean(user?.transaction_pin_enabled));
 
   async function updateBiometrics(enabled: boolean) {
     if (updatingBiometrics) return;
@@ -63,7 +55,9 @@ export function SecurityScreen({ navigation }: Props) {
           <View style={styles.scoreHeader}>
             <Text style={styles.securityTitle}>{t('security.score')}</Text>
             <View style={styles.safeBadge}>
-              <Text style={styles.safeBadgeText}>{t('security.safe')}</Text>
+              <Text style={styles.safeBadgeText}>
+                {t('security.methodsEnabled', { count: enabledSecurityLayers })}
+              </Text>
             </View>
           </View>
           <Text style={styles.securityDesc}>{t('security.description')}</Text>
@@ -86,18 +80,6 @@ export function SecurityScreen({ navigation }: Props) {
             />
           </View>
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingTextContainer}>
-              <Text style={styles.settingLabel}>{t('security.twoFactor')}</Text>
-              <Text style={styles.settingSublabel}>{t('security.twoFactorHint')}</Text>
-            </View>
-            <Switch
-              value={twoFactorEnabled}
-              onValueChange={setTwoFactorEnabled}
-              trackColor={{ false: colors.outline, true: colors.primary }}
-              thumbColor={colors.white}
-            />
-          </View>
         </View>
 
         <View style={styles.settingSection}>
@@ -127,7 +109,7 @@ export function SecurityScreen({ navigation }: Props) {
           
           <Pressable 
             style={styles.actionRow} 
-            onPress={() => Alert.alert(t('security.alertTitle'), t('security.alertMessage'))}
+            onPress={() => navigation.navigate('ChangePassword')}
           >
             <View style={styles.settingTextContainer}>
               <Text style={styles.settingLabel}>{t('security.changePassword')}</Text>
@@ -141,10 +123,7 @@ export function SecurityScreen({ navigation }: Props) {
               <Text style={styles.settingLabel}>{t('security.registeredEmail')}</Text>
               <Text style={styles.settingSublabel}>{user?.email}</Text>
             </View>
-            <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color={colors.success} />
-              <Text style={styles.verifiedText}>{t('security.verified')}</Text>
-            </View>
+            <Ionicons name="mail-outline" size={18} color={colors.textMuted} />
           </View>
         </View>
       </ScrollView>
@@ -172,6 +151,4 @@ const styles = StyleSheet.create({
   settingLabel: { fontFamily: fonts.medium, fontSize: 14, color: colors.text },
   settingSublabel: { fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 2 },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: colors.border },
-  verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  verifiedText: { fontFamily: fonts.bold, fontSize: 12, color: colors.success },
 });

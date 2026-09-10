@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { useCallback, useState } from 'react';
+import { Alert, FlatList, Image, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -29,10 +30,12 @@ export function TripsScreen() {
   const [loading, setLoading] = useState(Boolean(user));
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
 
   const load = useCallback(async (refresh = false) => {
     if (!user) return;
-    refresh ? setRefreshing(true) : setLoading(true);
+    if (refresh) setRefreshing(true);
+    else setLoading(true);
     setError('');
     try {
       setBookings(await bookingService.list());
@@ -42,11 +45,28 @@ export function TripsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [user]);
+  }, [t, user]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     void load();
-  }, [load]);
+  }, [load]));
+
+  const cancelBooking = (booking: Booking) => {
+    Alert.alert(t('trips.cancelTitle'), t('trips.cancelMessage', { id: booking.id }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('trips.cancelAction'),
+        style: 'destructive',
+        onPress: () => {
+          setCancellingId(booking.id);
+          void bookingService.cancel(booking.id, 'Hủy bởi khách hàng trên ứng dụng')
+            .then(() => load(true))
+            .catch((reason) => Alert.alert(t('trips.cancelFailed'), reason instanceof Error ? reason.message : t('trips.cancelFailed')))
+            .finally(() => setCancellingId(null));
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -61,14 +81,17 @@ export function TripsScreen() {
           message={t('trips.loginMessage')}
         />
       ) : loading ? <LoadingState label={t('trips.loading')} /> : (
-        <ScrollView
+        <FlatList
+          data={bookings}
+          keyExtractor={(booking) => String(booking.id)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.primary} />}
-        >
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {!bookings.length ? <EmptyState icon="calendar-outline" title={t('trips.emptyTitle')} message={t('trips.emptyMessage')} /> : null}
-          {bookings.map((booking) => (
+          ListHeaderComponent={error ? (
+            <Pressable accessibilityRole="button" onPress={() => void load()}><Text style={styles.error}>{error} · {t('common.retry')}</Text></Pressable>
+          ) : null}
+          ListEmptyComponent={<EmptyState icon={error ? 'cloud-offline-outline' : 'calendar-outline'} title={error ? t('trips.notAvailable') : t('trips.emptyTitle')} message={error ? t('common.retry') : t('trips.emptyMessage')} />}
+          renderItem={({ item: booking }) => (
             <View key={booking.id} style={styles.card}>
               {booking.property_image ? <Image source={{ uri: booking.property_image }} style={styles.image} /> : <View style={[styles.image, styles.imagePlaceholder]}><Ionicons name="bed-outline" size={30} color={colors.primary} /></View>}
               <View style={styles.cardContent}>
@@ -77,10 +100,20 @@ export function TripsScreen() {
                 <Text style={styles.location}>{booking.property_location}</Text>
                 <View style={styles.metaRow}><Ionicons name="calendar-outline" size={15} color={colors.textMuted} /><Text style={styles.meta}>{formatDate(booking.check_in)} – {formatDate(booking.check_out)}</Text></View>
                 <View style={styles.cardBottom}><Text style={styles.room}>{booking.room_type_name}</Text><Text style={styles.price}>{formatCurrency(Number(booking.total_price))}</Text></View>
+                {booking.status === 'pending' ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    disabled={cancellingId === booking.id}
+                    style={[styles.cancelButton, cancellingId === booking.id && styles.cancelButtonDisabled]}
+                    onPress={() => cancelBooking(booking)}
+                  >
+                    <Text style={styles.cancelButtonText}>{cancellingId === booking.id ? t('trips.cancelling') : t('trips.cancelAction')}</Text>
+                  </Pressable>
+                ) : null}
               </View>
             </View>
-          ))}
-        </ScrollView>
+          )}
+        />
       )}
     </SafeAreaView>
   );
@@ -108,4 +141,7 @@ const styles = StyleSheet.create({
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 13, marginTop: 13 },
   room: { flex: 1, color: colors.text, fontFamily: fonts.medium, fontSize: 12 },
   price: { color: colors.primary, fontFamily: fonts.heading, fontSize: 16 },
+  cancelButton: { alignItems: 'center', justifyContent: 'center', minHeight: 42, borderRadius: 12, borderWidth: 1, borderColor: '#e8b0ad', backgroundColor: '#fff5f4', marginTop: 13 },
+  cancelButtonDisabled: { opacity: 0.55 },
+  cancelButtonText: { color: colors.error, fontFamily: fonts.bold, fontSize: 11 },
 });

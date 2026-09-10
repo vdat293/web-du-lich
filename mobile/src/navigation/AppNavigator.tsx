@@ -4,6 +4,7 @@ import {
   NavigationContainer,
   DefaultTheme,
   createNavigationContainerRef,
+  type LinkingOptions,
 } from '@react-navigation/native';
 import {
   BottomTabBar,
@@ -11,7 +12,7 @@ import {
   createBottomTabNavigator,
 } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { colors, fonts } from '../theme';
 import { DetailsScreen } from '../screens/DetailsScreen';
@@ -24,6 +25,7 @@ import { SearchScreen } from '../screens/SearchScreen';
 import { TripsScreen } from '../screens/TripsScreen';
 import { PersonalInfoScreen } from '../screens/PersonalInfoScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
+import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
 import { SetupPinScreen } from '../screens/SetupPinScreen'; // Transaction PIN setup screen
 import { HelpCenterScreen } from '../screens/HelpCenterScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
@@ -40,6 +42,24 @@ const Tabs = createBottomTabNavigator<TabParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const TAB_TRANSITION_DURATION = 260;
 const tabTransitionEasing = Easing.bezier(0.22, 1, 0.36, 1);
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: ['aoklevart://'],
+  config: {
+    screens: {
+      Tabs: {
+        screens: {
+          Explore: 'explore',
+          Saved: 'saved',
+          Trips: 'trips',
+          Rewards: 'rewards',
+          Notifications: 'notifications',
+          Profile: 'profile',
+        },
+      },
+      Login: 'login',
+    },
+  },
+};
 
 const icons: Record<keyof TabParamList, keyof typeof Ionicons.glyphMap> = {
   Explore: 'compass',
@@ -131,12 +151,12 @@ function TabNavigator() {
 
   return (
     <Tabs.Navigator
-      detachInactiveScreens={false}
+      detachInactiveScreens
       tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,
         animation: 'none',
-        lazy: false,
+        lazy: true,
         sceneStyle: { backgroundColor: colors.surface },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
@@ -194,7 +214,7 @@ function TabNavigator() {
 }
 
 export function AppNavigator() {
-  const { markNotificationOpened, refreshNotifications } = useAuth();
+  const { locked, markNotificationOpened, refreshNotifications } = useAuth();
   const handledNotificationKeys = useRef(new Set<string>());
   const pendingPushData = useRef<Record<string, unknown> | null>(null);
 
@@ -231,10 +251,21 @@ export function AppNavigator() {
     return () => subscription.remove();
   }, [markNotificationOpened, navigateFromPushData, refreshNotifications]);
 
+  useEffect(() => {
+    if (!locked || !navigationRef.isReady()) return;
+    const currentRoute = navigationRef.getCurrentRoute();
+    if (currentRoute?.name !== 'Unlock') navigationRef.navigate('Unlock');
+  }, [locked]);
+
   return (
     <NavigationContainer
       ref={navigationRef}
+      linking={linking}
       onReady={() => {
+        if (locked && navigationRef.getCurrentRoute()?.name !== 'Unlock') {
+          navigationRef.navigate('Unlock');
+          return;
+        }
         if (!pendingPushData.current) return;
         const data = pendingPushData.current;
         pendingPushData.current = null;
@@ -252,6 +283,7 @@ export function AppNavigator() {
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
         <Stack.Screen name="Security" component={SecurityScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="SetupPin" component={SetupPinScreen} />
         <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
         <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />

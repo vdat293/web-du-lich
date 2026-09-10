@@ -9,7 +9,7 @@ import {
   TextInputKeyPressEventData,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { authService } from '../api/services';
@@ -84,6 +84,8 @@ export function LoginForm({
       lastAutoSubmittedOtp.current = code;
       void verifyOtp(code);
     }
+  // The verifier is intentionally triggered only by OTP state transitions.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, otp, submitting]);
 
   useEffect(() => {
@@ -97,6 +99,8 @@ export function LoginForm({
       lastAutoSubmittedForgotOtp.current = code;
       void verifyForgotOtp(code);
     }
+  // The verifier is intentionally triggered only by OTP state transitions.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [forgotOtp, mode, submitting]);
 
   async function requestOtp() {

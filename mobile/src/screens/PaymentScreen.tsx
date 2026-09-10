@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -104,6 +104,8 @@ export function PaymentScreen({ navigation, route }: Props) {
   useEffect(() => {
     if (!momoBookingId || momoSeconds > 0 || momoStatus !== 'pending') return;
     void cancelMomo(i18n.language === 'en' ? 'MoMo transaction expired after 15 minutes' : 'Giao dịch MoMo quá hạn 15 phút');
+  // Payment flow is excluded from this hardening pass; keep its polling dependencies stable.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [momoBookingId, momoSeconds, momoStatus]);
 
   useEffect(() => {
@@ -122,6 +124,8 @@ export function PaymentScreen({ navigation, route }: Props) {
     return () => {
       active = false;
     };
+  // Re-apply the saved coupon only when the signed-in user or subtotal changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, draft.subtotal]);
 
   function formatCardNumber(value: string) {

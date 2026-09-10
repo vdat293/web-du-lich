@@ -1,12 +1,12 @@
 import {
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +16,7 @@ import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { LoadingState } from '../components/ScreenState';
 import type { TabParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
+import { formatRelativeTime } from '../utils/date';
 
 type Props = BottomTabScreenProps<TabParamList, 'Notifications'>;
 
@@ -33,6 +34,7 @@ export function NotificationsScreen({ navigation }: Props) {
     notificationsError,
     pushPermissionStatus,
     pushRegistrationError,
+    requestPushPermission,
     refreshNotifications,
     markAllNotificationsAsRead,
     markNotificationOpened,
@@ -63,7 +65,9 @@ export function NotificationsScreen({ navigation }: Props) {
       </View>
 
       {user ? (
-        <ScrollView
+        <FlatList
+          data={notifications}
+          keyExtractor={(notif) => String(notif.id)}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.content}
           refreshControl={
@@ -73,71 +77,67 @@ export function NotificationsScreen({ navigation }: Props) {
               tintColor={colors.primary}
             />
           }
-        >
-          {permissionWarning ? (
-            <View style={styles.warningBox}>
-              <Ionicons name="notifications-off-outline" size={18} color={colors.secondary} />
-              <Text style={styles.warningText}>
-                Quyền thông báo chưa được bật. Inbox vẫn hoạt động, nhưng thiết bị này có thể không nhận push.
-              </Text>
-            </View>
-          ) : null}
-
-          {pushRegistrationError ? (
-            <View style={styles.warningBox}>
-              <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
-              <Text style={styles.warningText}>{pushRegistrationError}</Text>
-            </View>
-          ) : null}
-
-          {notificationsError ? (
-            <View style={styles.errorBox}>
-              <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
-              <Text style={styles.errorText}>{notificationsError}</Text>
-            </View>
-          ) : null}
-
-          {notificationsLoading && notifications.length === 0 ? (
-            <LoadingState label="Đang tải thông báo..." />
-          ) : notifications.length > 0 ? (
+          ListHeaderComponent={(
             <>
-              {notifications.map((notif) => (
-                <Pressable
-                  key={notif.id}
-                  style={({ pressed }) => [
-                    styles.notifItem,
-                    notif.unread && styles.notifUnread,
-                    pressed && styles.notifPressed,
-                  ]}
-                  onPress={() => void openNotification(notif.id, notif.type, notif.data?.bookingId)}
-                >
-                  <View style={styles.iconBubble}>
-                    <Ionicons name={iconForType(notif.type)} size={18} color={colors.primary} />
-                  </View>
-                  <View style={styles.notifContent}>
-                    <View style={styles.notifHeaderRow}>
-                      <Text style={styles.notifTitle} numberOfLines={2}>{notif.title}</Text>
-                      {notif.unread && <View style={styles.unreadDot} />}
-                    </View>
-                    <Text style={styles.notifBody}>{notif.body}</Text>
-                    <Text style={styles.notifTime}>{notif.time}</Text>
+              {permissionWarning ? (
+                <Pressable accessibilityRole="button" style={styles.warningBox} onPress={() => void requestPushPermission()}>
+                  <Ionicons name="notifications-off-outline" size={18} color={colors.secondary} />
+                  <View style={styles.warningContent}>
+                    <Text style={styles.warningText}>{t('notifications.permissionWarning')}</Text>
+                    <Text style={styles.warningAction}>{t('notifications.enablePush')}</Text>
                   </View>
                 </Pressable>
-              ))}
-              {hasUnread && (
-                <Pressable style={styles.markReadButton} onPress={() => void markAllNotificationsAsRead()}>
-                  <Ionicons name="checkmark-done" size={16} color={colors.primary} />
-                  <Text style={styles.markReadText}>{t('notifications.markAllRead')}</Text>
+              ) : null}
+              {pushRegistrationError ? (
+                <View style={styles.warningBox}>
+                  <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
+                  <Text style={styles.warningText}>{pushRegistrationError}</Text>
+                </View>
+              ) : null}
+              {notificationsError ? (
+                <Pressable accessibilityRole="button" style={styles.errorBox} onPress={() => void refreshNotifications()}>
+                  <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
+                  <Text style={styles.errorText}>{notificationsError} · {t('common.retry')}</Text>
                 </Pressable>
-              )}
+              ) : null}
+              {notificationsLoading && notifications.length === 0 ? <LoadingState label={t('notifications.loading')} /> : null}
             </>
-          ) : (
+          )}
+          renderItem={({ item: notif }) => (
+            <Pressable
+              style={({ pressed }) => [
+                styles.notifItem,
+                notif.unread && styles.notifUnread,
+                pressed && styles.notifPressed,
+              ]}
+              onPress={() => void openNotification(notif.id, notif.type, notif.data?.bookingId)}
+            >
+              <View style={styles.iconBubble}>
+                <Ionicons name={iconForType(notif.type)} size={18} color={colors.primary} />
+              </View>
+              <View style={styles.notifContent}>
+                <View style={styles.notifHeaderRow}>
+                  <Text style={styles.notifTitle} numberOfLines={2}>{notif.title}</Text>
+                  {notif.unread && <View style={styles.unreadDot} />}
+                </View>
+                <Text style={styles.notifBody}>{notif.body}</Text>
+                <Text style={styles.notifTime}>{formatRelativeTime(notif.created_at)}</Text>
+              </View>
+            </Pressable>
+          )}
+          ListFooterComponent={hasUnread ? (
+            <Pressable accessibilityRole="button" style={styles.markReadButton} onPress={() => void markAllNotificationsAsRead()}>
+              <Ionicons name="checkmark-done" size={16} color={colors.primary} />
+              <Text style={styles.markReadText}>{t('notifications.markAllRead')}</Text>
+            </Pressable>
+          ) : null}
+          ListEmptyComponent={!notificationsLoading ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="notifications-off-outline" size={48} color={colors.outline} />
               <Text style={styles.emptyText}>{t('notifications.none')}</Text>
             </View>
-          )}
-        </ScrollView>
+          ) : null}
+        />
       ) : (
         <AuthPlaceholder
           icon="notifications-outline"
@@ -180,6 +180,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   warningText: { flex: 1, fontFamily: fonts.medium, fontSize: 12, color: colors.primary, lineHeight: 17 },
+  warningContent: { flex: 1 },
+  warningAction: { fontFamily: fonts.bold, fontSize: 11, color: colors.secondary, marginTop: 4 },
   errorBox: {
     flexDirection: 'row',
     gap: 10,

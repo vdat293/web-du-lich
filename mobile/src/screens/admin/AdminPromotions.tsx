@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Modal,
@@ -11,47 +12,39 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { getStoredValue, setStoredValue } from '../../storage';
+import {
+  adminService,
+  type AdminCoupon,
+  type AdminCouponPayload,
+} from '../../api/services';
 import { colors, fonts } from '../../theme';
+import { getAppLocale } from '../../utils/date';
 
-type PromotionStatus = 'draft' | 'active' | 'paused' | 'expired';
+type PromotionStatus = 'upcoming' | 'active' | 'exhausted' | 'expired';
 type DiscountType = 'percent' | 'fixed';
-type Audience = 'all' | 'new_users' | 'members';
 
 type Promotion = {
-  id: string;
-  name: string;
+  id: number;
   code: string;
   description: string;
   discountType: DiscountType;
   discountValue: number;
   minOrderAmount: number;
-  maxDiscountAmount: number;
-  usageLimit: number;
+  usageLimit: number | null;
   usedCount: number;
-  perUserLimit: number;
   startDate: string;
   endDate: string;
-  audience: Audience;
   status: PromotionStatus;
 };
-
-const STORAGE_KEY = 'aoklevart_admin_promotions_draft_v1';
 
 const STATUS_FILTERS: Array<{ key: '' | PromotionStatus; label: string }> = [
   { key: '', label: 'Tất cả' },
   { key: 'active', label: 'Đang chạy' },
-  { key: 'draft', label: 'Bản nháp' },
-  { key: 'paused', label: 'Tạm dừng' },
+  { key: 'upcoming', label: 'Sắp diễn ra' },
+  { key: 'exhausted', label: 'Hết lượt' },
   { key: 'expired', label: 'Hết hạn' },
-];
-
-const AUDIENCES: Array<{ key: Audience; label: string }> = [
-  { key: 'all', label: 'Tất cả khách hàng' },
-  { key: 'new_users', label: 'Khách hàng mới' },
-  { key: 'members', label: 'Thành viên' },
 ];
 
 function dateAfter(days: number) {
@@ -60,70 +53,59 @@ function dateAfter(days: number) {
   return date.toISOString().slice(0, 10);
 }
 
-const SAMPLE_PROMOTIONS: Promotion[] = [
-  {
-    id: 'sample-welcome',
-    name: 'Chào mừng thành viên mới',
-    code: 'WELCOME15',
-    description: 'Ưu đãi cho lần đặt phòng đầu tiên trên ứng dụng.',
-    discountType: 'percent',
-    discountValue: 15,
-    minOrderAmount: 1_000_000,
-    maxDiscountAmount: 500_000,
-    usageLimit: 500,
-    usedCount: 128,
-    perUserLimit: 1,
-    startDate: dateAfter(-15),
-    endDate: dateAfter(45),
-    audience: 'new_users',
-    status: 'active',
-  },
-  {
-    id: 'sample-summer',
-    name: 'Ưu đãi mùa hè',
-    code: 'SUMMER500',
-    description: 'Giảm trực tiếp cho đơn đặt phòng mùa hè.',
-    discountType: 'fixed',
-    discountValue: 500_000,
-    minOrderAmount: 3_000_000,
-    maxDiscountAmount: 500_000,
-    usageLimit: 300,
-    usedCount: 0,
-    perUserLimit: 1,
-    startDate: dateAfter(5),
-    endDate: dateAfter(75),
-    audience: 'all',
-    status: 'draft',
-  },
-];
+function toPromotion(coupon: AdminCoupon): Promotion {
+  const today = new Date().toISOString().slice(0, 10);
+  let status: PromotionStatus = 'active';
+  if (coupon.valid_until < today) status = 'expired';
+  else if (coupon.valid_from > today) status = 'upcoming';
+  else if (coupon.max_uses != null && coupon.used_count >= coupon.max_uses) status = 'exhausted';
+
+  return {
+    id: coupon.id,
+    code: coupon.code,
+    description: coupon.description || '',
+    discountType: coupon.discount_type,
+    discountValue: coupon.discount_value,
+    minOrderAmount: coupon.min_order_amount || 0,
+    usageLimit: coupon.max_uses,
+    usedCount: coupon.used_count,
+    startDate: coupon.valid_from,
+    endDate: coupon.valid_until,
+    status,
+  };
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Không thể hoàn tất yêu cầu.';
+}
 
 export function AdminPromotions() {
-  const [promotions, setPromotions] = useState<Promotion[]>(SAMPLE_PROMOTIONS);
-  const [loaded, setLoaded] = useState(false);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<'' | PromotionStatus>('');
   const [editing, setEditing] = useState<Promotion | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    void getStoredValue(STORAGE_KEY)
-      .then((stored) => {
-        if (stored) setPromotions(JSON.parse(stored) as Promotion[]);
-      })
-      .catch(() => undefined)
-      .finally(() => setLoaded(true));
-  }, []);
+  const loadPromotions = async () => {
+    setLoadError('');
+    try {
+      setPromotions((await adminService.getCoupons()).map(toPromotion));
+    } catch (error) {
+      setLoadError(errorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    if (!loaded) return;
-    void setStoredValue(STORAGE_KEY, JSON.stringify(promotions));
-  }, [loaded, promotions]);
+  useEffect(() => { void loadPromotions(); }, []);
 
   const filtered = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     return promotions.filter((promotion) => {
       const matchesSearch = !normalizedSearch
-        || promotion.name.toLowerCase().includes(normalizedSearch)
+        || promotion.description.toLowerCase().includes(normalizedSearch)
         || promotion.code.toLowerCase().includes(normalizedSearch);
       return matchesSearch && (!status || promotion.status === status);
     });
@@ -139,13 +121,10 @@ export function AdminPromotions() {
     setModalVisible(true);
   };
 
-  const savePromotion = (promotion: Promotion) => {
-    setPromotions((current) => {
-      const exists = current.some((item) => item.id === promotion.id);
-      return exists
-        ? current.map((item) => item.id === promotion.id ? promotion : item)
-        : [promotion, ...current];
-    });
+  const savePromotion = async (payload: AdminCouponPayload) => {
+    if (editing) await adminService.updateCoupon(editing.id, payload);
+    else await adminService.createCoupon(payload);
+    await loadPromotions();
     setModalVisible(false);
     setEditing(null);
   };
@@ -156,7 +135,15 @@ export function AdminPromotions() {
       `Bạn có chắc muốn xóa mã ${promotion.code}?`,
       [
         { text: 'Hủy', style: 'cancel' },
-        { text: 'Xóa', style: 'destructive', onPress: () => setPromotions((current) => current.filter((item) => item.id !== promotion.id)) },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            void adminService.deleteCoupon(promotion.id)
+              .then(loadPromotions)
+              .catch((error) => Alert.alert('Không thể xóa', errorMessage(error)));
+          },
+        },
       ],
     );
   };
@@ -179,17 +166,9 @@ export function AdminPromotions() {
           </Pressable>
         </View>
 
-        <View style={styles.scaffoldNotice}>
-          <Ionicons name="construct-outline" size={20} color={colors.secondary} />
-          <View style={styles.flexText}>
-            <Text style={styles.noticeTitle}>Module đang dùng dữ liệu cục bộ</Text>
-            <Text style={styles.noticeText}>Đã có đầy đủ danh sách và CRUD. Khi server có API khuyến mãi, chỉ cần thay lớp lưu trữ.</Text>
-          </View>
-        </View>
-
         <View style={styles.summaryRow}>
           <SummaryItem label="Đang chạy" value={promotions.filter((item) => item.status === 'active').length} color={colors.success} />
-          <SummaryItem label="Bản nháp" value={promotions.filter((item) => item.status === 'draft').length} color="#6d5aac" />
+          <SummaryItem label="Sắp diễn ra" value={promotions.filter((item) => item.status === 'upcoming').length} color="#6d5aac" />
           <SummaryItem label="Lượt dùng" value={promotions.reduce((sum, item) => sum + item.usedCount, 0)} color={colors.secondary} />
         </View>
 
@@ -198,7 +177,7 @@ export function AdminPromotions() {
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Tìm tên hoặc mã khuyến mãi..."
+            placeholder="Tìm mô tả hoặc mã khuyến mãi..."
             placeholderTextColor={colors.outline}
             autoCapitalize="characters"
             style={styles.searchInput}
@@ -218,18 +197,20 @@ export function AdminPromotions() {
           ))}
         </ScrollView>
 
-        <View style={styles.promotionList}>
+        {loading ? <ActivityIndicator style={styles.loading} color={colors.primary} /> : null}
+        {loadError ? (
+          <Pressable style={styles.errorBox} onPress={() => { setLoading(true); void loadPromotions(); }}>
+            <Text style={styles.formError}>{loadError}</Text>
+            <Text style={styles.retryText}>Chạm để thử lại</Text>
+          </Pressable>
+        ) : null}
+        {!loading && !loadError ? <View style={styles.promotionList}>
           {filtered.map((promotion) => (
             <PromotionCard
               key={promotion.id}
               promotion={promotion}
               onEdit={() => openEdit(promotion)}
               onDelete={() => deletePromotion(promotion)}
-              onToggleStatus={() => {
-                setPromotions((current) => current.map((item) => item.id === promotion.id
-                  ? { ...item, status: item.status === 'active' ? 'paused' : 'active' }
-                  : item));
-              }}
             />
           ))}
           {!filtered.length ? (
@@ -239,7 +220,7 @@ export function AdminPromotions() {
               <Text style={styles.emptyMessage}>Tạo chương trình mới hoặc thay đổi bộ lọc.</Text>
             </View>
           ) : null}
-        </View>
+        </View> : null}
       </ScrollView>
 
       <PromotionFormModal
@@ -260,7 +241,7 @@ function SummaryItem({ label, value, color }: { label: string; value: number; co
   return (
     <View style={styles.summaryItem}>
       <View style={[styles.summaryDot, { backgroundColor: color }]} />
-      <Text style={styles.summaryValue}>{value.toLocaleString('vi-VN')}</Text>
+      <Text style={styles.summaryValue}>{value.toLocaleString(getAppLocale())}</Text>
       <Text style={styles.summaryLabel}>{label}</Text>
     </View>
   );
@@ -270,14 +251,12 @@ function PromotionCard({
   promotion,
   onEdit,
   onDelete,
-  onToggleStatus,
 }: {
   promotion: Promotion;
   onEdit: () => void;
   onDelete: () => void;
-  onToggleStatus: () => void;
 }) {
-  const usedPercentage = promotion.usageLimit > 0
+  const usedPercentage = promotion.usageLimit != null && promotion.usageLimit > 0
     ? Math.min(100, Math.round((promotion.usedCount / promotion.usageLimit) * 100))
     : 0;
   const statusTheme = getStatusTheme(promotion.status);
@@ -287,7 +266,6 @@ function PromotionCard({
       <View style={styles.cardTopRow}>
         <View style={styles.promoIcon}><Ionicons name="ticket-outline" size={21} color={colors.secondary} /></View>
         <View style={styles.flexText}>
-          <Text style={styles.promotionName} numberOfLines={1}>{promotion.name}</Text>
           <Text style={styles.promotionCode}>{promotion.code}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusTheme.background }]}>
@@ -315,8 +293,7 @@ function PromotionCard({
 
       <View style={styles.metaGrid}>
         <Meta icon="calendar-outline" text={`${formatDate(promotion.startDate)} - ${formatDate(promotion.endDate)}`} />
-        <Meta icon="people-outline" text={AUDIENCES.find((item) => item.key === promotion.audience)?.label || promotion.audience} />
-        <Meta icon="person-outline" text={`${promotion.perUserLimit} lượt / người`} />
+        <Meta icon="people-outline" text="Áp dụng theo điều kiện coupon trên hệ thống" />
       </View>
 
       <View style={styles.usageHeader}>
@@ -328,12 +305,8 @@ function PromotionCard({
       </View>
 
       <View style={styles.cardActions}>
-        <Pressable style={styles.toggleButton} onPress={onToggleStatus}>
-          <Ionicons name={promotion.status === 'active' ? 'pause-outline' : 'play-outline'} size={16} color={colors.primary} />
-          <Text style={styles.toggleButtonText}>{promotion.status === 'active' ? 'Tạm dừng' : 'Kích hoạt'}</Text>
-        </Pressable>
-        <Pressable style={styles.iconButton} onPress={onEdit}><Ionicons name="create-outline" size={17} color="#3276d3" /></Pressable>
-        <Pressable style={styles.deleteButton} onPress={onDelete}><Ionicons name="trash-outline" size={17} color={colors.error} /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Sửa mã ${promotion.code}`} style={styles.iconButton} onPress={onEdit}><Ionicons name="create-outline" size={17} color="#3276d3" /></Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={`Xóa mã ${promotion.code}`} style={styles.deleteButton} onPress={onDelete}><Ionicons name="trash-outline" size={17} color={colors.error} /></Pressable>
       </View>
     </View>
   );
@@ -357,30 +330,34 @@ function PromotionFormModal({
   visible: boolean;
   promotion: Promotion | null;
   onClose: () => void;
-  onSave: (promotion: Promotion) => void;
+  onSave: (payload: AdminCouponPayload) => Promise<void>;
 }) {
-  const [form, setForm] = useState<Promotion>(promotion || {
-    id: `promotion-${Date.now()}`,
-    name: '',
+  const [form, setForm] = useState({
     code: '',
     description: '',
-    discountType: 'percent',
+    discountType: 'percent' as DiscountType,
     discountValue: 10,
     minOrderAmount: 0,
-    maxDiscountAmount: 0,
     usageLimit: 100,
-    usedCount: 0,
-    perUserLimit: 1,
     startDate: dateAfter(0),
     endDate: dateAfter(30),
-    audience: 'all',
-    status: 'draft',
+    ...(promotion ? {
+      code: promotion.code,
+      description: promotion.description,
+      discountType: promotion.discountType,
+      discountValue: promotion.discountValue,
+      minOrderAmount: promotion.minOrderAmount,
+      usageLimit: promotion.usageLimit || 0,
+      startDate: promotion.startDate,
+      endDate: promotion.endDate,
+    } : {}),
   });
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const submit = () => {
-    if (!form.name.trim() || !form.code.trim()) {
-      setError('Tên chương trình và mã khuyến mãi là bắt buộc.');
+  const submit = async () => {
+    if (!/^[A-Z0-9_-]{3,50}$/.test(form.code.trim().toUpperCase())) {
+      setError('Mã cần 3-50 ký tự A-Z, 0-9, gạch ngang hoặc gạch dưới.');
       return;
     }
     if (form.discountValue <= 0) {
@@ -399,7 +376,24 @@ function PromotionFormModal({
       setError('Ngày kết thúc phải sau ngày bắt đầu.');
       return;
     }
-    onSave({ ...form, name: form.name.trim(), code: form.code.trim().toUpperCase(), description: form.description.trim() });
+    setError('');
+    setSaving(true);
+    try {
+      await onSave({
+        code: form.code.trim().toUpperCase(),
+        description: form.description.trim() || null,
+        discount_type: form.discountType,
+        discount_value: form.discountValue,
+        min_order_amount: form.minOrderAmount || null,
+        max_uses: form.usageLimit || null,
+        valid_from: form.startDate,
+        valid_until: form.endDate,
+      });
+    } catch (saveError) {
+      setError(errorMessage(saveError));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -416,7 +410,6 @@ function PromotionFormModal({
           </View>
 
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.formContent}>
-            <FormField label="Tên chương trình *" value={form.name} onChangeText={(name) => setForm({ ...form, name })} placeholder="Ưu đãi mùa hè" />
             <FormField label="Mã khuyến mãi *" value={form.code} onChangeText={(code) => setForm({ ...form, code: code.toUpperCase() })} placeholder="SUMMER20" autoCapitalize="characters" />
             <FormField label="Mô tả" value={form.description} onChangeText={(description) => setForm({ ...form, description })} placeholder="Mô tả ngắn về chương trình" multiline numberOfLines={3} textAlignVertical="top" inputStyle={styles.textArea} />
 
@@ -430,41 +423,19 @@ function PromotionFormModal({
               <NumberField label="Mức giảm *" value={form.discountValue} onChange={(discountValue) => setForm({ ...form, discountValue })} />
               <NumberField label="Đơn tối thiểu" value={form.minOrderAmount} onChange={(minOrderAmount) => setForm({ ...form, minOrderAmount })} />
             </View>
-            {form.discountType === 'percent' ? (
-              <NumberField label="Giảm tối đa" value={form.maxDiscountAmount} onChange={(maxDiscountAmount) => setForm({ ...form, maxDiscountAmount })} />
-            ) : null}
-
-            <View style={styles.twoColumns}>
-              <NumberField label="Tổng lượt sử dụng" value={form.usageLimit} onChange={(usageLimit) => setForm({ ...form, usageLimit })} />
-              <NumberField label="Lượt / người" value={form.perUserLimit} onChange={(perUserLimit) => setForm({ ...form, perUserLimit })} />
-            </View>
+            <NumberField label="Tổng lượt sử dụng (0 = không giới hạn)" value={form.usageLimit} onChange={(usageLimit) => setForm({ ...form, usageLimit })} />
 
             <View style={styles.twoColumns}>
               <FormField label="Bắt đầu" value={form.startDate} onChangeText={(startDate) => setForm({ ...form, startDate })} placeholder="YYYY-MM-DD" />
               <FormField label="Kết thúc" value={form.endDate} onChangeText={(endDate) => setForm({ ...form, endDate })} placeholder="YYYY-MM-DD" />
             </View>
 
-            <Text style={styles.fieldLabel}>ĐỐI TƯỢNG ÁP DỤNG</Text>
-            <View style={styles.optionList}>
-              {AUDIENCES.map((item) => (
-                <Pressable key={item.key} style={[styles.optionRow, form.audience === item.key && styles.activeOptionRow]} onPress={() => setForm({ ...form, audience: item.key })}>
-                  <Ionicons name={form.audience === item.key ? 'radio-button-on' : 'radio-button-off'} size={18} color={form.audience === item.key ? colors.primary : colors.outline} />
-                  <Text style={styles.optionText}>{item.label}</Text>
-                </Pressable>
-              ))}
-            </View>
-
-            <Text style={styles.fieldLabel}>TRẠNG THÁI</Text>
-            <View style={styles.segmentedRow}>
-              <SegmentButton label="Bản nháp" active={form.status === 'draft'} onPress={() => setForm({ ...form, status: 'draft' })} />
-              <SegmentButton label="Kích hoạt" active={form.status === 'active'} onPress={() => setForm({ ...form, status: 'active' })} />
-              <SegmentButton label="Tạm dừng" active={form.status === 'paused'} onPress={() => setForm({ ...form, status: 'paused' })} />
-            </View>
-
             {error ? <Text style={styles.formError}>{error}</Text> : null}
             <View style={styles.modalActions}>
-              <Pressable style={styles.cancelButton} onPress={onClose}><Text style={styles.cancelButtonText}>Hủy</Text></Pressable>
-              <Pressable style={styles.saveButton} onPress={submit}><Text style={styles.saveButtonText}>Lưu khuyến mãi</Text></Pressable>
+              <Pressable disabled={saving} style={styles.cancelButton} onPress={onClose}><Text style={styles.cancelButtonText}>Hủy</Text></Pressable>
+              <Pressable disabled={saving} style={[styles.saveButton, saving && styles.disabledButton]} onPress={() => void submit()}>
+                {saving ? <ActivityIndicator color={colors.white} /> : <Text style={styles.saveButtonText}>Lưu khuyến mãi</Text>}
+              </Pressable>
             </View>
           </ScrollView>
         </View>
@@ -503,9 +474,10 @@ function SegmentButton({ label, active, onPress }: { label: string; active: bool
 
 function getStatusTheme(status: PromotionStatus) {
   if (status === 'active') return { label: 'ĐANG CHẠY', background: '#e3f4e9', text: '#24633b' };
-  if (status === 'paused') return { label: 'TẠM DỪNG', background: '#fff1d8', text: '#8b5b12' };
+  if (status === 'upcoming') return { label: 'SẮP DIỄN RA', background: '#eee8fb', text: '#6742a2' };
+  if (status === 'exhausted') return { label: 'HẾT LƯỢT', background: '#fff1d8', text: '#8b5b12' };
   if (status === 'expired') return { label: 'HẾT HẠN', background: '#fde8e8', text: '#9d2929' };
-  return { label: 'BẢN NHÁP', background: '#eee8fb', text: '#6742a2' };
+  return { label: 'KHÔNG XÁC ĐỊNH', background: '#eee8fb', text: '#6742a2' };
 }
 
 function formatCurrency(value: number) {
@@ -514,7 +486,7 @@ function formatCurrency(value: number) {
 
 function formatDate(value: string) {
   const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString('vi-VN');
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(getAppLocale());
 }
 
 const styles = StyleSheet.create({
@@ -536,6 +508,9 @@ const styles = StyleSheet.create({
   summaryLabel: { color: colors.textMuted, fontFamily: fonts.medium, fontSize: 8, marginTop: 2 },
   searchBox: { height: 48, flexDirection: 'row', alignItems: 'center', gap: 9, borderRadius: 14, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, marginTop: 14 },
   searchInput: { flex: 1, color: colors.text, fontFamily: fonts.body, fontSize: 12 },
+  loading: { marginTop: 48 },
+  errorBox: { alignItems: 'center', borderRadius: 14, borderWidth: 1, borderColor: '#f0b7b2', backgroundColor: '#fff0ef', padding: 16, marginTop: 14 },
+  retryText: { color: colors.primary, fontFamily: fonts.bold, fontSize: 10, marginTop: 8 },
   filters: { gap: 7, paddingVertical: 12 },
   filterChip: { borderRadius: 99, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 13, paddingVertical: 7 },
   activeFilterChip: { backgroundColor: colors.primary, borderColor: colors.primary },
@@ -598,5 +573,6 @@ const styles = StyleSheet.create({
   cancelButton: { flex: 1, height: 48, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
   cancelButtonText: { color: colors.text, fontFamily: fonts.bold, fontSize: 11 },
   saveButton: { flex: 1.5, height: 48, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  disabledButton: { opacity: 0.55 },
   saveButtonText: { color: colors.white, fontFamily: fonts.bold, fontSize: 11 },
 });

@@ -2,27 +2,19 @@ import { useEffect } from 'react';
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import {
-  DMSans_400Regular,
-  DMSans_500Medium,
-  DMSans_700Bold,
-  useFonts as useDmSans,
-} from '@expo-google-fonts/dm-sans';
-import {
-  PlayfairDisplay_600SemiBold,
-  PlayfairDisplay_700Bold,
-  useFonts as usePlayfair,
-} from '@expo-google-fonts/playfair-display';
+import { useFonts } from 'expo-font';
+import { DMSans_400Regular } from '@expo-google-fonts/dm-sans/400Regular';
+import { DMSans_500Medium } from '@expo-google-fonts/dm-sans/500Medium';
+import { DMSans_700Bold } from '@expo-google-fonts/dm-sans/700Bold';
 
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { FavoritesProvider } from './src/context/FavoritesContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { LoadingState } from './src/components/ScreenState';
+import { AppErrorBoundary } from './src/components/AppErrorBoundary';
 import { getStoredValue } from './src/storage';
 import { colors } from './src/theme';
-import { useAuth } from './src/context/AuthContext';
 import i18n from './src/i18n';
-import './src/i18n';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -39,17 +31,12 @@ function AppContent() {
 }
 
 export default function App() {
-  const [dmLoaded] = useDmSans({
+  const [fontsLoaded] = useFonts({
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_700Bold,
   });
-  const [playfairLoaded] = usePlayfair({
-    PlayfairDisplay_600SemiBold,
-    PlayfairDisplay_700Bold,
-  });
-
-  const ready = dmLoaded && playfairLoaded;
+  const ready = fontsLoaded;
 
   useEffect(() => {
     if (ready) {
@@ -70,11 +57,13 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <FavoritesProvider>
-        <StatusBar style="dark" />
-        <AppContent />
-      </FavoritesProvider>
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <FavoritesProvider>
+          <StatusBar style="dark" />
+          <AppContent />
+        </FavoritesProvider>
+      </AuthProvider>
+    </AppErrorBoundary>
   );
 }

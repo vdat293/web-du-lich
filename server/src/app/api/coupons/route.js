@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import db from '../../../lib/db';
+import { verifyAdmin } from '../../../lib/auth';
 
 // GET: Lấy danh sách coupon (admin)
 // POST: Tạo coupon mới (admin)
@@ -45,7 +46,13 @@ export async function GET(req) {
             });
         }
 
-        // Lấy tất cả coupon (cho admin)
+        // Danh sách đầy đủ chỉ dành cho admin. Tra cứu một mã ở
+        // nhánh trên vẫn được phép cho luồng đặt chỗ công khai.
+        const authResult = await verifyAdmin(req);
+        if (authResult.error) {
+            return NextResponse.json({ message: authResult.error }, { status: authResult.status });
+        }
+
         const [coupons] = await db.execute(`
             SELECT * FROM coupons ORDER BY created_at DESC
         `);
@@ -59,6 +66,11 @@ export async function GET(req) {
 
 export async function POST(req) {
     try {
+        const authResult = await verifyAdmin(req);
+        if (authResult.error) {
+            return NextResponse.json({ message: authResult.error }, { status: authResult.status });
+        }
+
         const body = await req.json();
         const { code, discount_type, discount_value, min_order_amount, max_uses, valid_from, valid_until, description } = body;
 
@@ -84,7 +96,7 @@ export async function POST(req) {
         }, { status: 201 });
     } catch (err) {
         console.error('Lỗi khi tạo coupon:', err);
-        return NextResponse.json({ message: 'Lỗi server!', error: String(err) }, { status: 500 });
+        return NextResponse.json({ message: 'Lỗi server!' }, { status: 500 });
     }
 }
 
