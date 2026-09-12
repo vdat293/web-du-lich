@@ -25,10 +25,30 @@ import { resolveNotificationTarget } from '../utils/notificationRouting';
 
 type Props = BottomTabScreenProps<TabParamList, 'Notifications'>;
 
-function iconForType(type: string): keyof typeof Ionicons.glyphMap {
-  if (type.includes('booking')) return 'calendar';
-  if (type.includes('broadcast') || type.includes('promotion')) return 'megaphone';
-  return 'notifications';
+function visualForNotification(type: string) {
+  const normalized = type.toLowerCase();
+  if (normalized.includes('booking')) {
+    return {
+      icon: 'calendar' as const,
+      iconColor: colors.primary,
+      iconBackground: '#e4f2f1',
+      borderColor: '#d5e9e7',
+    };
+  }
+  if (normalized.includes('broadcast') || normalized.includes('promotion')) {
+    return {
+      icon: 'megaphone' as const,
+      iconColor: colors.secondary,
+      iconBackground: '#fff3d6',
+      borderColor: '#f1e3ba',
+    };
+  }
+  return {
+    icon: 'notifications' as const,
+    iconColor: colors.primary,
+    iconBackground: '#edf0ef',
+    borderColor: colors.border,
+  };
 }
 
 export function NotificationsScreen({ navigation }: Props) {
@@ -43,6 +63,7 @@ export function NotificationsScreen({ navigation }: Props) {
   } = useAuth();
   const { t } = useTranslation();
   const hasUnread = notifications.some((n) => n.unread);
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
   useFocusEffect(
     useCallback(() => {
@@ -100,6 +121,19 @@ export function NotificationsScreen({ navigation }: Props) {
           }
           ListHeaderComponent={(
             <>
+              <View style={styles.overviewCard}>
+                <View style={styles.overviewIcon}>
+                  <Ionicons name="sparkles-outline" size={22} color={colors.secondary} />
+                </View>
+                <View style={styles.overviewCopy}>
+                  <Text style={styles.overviewLabel}>{t('notifications.inboxLabel')}</Text>
+                  <Text style={styles.overviewSubtitle}>{t('notifications.subtitle')}</Text>
+                </View>
+                <View style={styles.unreadSummary}>
+                  <Text style={styles.unreadSummaryCount}>{unreadCount}</Text>
+                  <Text style={styles.unreadSummaryLabel}>{t('notifications.unreadShort')}</Text>
+                </View>
+              </View>
               {notificationsError ? (
                 <Pressable accessibilityRole="button" style={styles.errorBox} onPress={() => void refreshNotifications()}>
                   <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
@@ -110,26 +144,44 @@ export function NotificationsScreen({ navigation }: Props) {
             </>
           )}
           renderItem={({ item: notif }) => (
-            <Pressable
-              style={({ pressed }) => [
-                styles.notifItem,
-                notif.unread && styles.notifUnread,
-                pressed && styles.notifPressed,
-              ]}
-              onPress={() => void openNotification(notif)}
-            >
-              <View style={styles.iconBubble}>
-                <Ionicons name={iconForType(notif.type)} size={18} color={colors.primary} />
-              </View>
-              <View style={styles.notifContent}>
-                <View style={styles.notifHeaderRow}>
-                  <Text style={styles.notifTitle} numberOfLines={2}>{notif.title}</Text>
-                  {notif.unread && <View style={styles.unreadDot} />}
-                </View>
-                <Text style={styles.notifBody}>{notif.body}</Text>
-                <Text style={styles.notifTime}>{formatRelativeTime(notif.created_at)}</Text>
-              </View>
-            </Pressable>
+            (() => {
+              const visual = visualForNotification(notif.type);
+              return (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.notifItem,
+                    { borderColor: notif.unread ? visual.borderColor : colors.border },
+                    notif.unread && styles.notifUnread,
+                    pressed && styles.notifPressed,
+                  ]}
+                  onPress={() => void openNotification(notif)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${notif.title}. ${notif.body}`}
+                >
+                  <View style={[styles.iconBubble, { backgroundColor: visual.iconBackground }]}>
+                    <Ionicons name={visual.icon} size={18} color={visual.iconColor} />
+                  </View>
+                  <View style={styles.notifContent}>
+                    <View style={styles.notifHeaderRow}>
+                      <Text style={styles.notifTitle} numberOfLines={2}>{notif.title}</Text>
+                      {notif.unread ? <View style={styles.unreadDot} /> : null}
+                    </View>
+                    <Text style={styles.notifBody} numberOfLines={3}>{notif.body}</Text>
+                    <View style={styles.notifMetaRow}>
+                      <View style={styles.timeRow}>
+                        <Ionicons name="time-outline" size={12} color={colors.textMuted} />
+                        <Text style={styles.notifTime}>{formatRelativeTime(notif.created_at)}</Text>
+                      </View>
+                      {notif.unread ? (
+                        <View style={styles.newBadge}>
+                          <Text style={styles.newBadgeText}>{t('notifications.newLabel')}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })()
           )}
           ListFooterComponent={hasUnread ? (
             <Pressable accessibilityRole="button" style={styles.markReadButton} onPress={() => void markAllNotificationsAsRead()}>
@@ -176,7 +228,35 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLow,
   },
   headerActionPlaceholder: { width: 36, height: 36 },
-  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 105 },
+  content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 105 },
+  overviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 86,
+    padding: 14,
+    borderRadius: 20,
+    backgroundColor: colors.primary,
+    marginBottom: 16,
+    shadowColor: colors.primary,
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 7 },
+    elevation: 5,
+  },
+  overviewIcon: {
+    width: 46,
+    height: 46,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 16,
+    backgroundColor: colors.secondaryFixed,
+  },
+  overviewCopy: { flex: 1, paddingHorizontal: 12 },
+  overviewLabel: { color: colors.white, fontFamily: fonts.bold, fontSize: 14 },
+  overviewSubtitle: { color: 'rgba(255,255,255,0.68)', fontFamily: fonts.body, fontSize: 11, lineHeight: 16, marginTop: 3 },
+  unreadSummary: { alignItems: 'center', minWidth: 48, paddingVertical: 4 },
+  unreadSummaryCount: { color: colors.secondaryFixed, fontFamily: fonts.display, fontSize: 22, lineHeight: 24 },
+  unreadSummaryLabel: { color: 'rgba(255,255,255,0.7)', fontFamily: fonts.medium, fontSize: 9, marginTop: 2 },
   errorBox: {
     flexDirection: 'row',
     gap: 10,
@@ -186,20 +266,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ffd1d1',
     marginBottom: 12,
+    shadowColor: colors.error,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
   },
   errorText: { flex: 1, fontFamily: fonts.medium, fontSize: 12, color: colors.error, lineHeight: 17 },
   notifItem: {
-    minHeight: 92,
+    minHeight: 98,
     flexDirection: 'row',
     gap: 12,
     padding: 14,
     borderRadius: 14,
-    backgroundColor: colors.surfaceLow,
+    backgroundColor: colors.white,
     marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  notifUnread: { backgroundColor: '#f0f9f9', borderColor: '#d0eceb' },
+  notifUnread: { backgroundColor: '#f3fbfa' },
   notifPressed: { opacity: 0.82 },
   iconBubble: {
     width: 38,
@@ -207,7 +292,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surfaceLow,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -215,8 +300,12 @@ const styles = StyleSheet.create({
   notifHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start', marginBottom: 4 },
   notifTitle: { flex: 1, fontFamily: fonts.bold, fontSize: 14, color: colors.primary, lineHeight: 19 },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 5 },
-  notifBody: { fontFamily: fonts.body, fontSize: 13, color: colors.textSoft, lineHeight: 18 },
-  notifTime: { fontFamily: fonts.body, fontSize: 11, color: colors.textMuted, marginTop: 6 },
+  notifBody: { fontFamily: fonts.body, fontSize: 13, color: colors.textSoft, lineHeight: 18, marginTop: 1 },
+  notifMetaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 8 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  notifTime: { fontFamily: fonts.body, fontSize: 11, color: colors.textMuted },
+  newBadge: { borderRadius: 999, backgroundColor: colors.secondaryFixed, paddingHorizontal: 8, paddingVertical: 3 },
+  newBadgeText: { color: colors.secondary, fontFamily: fonts.bold, fontSize: 9 },
   markReadButton: {
     height: 48,
     flexDirection: 'row',

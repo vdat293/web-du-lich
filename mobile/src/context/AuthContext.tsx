@@ -7,6 +7,7 @@ import { authService, notificationService, type AppNotification } from '../api/s
 import { getStoredValue, removeStoredValue, setStoredValue } from '../storage';
 import type { User } from '../types';
 import { formatRelativeTime } from '../utils/date';
+import { localizeNotification } from '../utils/notificationText';
 
 export type NotificationItem = AppNotification & {
   time: string;
@@ -49,9 +50,10 @@ async function getBiometricAvailability() {
 }
 
 function normalizeNotification(notification: AppNotification): NotificationItem {
+  const localized = localizeNotification(notification);
   return {
-    ...notification,
-    time: formatRelativeTime(notification.created_at),
+    ...localized,
+    time: formatRelativeTime(localized.created_at),
   };
 }
 

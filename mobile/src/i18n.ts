@@ -326,6 +326,11 @@ const resources = {
       },
       notifications: {
         title: 'Thông báo & Ưu đãi',
+        subtitle: 'Cập nhật mới nhất cho hành trình của bạn',
+        inboxLabel: 'Hộp thư của bạn',
+        unreadCount: '{{count}} chưa đọc',
+        unreadShort: 'chưa đọc',
+        newLabel: 'Mới',
         loading: 'Đang tải thông báo...',
         markAllRead: 'Đánh dấu tất cả đã đọc',
         none: 'Không có thông báo nào',
@@ -791,6 +796,11 @@ const resources = {
       },
       notifications: {
         title: 'Notifications & offers',
+        subtitle: 'The latest updates for your journey',
+        inboxLabel: 'Your inbox',
+        unreadCount: '{{count}} unread',
+        unreadShort: 'unread',
+        newLabel: 'New',
         loading: 'Loading notifications...',
         markAllRead: 'Mark all as read',
         none: 'No notifications',

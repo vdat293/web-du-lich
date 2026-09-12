@@ -273,8 +273,8 @@ export async function POST(req) {
             }
 
             await createNotificationForUsers([userId], {
-                title: `Booking #${bookingId} da duoc tao`,
-                body: `Don dat phong tai ${propertyName} dang o trang thai ${finalStatus}.`,
+                title: `Đặt phòng #${bookingId} đã được tạo`,
+                body: `Đơn đặt phòng tại ${propertyName} đang ở trạng thái ${finalStatus === 'pending' ? 'Chờ xác nhận' : finalStatus === 'confirmed' ? 'Đã xác nhận' : finalStatus}.`,
                 type: 'booking_created',
                 data: { bookingId, status: finalStatus },
             });

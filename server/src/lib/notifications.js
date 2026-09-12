@@ -601,10 +601,20 @@ export async function sendBookingStatusNotification(bookingId, status, sentBy = 
     const booking = rows[0];
     if (!booking?.customer_id) return { sent: 0, failed: 0, recipients: 0 };
 
-    const statusLabel = status || 'updated';
+    const statusLabels = {
+        pending: 'Chờ xác nhận',
+        paid: 'Đã thanh toán',
+        confirmed: 'Đã xác nhận',
+        checked_in: 'Đã nhận phòng',
+        checked_out: 'Đã hoàn tất',
+        cancelled: 'Đã hủy',
+        rejected: 'Đã từ chối',
+        no_show: 'Không đến',
+    };
+    const statusLabel = statusLabels[status] || status || 'Đã cập nhật';
     return createNotificationForUsers([booking.customer_id], {
-        title: `Booking #${booking.id} da cap nhat`,
-        body: `Trang thai dat phong tai ${booking.property_name || 'Aoklevart'}: ${statusLabel}.`,
+        title: `Đặt phòng #${booking.id} đã cập nhật`,
+        body: `Trạng thái đặt phòng tại ${booking.property_name || 'Aoklevart'}: ${statusLabel}.`,
         type: 'booking_status',
         data: { bookingId: Number(booking.id), status: statusLabel },
         deep_link: 'aoklevart://trips',
