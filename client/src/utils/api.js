@@ -42,3 +42,17 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+export const couponService = {
+  listAdmin: () => api.get('/api/admin/coupons'),
+  createAdmin: (payload) => api.post('/api/admin/coupons', payload),
+  updateAdmin: (id, payload) => api.put(`/api/admin/coupons/${id}`, payload),
+  deleteAdmin: (id) => api.delete(`/api/admin/coupons/${id}`),
+  listHost: () => api.get('/api/host/coupons'),
+  createHost: (payload) => api.post('/api/host/coupons', payload),
+  updateHost: (id, payload) => api.put(`/api/host/coupons/${id}`, payload),
+  deleteHost: (id) => api.delete(`/api/host/coupons/${id}`),
+  validate: (code, propertyId, amount) => api.get('/api/coupons', {
+    params: { code, property_id: propertyId, amount },
+  }),
+};

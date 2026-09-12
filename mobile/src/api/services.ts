@@ -201,21 +201,13 @@ export type AppNotification = {
   created_at: string;
 };
 
-export type PushTokenPayload = {
-  expo_push_token: string;
-  provider?: 'expo';
-  platform?: string;
-  device_id?: string;
-  expo_project_id?: string;
-  app_version?: string;
-  permission_status?: string;
-};
-
 export const notificationService = {
   list: () =>
     apiRequest<{ notifications: AppNotification[]; unread_count: number }>(
       '/api/user/notifications',
-      { authenticated: true },
+      // Hosted API cold starts can exceed the generic request timeout. Keep
+      // the inbox responsive while still surfacing a real timeout to the UI.
+      { authenticated: true, timeoutMs: 30_000 },
     ),
   markRead: (ids?: number[]) =>
     apiRequest<{ success: boolean }>('/api/user/notifications', {
@@ -228,18 +220,6 @@ export const notificationService = {
       method: 'POST',
       authenticated: true,
       body: JSON.stringify({ notificationId }),
-    }),
-  registerPushToken: (payload: PushTokenPayload) =>
-    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
-      method: 'POST',
-      authenticated: true,
-      body: JSON.stringify(payload),
-    }),
-  unregisterPushToken: (expoPushToken: string) =>
-    apiRequest<{ success: boolean }>('/api/user/push-tokens', {
-      method: 'DELETE',
-      authenticated: true,
-      body: JSON.stringify({ expo_push_token: expoPushToken }),
     }),
 };
 
@@ -301,17 +281,23 @@ export const securityService = {
 };
 
 export const couponService = {
-  validate: (code: string) =>
-    apiRequest<{
+  validate: (code: string, propertyId?: number, amount?: number) => {
+    const params = new URLSearchParams({ code });
+    if (propertyId != null) params.set('property_id', String(propertyId));
+    if (amount != null) params.set('amount', String(amount));
+    return apiRequest<{
       valid: boolean;
       message?: string;
+      discount_amount?: number;
+      final_price?: number;
       coupon?: {
         code: string;
         discount_type: 'fixed' | 'percent';
         discount_value: number;
         min_order_amount?: number | null;
       };
-    }>(`/api/coupons?code=${encodeURIComponent(code)}`, { authenticated: true }),
+    }>(`/api/coupons?${params.toString()}`, { authenticated: true });
+  },
 };
 
 export type AdminTimeRange = 'today' | '7days' | 'month' | 'quarter' | 'year' | 'all';
@@ -345,6 +331,7 @@ export type AdminCoupon = {
   valid_from: string;
   valid_until: string;
   description: string | null;
+  is_enabled?: boolean | number | string;
   created_at?: string;
 };
 
@@ -433,6 +420,10 @@ export const adminService = {
       min_order_amount: coupon.min_order_amount == null ? null : Number(coupon.min_order_amount),
       max_uses: coupon.max_uses == null ? null : Number(coupon.max_uses),
       used_count: Number(coupon.used_count),
+      is_enabled: coupon.is_enabled !== false
+        && coupon.is_enabled !== 0
+        && coupon.is_enabled !== '0'
+        && coupon.is_enabled !== 'false',
     }));
   },
   createCoupon: (payload: AdminCouponPayload) =>

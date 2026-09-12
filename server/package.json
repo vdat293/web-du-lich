@@ -7,11 +7,13 @@
     "dev": "node server.js",
     "start": "next start",
     "build": "next build",
+    "test:coupons": "node --test test/coupons.test.mjs",
     "db:export": "node export-db.js",
     "db:clean-demo": "node scripts/clean-demo-db.js --confirm-reset-bookings",
     "db:update-search-tags": "node scripts/update-search-tags.js",
     "db:import": "node import-db.js",
     "db:init": "node init-db.js",
+    "db:migrate-coupons": "node migrate-coupons.js",
     "db:migrate-loyalty": "node migrate-loyalty.js",
     "db:migrate-notifications": "node migrate-notifications.js",
     "media:migrate": "node migrate-assets-to-cloudinary.js"

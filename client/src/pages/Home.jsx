@@ -311,9 +311,9 @@ export default function Home() {
                 <span className="material-symbols-outlined">close</span>
               </button>
               <div className="promo-tag">{language === 'vi' ? 'Ưu đãi giới hạn' : 'Limited offer'}</div>
-              <h2 className="promo-title">{language === 'vi' ? 'Ưu đãi 30% cho kì nghỉ hè sảng khoái' : '30% off for a refreshing summer getaway'}</h2>
+              <h2 className="promo-title">{language === 'vi' ? 'Ưu đãi mùa hè dành cho khách hàng' : 'Summer offers for our guests'}</h2>
               <p className="promo-subtitle">
-                {language === 'vi' ? <>Nhập mã <strong>WELCOME30</strong> khi thanh toán để nhận ưu đãi cho mọi điểm đến trong hôm nay.</> : <>Use code <strong>WELCOME30</strong> at checkout to get the offer for every destination today.</>}
+                {language === 'vi' ? 'Khám phá các mã giảm giá đang hoạt động ở bước thanh toán. Điều kiện áp dụng tùy theo chương trình và chỗ nghỉ.' : 'Discover active discount codes at checkout. Eligibility depends on the promotion and property.'}
               </p>
               <div className="promo-actions">
                 <button type="button" className="promo-primary" onClick={() => setShowPromo(false)}>

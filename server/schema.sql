@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS loyalty_transactions;
 DROP TABLE IF EXISTS booking_status_history;
 DROP TABLE IF EXISTS booking_coupons;
 DROP TABLE IF EXISTS reward_redemptions;
+DROP TABLE IF EXISTS coupon_properties;
 DROP TABLE IF EXISTS rewards;
 DROP TABLE IF EXISTS coupons;
 DROP TABLE IF EXISTS wishlists;
@@ -307,7 +308,24 @@ CREATE TABLE coupons (
   valid_from DATE,
   valid_until DATE,
   description TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  owner_id INT NULL,
+  created_by INT NULL,
+  scope_type VARCHAR(20) NOT NULL DEFAULT 'system',
+  is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_coupons_scope_owner (scope_type, owner_id),
+  INDEX idx_coupons_enabled_dates (is_enabled, valid_from, valid_until)
+);
+
+CREATE TABLE coupon_properties (
+  coupon_id INT NOT NULL,
+  property_id INT NOT NULL,
+  PRIMARY KEY (coupon_id, property_id),
+  FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE,
+  FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE,
+  INDEX idx_coupon_properties_property (property_id)
 );
 
 CREATE TABLE rewards (

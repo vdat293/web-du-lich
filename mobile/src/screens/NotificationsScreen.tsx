@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
   FlatList,
   Pressable,
@@ -8,15 +9,19 @@ import {
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuth, type NotificationItem } from '../context/AuthContext';
+import { propertyService } from '../api/services';
 import { AuthPlaceholder } from '../components/AuthPlaceholder';
 import { LoadingState } from '../components/ScreenState';
-import type { TabParamList } from '../navigation/types';
+import type { RootStackParamList, TabParamList } from '../navigation/types';
 import { colors, fonts } from '../theme';
 import { formatRelativeTime } from '../utils/date';
+import { resolveNotificationTarget } from '../utils/notificationRouting';
 
 type Props = BottomTabScreenProps<TabParamList, 'Notifications'>;
 
@@ -32,25 +37,41 @@ export function NotificationsScreen({ navigation }: Props) {
     notifications,
     notificationsLoading,
     notificationsError,
-    pushPermissionStatus,
-    pushRegistrationError,
-    requestPushPermission,
     refreshNotifications,
     markAllNotificationsAsRead,
     markNotificationOpened,
   } = useAuth();
   const { t } = useTranslation();
   const hasUnread = notifications.some((n) => n.unread);
-  const permissionWarning = user
-    && pushPermissionStatus !== 'unknown'
-    && pushPermissionStatus !== 'unsupported'
-    && pushPermissionStatus !== 'granted';
 
-  const openNotification = async (id: number, type: string, bookingId?: unknown) => {
-    await markNotificationOpened(id);
-    if (type.includes('booking') || bookingId) {
-      navigation.navigate('Trips');
+  useFocusEffect(
+    useCallback(() => {
+      if (user) void refreshNotifications();
+    }, [refreshNotifications, user]),
+  );
+
+  const openNotification = async (notification: NotificationItem) => {
+    await markNotificationOpened(notification.id);
+    const target = resolveNotificationTarget(notification);
+
+    if (target.kind === 'tab') {
+      navigation.navigate(target.screen);
+      return;
     }
+
+    try {
+      const properties = await propertyService.list({ ids: [target.propertyId], limit: 1 });
+      const property = properties[0];
+      const rootNavigation = navigation.getParent<NativeStackNavigationProp<RootStackParamList>>();
+      if (property && rootNavigation) {
+        rootNavigation.navigate('Details', { property });
+        return;
+      }
+    } catch {
+      // A stale/deleted property must not break the inbox interaction.
+    }
+
+    navigation.navigate('Explore');
   };
 
   return (
@@ -79,21 +100,6 @@ export function NotificationsScreen({ navigation }: Props) {
           }
           ListHeaderComponent={(
             <>
-              {permissionWarning ? (
-                <Pressable accessibilityRole="button" style={styles.warningBox} onPress={() => void requestPushPermission()}>
-                  <Ionicons name="notifications-off-outline" size={18} color={colors.secondary} />
-                  <View style={styles.warningContent}>
-                    <Text style={styles.warningText}>{t('notifications.permissionWarning')}</Text>
-                    <Text style={styles.warningAction}>{t('notifications.enablePush')}</Text>
-                  </View>
-                </Pressable>
-              ) : null}
-              {pushRegistrationError ? (
-                <View style={styles.warningBox}>
-                  <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
-                  <Text style={styles.warningText}>{pushRegistrationError}</Text>
-                </View>
-              ) : null}
               {notificationsError ? (
                 <Pressable accessibilityRole="button" style={styles.errorBox} onPress={() => void refreshNotifications()}>
                   <Ionicons name="alert-circle-outline" size={18} color={colors.error} />
@@ -110,7 +116,7 @@ export function NotificationsScreen({ navigation }: Props) {
                 notif.unread && styles.notifUnread,
                 pressed && styles.notifPressed,
               ]}
-              onPress={() => void openNotification(notif.id, notif.type, notif.data?.bookingId)}
+              onPress={() => void openNotification(notif)}
             >
               <View style={styles.iconBubble}>
                 <Ionicons name={iconForType(notif.type)} size={18} color={colors.primary} />
@@ -171,17 +177,6 @@ const styles = StyleSheet.create({
   },
   headerActionPlaceholder: { width: 36, height: 36 },
   content: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 105 },
-  warningBox: {
-    flexDirection: 'row',
-    gap: 10,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: colors.secondaryFixed,
-    marginBottom: 12,
-  },
-  warningText: { flex: 1, fontFamily: fonts.medium, fontSize: 12, color: colors.primary, lineHeight: 17 },
-  warningContent: { flex: 1 },
-  warningAction: { fontFamily: fonts.bold, fontSize: 11, color: colors.secondary, marginTop: 4 },
   errorBox: {
     flexDirection: 'row',
     gap: 10,

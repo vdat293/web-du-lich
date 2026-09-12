@@ -22,7 +22,7 @@ import {
 import { colors, fonts } from '../../theme';
 import { getAppLocale } from '../../utils/date';
 
-type PromotionStatus = 'upcoming' | 'active' | 'exhausted' | 'expired';
+type PromotionStatus = 'upcoming' | 'active' | 'exhausted' | 'expired' | 'disabled';
 type DiscountType = 'percent' | 'fixed';
 
 type Promotion = {
@@ -37,6 +37,7 @@ type Promotion = {
   startDate: string;
   endDate: string;
   status: PromotionStatus;
+  isEnabled: boolean;
 };
 
 const STATUS_FILTERS: Array<{ key: '' | PromotionStatus; label: string }> = [
@@ -45,6 +46,7 @@ const STATUS_FILTERS: Array<{ key: '' | PromotionStatus; label: string }> = [
   { key: 'upcoming', label: 'Sắp diễn ra' },
   { key: 'exhausted', label: 'Hết lượt' },
   { key: 'expired', label: 'Hết hạn' },
+  { key: 'disabled', label: 'Đã tắt' },
 ];
 
 function dateAfter(days: number) {
@@ -55,8 +57,13 @@ function dateAfter(days: number) {
 
 function toPromotion(coupon: AdminCoupon): Promotion {
   const today = new Date().toISOString().slice(0, 10);
+  const isEnabled = coupon.is_enabled !== false
+    && coupon.is_enabled !== 0
+    && coupon.is_enabled !== '0'
+    && coupon.is_enabled !== 'false';
   let status: PromotionStatus = 'active';
-  if (coupon.valid_until < today) status = 'expired';
+  if (!isEnabled) status = 'disabled';
+  else if (coupon.valid_until < today) status = 'expired';
   else if (coupon.valid_from > today) status = 'upcoming';
   else if (coupon.max_uses != null && coupon.used_count >= coupon.max_uses) status = 'exhausted';
 
@@ -72,6 +79,7 @@ function toPromotion(coupon: AdminCoupon): Promotion {
     startDate: coupon.valid_from,
     endDate: coupon.valid_until,
     status,
+    isEnabled,
   };
 }
 
@@ -341,6 +349,7 @@ function PromotionFormModal({
     usageLimit: 100,
     startDate: dateAfter(0),
     endDate: dateAfter(30),
+    isEnabled: true,
     ...(promotion ? {
       code: promotion.code,
       description: promotion.description,
@@ -350,6 +359,7 @@ function PromotionFormModal({
       usageLimit: promotion.usageLimit || 0,
       startDate: promotion.startDate,
       endDate: promotion.endDate,
+      isEnabled: promotion.isEnabled,
     } : {}),
   });
   const [error, setError] = useState('');
@@ -388,6 +398,7 @@ function PromotionFormModal({
         max_uses: form.usageLimit || null,
         valid_from: form.startDate,
         valid_until: form.endDate,
+        is_enabled: form.isEnabled,
       });
     } catch (saveError) {
       setError(errorMessage(saveError));
@@ -429,6 +440,21 @@ function PromotionFormModal({
               <FormField label="Bắt đầu" value={form.startDate} onChangeText={(startDate) => setForm({ ...form, startDate })} placeholder="YYYY-MM-DD" />
               <FormField label="Kết thúc" value={form.endDate} onChangeText={(endDate) => setForm({ ...form, endDate })} placeholder="YYYY-MM-DD" />
             </View>
+
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: form.isEnabled }}
+              style={styles.enabledToggle}
+              onPress={() => setForm({ ...form, isEnabled: !form.isEnabled })}
+            >
+              <View style={[styles.toggleTrack, form.isEnabled && styles.toggleTrackActive]}>
+                <View style={[styles.toggleThumb, form.isEnabled && styles.toggleThumbActive]} />
+              </View>
+              <View style={styles.flexText}>
+                <Text style={styles.toggleTitle}>{form.isEnabled ? 'Đang bật coupon' : 'Coupon đang tắt'}</Text>
+                <Text style={styles.toggleSubtitle}>Coupon tắt sẽ không thể áp dụng khi thanh toán.</Text>
+              </View>
+            </Pressable>
 
             {error ? <Text style={styles.formError}>{error}</Text> : null}
             <View style={styles.modalActions}>
@@ -473,6 +499,7 @@ function SegmentButton({ label, active, onPress }: { label: string; active: bool
 }
 
 function getStatusTheme(status: PromotionStatus) {
+  if (status === 'disabled') return { label: 'ĐÃ TẮT', background: '#eef0f3', text: '#606b78' };
   if (status === 'active') return { label: 'ĐANG CHẠY', background: '#e3f4e9', text: '#24633b' };
   if (status === 'upcoming') return { label: 'SẮP DIỄN RA', background: '#eee8fb', text: '#6742a2' };
   if (status === 'exhausted') return { label: 'HẾT LƯỢT', background: '#fff1d8', text: '#8b5b12' };
@@ -554,6 +581,13 @@ const styles = StyleSheet.create({
   modalSubtitle: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 10, marginTop: 2 },
   closeButton: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceContainer },
   formContent: { paddingBottom: 28 },
+  enabledToggle: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 13, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, padding: 12, marginTop: 2 },
+  toggleTrack: { width: 42, height: 24, borderRadius: 12, justifyContent: 'center', backgroundColor: colors.outline, paddingHorizontal: 3 },
+  toggleTrackActive: { backgroundColor: colors.primary },
+  toggleThumb: { width: 18, height: 18, borderRadius: 9, backgroundColor: colors.white },
+  toggleThumbActive: { alignSelf: 'flex-end' },
+  toggleTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 11 },
+  toggleSubtitle: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 9, marginTop: 2 },
   field: { flex: 1, marginBottom: 12 },
   fieldLabel: { color: colors.textMuted, fontFamily: fonts.bold, fontSize: 9, letterSpacing: 0.5, marginBottom: 6 },
   input: { height: 47, borderRadius: 13, borderWidth: 1, borderColor: colors.outline, backgroundColor: colors.white, color: colors.text, fontFamily: fonts.body, fontSize: 12, paddingHorizontal: 13 },

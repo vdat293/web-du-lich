@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import api from '../utils/api';
 import { readJsonStorage } from '../utils/storage';
+import CouponManager from '../components/CouponManager';
 
 export default function Admin() {
     console.log("Admin component mounting...");
@@ -429,6 +430,13 @@ export default function Admin() {
                     >
                         <span className="material-symbols-outlined">home_work</span>
                         Quản lý Property
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('promotions')}
+                        className={`w-full text-left px-4 py-2.5 rounded-lg flex items-center gap-3 ${activeTab === 'promotions' ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                    >
+                        <span className="material-symbols-outlined">local_offer</span>
+                        Quản lý khuyến mãi
                     </button>
                     <button
                         onClick={() => setActiveTab('logs')}
@@ -1022,6 +1030,9 @@ export default function Admin() {
                         )}
                     </div>
                 )}
+
+                {/* System Promotions Tab */}
+                {activeTab === 'promotions' && <CouponManager mode="admin" />}
 
 
                 {/* Activity Logs Tab */}

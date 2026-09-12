@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import OtpModal from '../components/OtpModal';
-import api from '../utils/api';
+import api, { couponService } from '../utils/api';
 import { assetUrl, resolveMediaUrl } from '../utils/media';
 
 export default function Payment() {
@@ -25,6 +25,7 @@ export default function Payment() {
 
     const [appliedDiscount, setAppliedDiscount] = useState(null);
     const [discountMessage, setDiscountMessage] = useState({ text: '', type: '' });
+    const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
 
     const [specialRequests, setSpecialRequests] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -98,13 +99,6 @@ export default function Payment() {
         }
     }, [otpValues]);
 
-    const discountCodes = {
-        'GIAM10': { type: 'percent', value: 10 },
-        'GIAM20': { type: 'percent', value: 20 },
-        'GIAM50K': { type: 'fixed', value: 50000 },
-        'WELCOME': { type: 'percent', value: 15 }
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center font-display bg-background-light text-neutral-700">
@@ -147,32 +141,53 @@ export default function Payment() {
 
     let discountAmount = 0;
     if (appliedDiscount) {
-        if (appliedDiscount.type === 'percent') {
-            discountAmount = Math.round(initialTotal * (appliedDiscount.value / 100));
-        } else {
-            discountAmount = appliedDiscount.value;
-        }
+        discountAmount = Number(appliedDiscount.discountAmount || 0);
     }
 
-    const total = initialTotal - discountAmount;
+    const total = Math.max(0, initialTotal - discountAmount);
 
     const formatDate = (date) => {
         return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
     };
 
-    const handleApplyDiscount = () => {
+    const handleApplyDiscount = async () => {
         const code = discountCode.trim().toUpperCase();
         if (!code) {
             setDiscountMessage({ text: language === 'vi' ? 'Vui lòng nhập mã giảm giá' : 'Please enter a discount code', type: 'error' });
             return;
         }
-        if (discountCodes[code]) {
-            setAppliedDiscount({ code, ...discountCodes[code] });
-            setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${code}" thành công!` : `Code "${code}" applied successfully!`, type: 'success' });
-            setDiscountCode('');
-        } else {
-            setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá không hợp lệ hoặc đã hết hạn' : 'Invalid or expired discount code', type: 'error' });
+        if (!isLoggedIn) {
             setAppliedDiscount(null);
+            setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá chỉ áp dụng cho tài khoản đã đăng nhập.' : 'Discount codes require a signed-in account.', type: 'error' });
+            return;
+        }
+
+        setIsApplyingDiscount(true);
+        setDiscountMessage({ text: '', type: '' });
+        try {
+            // The API validates the coupon against this property and the
+            // server-derived room subtotal; the browser never decides validity.
+            const response = await couponService.validate(code, propertyId, totalBase);
+            if (!response.data.valid || !response.data.coupon) {
+                setAppliedDiscount(null);
+                setDiscountMessage({ text: response.data.message || (language === 'vi' ? 'Mã giảm giá không hợp lệ hoặc không áp dụng cho chỗ nghỉ này' : 'Invalid discount code for this property'), type: 'error' });
+                return;
+            }
+
+            const coupon = response.data.coupon;
+            setAppliedDiscount({
+                code: coupon.code,
+                type: coupon.discount_type,
+                value: Number(coupon.discount_value),
+                discountAmount: Number(response.data.discount_amount || 0),
+            });
+            setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${coupon.code}" thành công!` : `Code "${coupon.code}" applied successfully!`, type: 'success' });
+            setDiscountCode('');
+        } catch (error) {
+            setAppliedDiscount(null);
+            setDiscountMessage({ text: error.response?.data?.message || (language === 'vi' ? 'Không thể kiểm tra mã giảm giá' : 'Unable to validate discount code'), type: 'error' });
+        } finally {
+            setIsApplyingDiscount(false);
         }
     };
 
@@ -273,7 +288,6 @@ export default function Payment() {
     // Create booking after successful payment
     const createBookingAfterPayment = async (method = 'card', status = 'confirmed') => {
         const roomTypeId = getRoomTypeId();
-        const token = localStorage.getItem('token');
         try {
             if (isLoggedIn) {
                 const res = await api.post('/api/user/bookings', {
@@ -283,6 +297,7 @@ export default function Payment() {
                     check_out: formatDateForDB(checkOutDate),
                     number_of_rooms: 1,
                     total_price: total,
+                    coupon_code: appliedDiscount?.code || null,
                     special_requests: specialRequests || null,
                     status: status,
                     payment_method: method,
@@ -608,12 +623,12 @@ export default function Payment() {
                                         value={discountCode}
                                         onChange={(e) => setDiscountCode(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleApplyDiscount()}
-                                        disabled={!!appliedDiscount}
+                                        disabled={!!appliedDiscount || isApplyingDiscount}
                                         className="flex-1 px-4 py-2.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-transparent text-neutral-700 dark:text-white placeholder-neutral-400 focus:ring-primary focus:border-primary uppercase"
                                         placeholder={language === 'vi' ? 'Nhập mã giảm giá' : 'Enter discount code'} />
-                                    <button onClick={handleApplyDiscount} disabled={!!appliedDiscount}
-                                        className={`px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors ${appliedDiscount ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                        {appliedDiscount ? (language === 'vi' ? 'Đã áp dụng' : 'Applied') : t('payment.apply')}
+                                    <button onClick={handleApplyDiscount} disabled={!!appliedDiscount || isApplyingDiscount}
+                                        className={`px-5 py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors ${appliedDiscount || isApplyingDiscount ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                        {appliedDiscount ? (language === 'vi' ? 'Đã áp dụng' : 'Applied') : isApplyingDiscount ? 'Đang kiểm tra...' : t('payment.apply')}
                                     </button>
                                 </div>
                                 {discountMessage.text && (

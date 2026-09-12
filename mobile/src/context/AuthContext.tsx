@@ -1,16 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 
 import { subscribeToUnauthorized } from '../api/client';
 import { authService, notificationService, type AppNotification } from '../api/services';
-import {
-  addPushReceivedListener,
-  getStoredPushRegistration,
-  initializePushNotifications,
-  requestPushNotifications,
-  type PushRegistration,
-} from '../notifications/push';
 import { getStoredValue, removeStoredValue, setStoredValue } from '../storage';
 import type { User } from '../types';
 import { formatRelativeTime } from '../utils/date';
@@ -36,9 +29,6 @@ type AuthContextValue = {
   notifications: NotificationItem[];
   notificationsLoading: boolean;
   notificationsError: string;
-  pushPermissionStatus: string;
-  pushRegistrationError: string;
-  requestPushPermission: () => Promise<boolean>;
   refreshNotifications: () => Promise<void>;
   markAllNotificationsAsRead: () => Promise<void>;
   markNotificationOpened: (notificationId: number) => Promise<void>;
@@ -75,11 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState('');
-  const [pushPermissionStatus, setPushPermissionStatus] = useState('unknown');
-  const [pushRegistrationError, setPushRegistrationError] = useState('');
-  const [pushRegistration, setPushRegistration] = useState<PushRegistration | null>(null);
+  const notificationsRequestRef = useRef<{ key: string; promise: Promise<void> } | null>(null);
+  const notificationGenerationRef = useRef(0);
+  const notificationSessionKey = `${user?.id ?? ''}:${token ?? ''}:${locked ? 'locked' : 'unlocked'}`;
+  const currentNotificationSessionKeyRef = useRef(notificationSessionKey);
+  currentNotificationSessionKeyRef.current = notificationSessionKey;
 
   const clearLocalSession = useCallback(async () => {
+    notificationGenerationRef.current += 1;
     await Promise.all([
       removeStoredValue(TOKEN_KEY),
       removeStoredValue(USER_KEY),
@@ -94,80 +87,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void clearLocalSession();
   }), [clearLocalSession]);
 
+  const refreshNotifications = useCallback(async () => {
+    const requestGeneration = notificationGenerationRef.current;
+    const requestKey = `${notificationSessionKey}:${requestGeneration}`;
+    const isCurrentSession = () => (
+      notificationGenerationRef.current === requestGeneration
+      && currentNotificationSessionKeyRef.current === notificationSessionKey
+    );
+
+    if (!user || !token || locked) {
+      if (isCurrentSession()) {
+        setNotifications([]);
+        setNotificationsLoading(false);
+      }
+      return;
+    }
+
+    const existingRequest = notificationsRequestRef.current;
+    if (existingRequest?.key === requestKey) return existingRequest.promise;
+
+    const request = (async () => {
+      if (!isCurrentSession()) return;
+      setNotificationsLoading(true);
+      setNotificationsError('');
+      try {
+        const result = await notificationService.list();
+        if (isCurrentSession()) {
+          setNotifications(result.notifications.map(normalizeNotification));
+        }
+      } catch (error) {
+        if (isCurrentSession()) {
+          setNotificationsError(error instanceof Error ? error.message : 'Không thể tải thông báo.');
+        }
+      } finally {
+        if (isCurrentSession()) {
+          setNotificationsLoading(false);
+        }
+      }
+    })();
+    notificationsRequestRef.current = { key: requestKey, promise: request };
+
+    try {
+      await request;
+    } finally {
+      if (notificationsRequestRef.current?.promise === request) notificationsRequestRef.current = null;
+    }
+  }, [locked, notificationSessionKey, token, user]);
+
   useEffect(() => {
     if (Platform.OS === 'web') return undefined;
 
     let previousState = AppState.currentState;
     const subscription = AppState.addEventListener('change', (nextState) => {
       const returningToForeground = previousState !== 'active' && nextState === 'active';
-      if (returningToForeground && biometricsEnabled && token && user) {
-        setLocked(true);
-      }
       previousState = nextState;
+
+      if (!returningToForeground || !user || !token || locked) return;
+      if (biometricsEnabled) {
+        notificationGenerationRef.current += 1;
+        setLocked(true);
+        return;
+      }
+
+      // The inbox is API-backed; refresh when the session becomes visible
+      // again so events completed while backgrounded appear without pull-to-refresh.
+      void refreshNotifications();
     });
 
     return () => subscription.remove();
-  }, [biometricsEnabled, token, user]);
-
-  useEffect(() => {
-    void initializePushNotifications().then((result) => {
-      setPushPermissionStatus(result.permissionStatus);
-      setPushRegistration(result.registration);
-      setPushRegistrationError(result.error || '');
-    });
-  }, []);
-
-  const refreshNotifications = useCallback(async () => {
-    if (!user || !token || locked) {
-      setNotifications([]);
-      return;
-    }
-
-    setNotificationsLoading(true);
-    setNotificationsError('');
-    try {
-      const result = await notificationService.list();
-      setNotifications(result.notifications.map(normalizeNotification));
-    } catch (error) {
-      setNotificationsError(error instanceof Error ? error.message : 'Không thể tải thông báo.');
-    } finally {
-      setNotificationsLoading(false);
-    }
-  }, [locked, token, user]);
-
-  const registerPushToken = useCallback(async () => {
-    if (!user || !token || locked) return;
-
-    const registration = pushRegistration || await getStoredPushRegistration();
-    if (!registration?.expo_push_token) return;
-
-    try {
-      await notificationService.registerPushToken(registration);
-      setPushRegistrationError('');
-    } catch (error) {
-      setPushRegistrationError(error instanceof Error ? error.message : 'Không thể đăng ký push token.');
-    }
-  }, [locked, pushRegistration, token, user]);
-
-  const requestPushPermission = useCallback(async () => {
-    const result = await requestPushNotifications();
-    setPushPermissionStatus(result.permissionStatus);
-    setPushRegistration(result.registration);
-    setPushRegistrationError(result.error || '');
-
-    if (result.registration && user && token && !locked) {
-      try {
-        await notificationService.registerPushToken(result.registration);
-      } catch (error) {
-        setPushRegistrationError(
-          error instanceof Error ? error.message : 'Không thể đăng ký push token.',
-        );
-        return false;
-      }
-    }
-
-    return result.permissionStatus === 'granted';
-  }, [locked, token, user]);
+  }, [biometricsEnabled, locked, refreshNotifications, token, user]);
 
   useEffect(() => {
     void Promise.all([
@@ -197,18 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void refreshNotifications();
-    void registerPushToken();
-  }, [refreshNotifications, registerPushToken]);
-
-  useEffect(() => {
-    if (!user || !token || locked) return undefined;
-
-    const subscription = addPushReceivedListener(() => {
-      void refreshNotifications();
-    });
-
-    return () => subscription.remove();
-  }, [locked, refreshNotifications, token, user]);
+  }, [refreshNotifications]);
 
   const persistSession = useCallback(async (nextToken: string, nextUser: User) => {
     await Promise.all([
@@ -268,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const markAllNotificationsAsRead = useCallback(async () => {
-    if (!user) return;
+    if (!user || !token || locked) return;
 
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false, read_at: n.read_at || new Date().toISOString() })));
     try {
@@ -277,10 +254,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setNotificationsError(error instanceof Error ? error.message : 'Không thể cập nhật thông báo.');
       await refreshNotifications();
     }
-  }, [refreshNotifications, user]);
+  }, [locked, refreshNotifications, token, user]);
 
   const markNotificationOpened = useCallback(async (notificationId: number) => {
-    if (!user || !notificationId) return;
+    if (!user || !token || locked || !notificationId) return;
 
     const timestamp = new Date().toISOString();
     setNotifications((prev) => prev.map((n) => (
@@ -293,8 +270,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await notificationService.markOpened(notificationId);
     } catch (error) {
       setNotificationsError(error instanceof Error ? error.message : 'Không thể cập nhật thông báo.');
+      await refreshNotifications();
     }
-  }, [user]);
+  }, [locked, refreshNotifications, token, user]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -318,10 +296,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unlockWithBiometrics,
       setBiometricsEnabled,
       logout: async () => {
-        const registration = await getStoredPushRegistration();
-        if (registration?.expo_push_token) {
-          await notificationService.unregisterPushToken(registration.expo_push_token).catch(() => undefined);
-        }
         await clearLocalSession();
       },
       updateUser: async (updatedUser) => {
@@ -331,9 +305,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       notifications,
       notificationsLoading,
       notificationsError,
-      pushPermissionStatus,
-      pushRegistrationError,
-      requestPushPermission,
       refreshNotifications,
       markAllNotificationsAsRead,
       markNotificationOpened,
@@ -350,9 +321,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       notificationsError,
       notificationsLoading,
       persistSession,
-      pushPermissionStatus,
-      pushRegistrationError,
-      requestPushPermission,
       refreshNotifications,
       setBiometricsEnabled,
       token,

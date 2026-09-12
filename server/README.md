@@ -85,6 +85,14 @@ npm start
 
 Server sẽ chạy tại: **http://localhost:3000**
 
+### 5. Nâng cấp coupon cho database hiện có
+
+```bash
+npm run db:migrate-coupons
+```
+
+Migration này idempotent: bổ sung owner/scope/trạng thái coupon và bảng liên kết property, giữ nguyên dữ liệu coupon hiện có (coupon cũ là phạm vi system).
+
 ---
 
 ## 📁 Cấu Trúc Thư Mục
@@ -157,7 +165,16 @@ server/
 |--------|----------|-------|
 | GET | `/api/coupons` | Danh sách coupon |
 | GET | `/api/coupons?code=XYZ` | Kiểm tra mã |
-| POST | `/api/coupons` | Tạo coupon mới |
+| GET | `/api/coupons?code=XYZ&property_id=1&amount=1000000` | Kiểm tra mã theo property và số tiền |
+
+Admin quản lý coupon system tại `/api/admin/coupons`. Host quản lý coupon của mình tại `/api/host/coupons`; host phải gửi `property_ids` là các property thuộc quyền sở hữu của mình.
+
+| Method | Endpoint | Mô Tả |
+|--------|----------|-------|
+| GET, POST | `/api/admin/coupons` | Admin xem toàn bộ hoặc tạo coupon system |
+| PUT, DELETE | `/api/admin/coupons/:id` | Admin sửa/tắt hoặc xoá coupon system chưa sử dụng |
+| GET, POST | `/api/host/coupons` | Host xem hoặc tạo coupon theo property sở hữu |
+| PUT, DELETE | `/api/host/coupons/:id` | Host sửa/tắt hoặc xoá coupon do mình tạo |
 
 ---
 

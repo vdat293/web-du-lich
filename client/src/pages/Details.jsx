@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 import Header from '../components/Header';
 import { FullPageLoader, Spinner } from '../components/Loader';
-import api from '../utils/api';
+import api, { couponService } from '../utils/api';
 import { assetUrl, BRAND_LOGO_URL, resolveMediaUrl } from '../utils/media';
 
 export default function Details() {
@@ -19,6 +19,7 @@ export default function Details() {
     const [discountCode, setDiscountCode] = useState('');
     const [appliedDiscount, setAppliedDiscount] = useState(null);
     const [discountMessage, setDiscountMessage] = useState({ text: '', type: '' });
+    const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
     const [specialRequests, setSpecialRequests] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
@@ -1044,13 +1045,6 @@ export default function Details() {
             {isMobilePaymentOpen && (() => {
                 const isLoggedIn = !!localStorage.getItem('token');
 
-                const discountCodes = {
-                    'GIAM10': { type: 'percent', value: 10 },
-                    'GIAM20': { type: 'percent', value: 20 },
-                    'GIAM50K': { type: 'fixed', value: 50000 },
-                    'WELCOME': { type: 'percent', value: 15 }
-                };
-
                 const mRooms = Array.isArray(property.rooms) ? property.rooms : [];
                 const mSelectedRoom = mRooms.find(r => String(r.id) === String(mobileRoomType)) || mRooms[0];
                 let mRoomTypeText = mSelectedRoom ? mSelectedRoom.name : 'Phòng';
@@ -1069,11 +1063,9 @@ export default function Details() {
 
                 let mDiscountAmount = 0;
                 if (appliedDiscount) {
-                    mDiscountAmount = appliedDiscount.type === 'percent'
-                        ? Math.round(mTotal * (appliedDiscount.value / 100))
-                        : appliedDiscount.value;
+                    mDiscountAmount = Number(appliedDiscount.discountAmount || 0);
                 }
-                const mFinalTotal = mTotal - mDiscountAmount;
+                const mFinalTotal = Math.max(0, mTotal - mDiscountAmount);
                 const datesSelected = !!(mobileCheckIn && mobileCheckOut && mNights > 0);
 
                 const formatDateForDB = (date) => {
@@ -1083,16 +1075,37 @@ export default function Details() {
                     return `${y}-${m}-${d}`;
                 };
 
-                const handleApplyDiscount = () => {
+                const handleApplyDiscount = async () => {
                     const code = discountCode.trim().toUpperCase();
                     if (!code) { setDiscountMessage({ text: language === 'vi' ? 'Vui lòng nhập mã giảm giá' : 'Please enter a discount code', type: 'error' }); return; }
-                    if (discountCodes[code]) {
-                        setAppliedDiscount({ code, ...discountCodes[code] });
-                        setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${code}" thành công!` : `Promo code "${code}" applied successfully!`, type: 'success' });
-                        setDiscountCode('');
-                    } else {
-                        setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá không hợp lệ' : 'Invalid discount code', type: 'error' });
+                    if (!isLoggedIn) {
                         setAppliedDiscount(null);
+                        setDiscountMessage({ text: language === 'vi' ? 'Mã giảm giá chỉ áp dụng cho tài khoản đã đăng nhập.' : 'Discount codes require a signed-in account.', type: 'error' });
+                        return;
+                    }
+                    setIsApplyingDiscount(true);
+                    setDiscountMessage({ text: '', type: '' });
+                    try {
+                        const response = await couponService.validate(code, property.id, mTotalBase);
+                        if (!response.data.valid || !response.data.coupon) {
+                            setAppliedDiscount(null);
+                            setDiscountMessage({ text: response.data.message || (language === 'vi' ? 'Mã giảm giá không hợp lệ cho chỗ nghỉ này' : 'Invalid discount code for this property'), type: 'error' });
+                            return;
+                        }
+                        const coupon = response.data.coupon;
+                        setAppliedDiscount({
+                            code: coupon.code,
+                            type: coupon.discount_type,
+                            value: Number(coupon.discount_value),
+                            discountAmount: Number(response.data.discount_amount || 0),
+                        });
+                        setDiscountMessage({ text: language === 'vi' ? `Áp dụng mã "${coupon.code}" thành công!` : `Promo code "${coupon.code}" applied successfully!`, type: 'success' });
+                        setDiscountCode('');
+                    } catch (error) {
+                        setAppliedDiscount(null);
+                        setDiscountMessage({ text: error.response?.data?.message || (language === 'vi' ? 'Không thể kiểm tra mã giảm giá' : 'Unable to validate discount code'), type: 'error' });
+                    } finally {
+                        setIsApplyingDiscount(false);
                     }
                 };
 
@@ -1111,7 +1124,7 @@ export default function Details() {
                                 property_id: property.id, room_type_id: roomTypeId,
                                 check_in: formatDateForDB(new Date(mobileCheckIn)),
                                 check_out: formatDateForDB(new Date(mobileCheckOut)),
-                                number_of_rooms: 1, total_price: mFinalTotal,
+                                number_of_rooms: 1, total_price: mFinalTotal, coupon_code: appliedDiscount?.code || null,
                                 special_requests: specialRequests || null,
                             });
                             setIsProcessing(false);
@@ -1296,12 +1309,12 @@ export default function Details() {
                                             <div className="flex gap-2">
                                                 <input type="text" value={discountCode} onChange={(e) => setDiscountCode(e.target.value)}
                                                     onKeyDown={(e) => e.key === 'Enter' && handleApplyDiscount()}
-                                                    disabled={!!appliedDiscount}
+                                                    disabled={!!appliedDiscount || isApplyingDiscount}
                                                     className="flex-1 px-3 py-2.5 rounded-lg border border-neutral-200 text-sm uppercase placeholder-neutral-400 focus:ring-2 focus:ring-primary focus:border-transparent"
                                                     placeholder={language === 'vi' ? "Nhập mã" : "Enter code"} />
-                                                <button onClick={handleApplyDiscount} disabled={!!appliedDiscount}
-                                                    className={`px-4 py-2.5 bg-primary text-white font-bold text-sm rounded-lg ${appliedDiscount ? 'opacity-50' : ''}`}>
-                                                    {appliedDiscount ? (language === 'vi' ? 'Đã dùng' : 'Used') : (language === 'vi' ? 'Áp dụng' : 'Apply')}
+                                                <button onClick={handleApplyDiscount} disabled={!!appliedDiscount || isApplyingDiscount}
+                                                    className={`px-4 py-2.5 bg-primary text-white font-bold text-sm rounded-lg ${appliedDiscount || isApplyingDiscount ? 'opacity-50' : ''}`}>
+                                                    {appliedDiscount ? (language === 'vi' ? 'Đã dùng' : 'Used') : isApplyingDiscount ? 'Đang kiểm tra...' : (language === 'vi' ? 'Áp dụng' : 'Apply')}
                                                 </button>
                                             </div>
                                             {discountMessage.text && (

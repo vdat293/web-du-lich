@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, View, StyleSheet, Pressable } from 'react-native';
 import {
   NavigationContainer,
@@ -33,7 +33,6 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { AppLockScreen } from '../screens/AppLockScreen';
 import { AdminDashboardScreen } from '../screens/admin/AdminDashboardScreen';
 import { useAuth } from '../context/AuthContext';
-import { addPushResponseListener, getLastPushResponseData } from '../notifications/push';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList, TabParamList } from './types';
 
@@ -214,42 +213,7 @@ function TabNavigator() {
 }
 
 export function AppNavigator() {
-  const { locked, markNotificationOpened, refreshNotifications } = useAuth();
-  const handledNotificationKeys = useRef(new Set<string>());
-  const pendingPushData = useRef<Record<string, unknown> | null>(null);
-
-  const navigateFromPushData = useCallback((data: Record<string, unknown>) => {
-    if (!navigationRef.isReady()) {
-      pendingPushData.current = data;
-      return;
-    }
-
-    const type = String(data.type || '');
-    const target = type.includes('booking') || data.bookingId ? 'Trips' : 'Notifications';
-    navigationRef.navigate('Tabs', { screen: target });
-  }, []);
-
-  useEffect(() => {
-    const handlePushData = (data?: Record<string, unknown>) => {
-      if (!data) return;
-
-      const notificationId = Number(data.notificationId);
-      const key = notificationId ? `id:${notificationId}` : JSON.stringify(data);
-      if (handledNotificationKeys.current.has(key)) return;
-      handledNotificationKeys.current.add(key);
-
-      if (notificationId) {
-        void markNotificationOpened(notificationId);
-      }
-      void refreshNotifications();
-
-      navigateFromPushData(data);
-    };
-
-    void getLastPushResponseData().then(handlePushData);
-    const subscription = addPushResponseListener(handlePushData);
-    return () => subscription.remove();
-  }, [markNotificationOpened, navigateFromPushData, refreshNotifications]);
+  const { locked } = useAuth();
 
   useEffect(() => {
     if (!locked || !navigationRef.isReady()) return;
@@ -264,12 +228,7 @@ export function AppNavigator() {
       onReady={() => {
         if (locked && navigationRef.getCurrentRoute()?.name !== 'Unlock') {
           navigationRef.navigate('Unlock');
-          return;
         }
-        if (!pendingPushData.current) return;
-        const data = pendingPushData.current;
-        pendingPushData.current = null;
-        navigateFromPushData(data);
       }}
       theme={{
         ...DefaultTheme,

@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 import api from '../utils/api';
 import { readJsonStorage } from '../utils/storage';
+import CouponManager from '../components/CouponManager';
 
 export default function HostDashboard() {
     const navigate = useNavigate();
@@ -592,6 +593,13 @@ export default function HostDashboard() {
                     >
                         <span className="material-symbols-outlined text-[20px]">book_online</span>
                         Lịch sử đặt phòng
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('promotions')}
+                        className={`w-full text-left px-4 py-2.5 rounded-lg flex items-center gap-3 transition-colors ${activeTab === 'promotions' ? 'bg-primary text-white shadow-md' : 'text-gray-700 hover:bg-gray-50'}`}
+                    >
+                        <span className="material-symbols-outlined text-[20px]">local_offer</span>
+                        Khuyến mãi
                     </button>
                 </nav>
                 <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-gray-50">
@@ -1195,6 +1203,9 @@ export default function HostDashboard() {
                         </div>
                     </div>
                 )}
+
+                {/* Host Promotions Tab */}
+                {activeTab === 'promotions' && <CouponManager mode="host" properties={properties} />}
 
                 {/* Property Schedule Modal */}
                 {selectedProperty && isScheduleOpen && (

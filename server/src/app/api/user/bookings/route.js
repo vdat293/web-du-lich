@@ -7,6 +7,7 @@ import { toAbsoluteMediaUrl } from '../../../../lib/http';
 import { BRAND_LOGO_URL } from '../../../../lib/brand';
 import { awardLoyaltyPoints } from '../../../../lib/loyalty';
 import { createNotificationForUsers } from '../../../../lib/notifications';
+import { findApplicableCoupon } from '../../../../lib/coupons';
 
 export async function GET(req) {
     try {
@@ -130,33 +131,23 @@ export async function POST(req) {
 
             // Kiểm tra và áp dụng coupon nếu có
             if (coupon_code) {
-                const [coupons] = await connection.execute(`
-                    SELECT c.* FROM coupons c
-                    LEFT JOIN reward_redemptions rr ON rr.coupon_id = c.id
-                    LEFT JOIN rewards r ON r.\`key\` = rr.reward_key
-                    WHERE c.code = ?
-                    AND c.valid_from <= CURDATE()
-                    AND c.valid_until >= CURDATE()
-                    AND (c.max_uses IS NULL OR c.used_count < c.max_uses)
-                    AND (c.min_order_amount IS NULL OR c.min_order_amount <= ?)
-                    AND (rr.id IS NULL OR (rr.user_id = ? AND r.category = 'booking'))
-                    FOR UPDATE
-                `, [coupon_code, calculatedTotalPrice, userId]);
+                const couponResult = await findApplicableCoupon(connection, {
+                    code: coupon_code,
+                    propertyId: property_id,
+                    amount: calculatedTotalPrice,
+                    userId,
+                    forUpdate: true,
+                });
 
-                if (coupons.length === 0) {
+                if (!couponResult) {
                     await connection.rollback();
                     return NextResponse.json({
-                        message: 'Coupon không hợp lệ, đã hết hạn, đã được sử dụng hoặc chưa đạt giá trị đơn tối thiểu'
+                        message: 'Coupon không hợp lệ, đã tắt, hết hạn, không áp dụng cho chỗ nghỉ này hoặc chưa đạt giá trị đơn tối thiểu'
                     }, { status: 400 });
                 }
 
-                const coupon = coupons[0];
-                if (coupon.discount_type === 'percent') {
-                    finalPrice = finalPrice - (finalPrice * coupon.discount_value / 100);
-                } else {
-                    finalPrice = finalPrice - coupon.discount_value;
-                }
-                finalPrice = Math.max(0, finalPrice);
+                const { coupon, discount_amount: discountAmount, final_price: couponFinalPrice } = couponResult;
+                finalPrice = couponFinalPrice;
 
                 // Cập nhật số lần sử dụng
                 await connection.execute('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
@@ -186,7 +177,7 @@ export async function POST(req) {
             if (couponId) {
                 await connection.execute(
                     `INSERT INTO booking_coupons (booking_id, coupon_id, discount_amount) VALUES (?, ?, ?)`,
-                    [bookingId, couponId, calculatedTotalPrice - finalPrice]
+                    [bookingId, couponId, discountAmount]
                 );
             }
 

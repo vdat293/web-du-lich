@@ -33,7 +33,7 @@ const PENDING_BOOKING_COUPON_KEY = 'aoklevart_pending_booking_coupon';
 export function PaymentScreen({ navigation, route }: Props) {
   const { t, i18n } = useTranslation();
   const { draft } = route.params;
-  const { user } = useAuth();
+  const { user, refreshNotifications } = useAuth();
   const [method, setMethod] = useState<PaymentMethod>('card');
   const [guestName, setGuestName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
@@ -88,7 +88,9 @@ export function PaymentScreen({ navigation, route }: Props) {
       try {
         const result = await paymentService.getBookingStatus(momoBookingId as number);
         setMomoStatus(result.status);
-        if (result.status === 'confirmed' || result.status === 'completed') {
+        const successfulStatus = ['confirmed', 'completed', 'success'].includes(result.status.toLowerCase());
+        if (successfulStatus) {
+          if (user) void refreshNotifications();
           setBookingId(momoBookingId);
           setMomoBookingId(null);
         }
@@ -99,7 +101,7 @@ export function PaymentScreen({ navigation, route }: Props) {
     void refreshStatus();
     const poller = setInterval(() => void refreshStatus(), 3000);
     return () => clearInterval(poller);
-  }, [momoBookingId, momoStatus]);
+  }, [momoBookingId, momoStatus, refreshNotifications, user]);
 
   useEffect(() => {
     if (!momoBookingId || momoSeconds > 0 || momoStatus !== 'pending') return;
@@ -174,6 +176,11 @@ export function PaymentScreen({ navigation, route }: Props) {
         // Booking đã tạo thành công; lỗi dọn SecureStore không được làm hỏng kết quả.
       }
     }
+    // The booking API creates the inbox item before returning. Refresh in the
+    // background so a successful booking is immediately reflected in-app.
+    if (user && (status === 'confirmed' || paymentMethod === 'cash')) {
+      void refreshNotifications();
+    }
     return result.booking_id;
   }
 
@@ -184,7 +191,7 @@ export function PaymentScreen({ navigation, route }: Props) {
     setApplyingCoupon(true);
     setCouponMessage('');
     try {
-      const response = await couponService.validate(code);
+      const response = await couponService.validate(code, draft.property.id, draft.subtotal);
       const coupon = response.coupon;
       if (
         !response.valid

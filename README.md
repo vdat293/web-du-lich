@@ -101,8 +101,11 @@ Frontend chạy tại **`http://localhost:5173`**
 npm run db:import   # Import data từ database-dump.sql (tạo mới / ghi đè DB)
 npm run db:export   # Export DB hiện tại ra database-dump.sql
 npm run db:init     # Tạo database rỗng (chỉ schema, không có data)
+npm run db:migrate-coupons # Thêm phạm vi coupon host/system an toàn, không xoá coupon cũ
 npm run dev         # Chạy server backend
 ```
+
+Nếu database đã tồn tại trước khi có coupon theo property, chạy `npm run db:migrate-coupons` một lần (script idempotent). Coupon cũ được giữ nguyên và mặc định là coupon phạm vi toàn hệ thống.
 
 ---
 
