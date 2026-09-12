@@ -129,6 +129,7 @@ export async function POST(req) {
                 Number(availability.roomType.price) * availability.nights * requestedRooms;
             let finalPrice = calculatedTotalPrice;
             let couponId = null;
+            let discountAmount = 0;
 
             // Kiểm tra và áp dụng coupon nếu có
             if (coupon_code) {
@@ -147,8 +148,9 @@ export async function POST(req) {
                     }, { status: 400 });
                 }
 
-                const { coupon, discount_amount: discountAmount, final_price: couponFinalPrice } = couponResult;
+                const { coupon, discount_amount: calculatedDiscountAmount, final_price: couponFinalPrice } = couponResult;
                 finalPrice = couponFinalPrice;
+                discountAmount = calculatedDiscountAmount;
 
                 // Cập nhật số lần sử dụng
                 await connection.execute('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
