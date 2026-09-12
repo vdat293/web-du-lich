@@ -53,19 +53,51 @@ export function formatNumber(value: number) {
   return new Intl.NumberFormat(getAppLocale()).format(value);
 }
 
+type RelativeTimeUnit = 'minute' | 'hour' | 'day';
+
+function formatRelativeTimeFallback(value: number, unit: RelativeTimeUnit) {
+  const amount = Math.abs(value);
+  const locale = getAppLocale();
+
+  if (locale.startsWith('en')) {
+    if (amount === 0) return 'now';
+    const label = `${unit}${amount === 1 ? '' : 's'}`;
+    return value < 0 ? `${amount} ${label} ago` : `in ${amount} ${label}`;
+  }
+
+  if (amount === 0) return 'vừa xong';
+  const labels: Record<RelativeTimeUnit, string> = {
+    minute: 'phút',
+    hour: 'giờ',
+    day: 'ngày',
+  };
+  return value < 0 ? `${amount} ${labels[unit]} trước` : `sau ${amount} ${labels[unit]}`;
+}
+
+function formatRelativeTimeValue(value: number, unit: RelativeTimeUnit) {
+  try {
+    // Hermes on native can expose Intl without a working RelativeTimeFormat.
+    if (typeof Intl !== 'undefined' && typeof Intl.RelativeTimeFormat === 'function') {
+      return new Intl.RelativeTimeFormat(getAppLocale(), { numeric: 'auto' }).format(value, unit);
+    }
+  } catch {
+    // Fall back to a plain localized string on engines with incomplete Intl support.
+  }
+  return formatRelativeTimeFallback(value, unit);
+}
+
 export function formatRelativeTime(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
 
   const diffMinutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60_000));
-  const formatter = new Intl.RelativeTimeFormat(getAppLocale(), { numeric: 'auto' });
-  if (diffMinutes < 60) return formatter.format(-diffMinutes, 'minute');
+  if (diffMinutes < 60) return formatRelativeTimeValue(-diffMinutes, 'minute');
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return formatter.format(-diffHours, 'hour');
+  if (diffHours < 24) return formatRelativeTimeValue(-diffHours, 'hour');
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return formatter.format(-diffDays, 'day');
+  if (diffDays < 7) return formatRelativeTimeValue(-diffDays, 'day');
 
   return new Intl.DateTimeFormat(getAppLocale(), {
     day: '2-digit',
