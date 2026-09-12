@@ -83,7 +83,11 @@ export async function POST(req) {
         return NextResponse.json({ message: 'Token không hợp lệ hoặc đã hết hạn' }, { status: 401 });
     }
 
-    const { reward_key: rewardKey, pin } = await req.json();
+    const {
+        reward_key: rewardKey,
+        pin,
+        biometric_verified: biometricVerified,
+    } = await req.json();
 
     const connection = await db.getConnection();
     try {
@@ -111,11 +115,12 @@ export async function POST(req) {
 
         const user = users[0];
 
-        // Check PIN if enabled
-        if (user.transaction_pin_enabled) {
-            if (!pin) {
+        // A successful biometric verification is accepted as the alternative
+        // transaction factor. The request is still protected by the user's JWT.
+        if (biometricVerified !== true) {
+            if (!user.transaction_pin_enabled || !pin) {
                 await connection.rollback();
-                return NextResponse.json({ message: 'Vui lòng nhập Mã PIN Giao dịch để xác thực' }, { status: 400 });
+                return NextResponse.json({ message: 'Vui lòng xác thực bằng sinh trắc học hoặc Mã PIN Giao dịch' }, { status: 400 });
             }
             const pinMatches = await bcryptjs.compare(pin, user.transaction_pin);
             if (!pinMatches) {

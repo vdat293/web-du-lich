@@ -1,6 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
+import type {
+  LocalAuthenticationOptions,
+  LocalAuthenticationResult,
+} from 'expo-local-authentication';
 
 import { subscribeToUnauthorized } from '../api/client';
 import { authService, notificationService, type AppNotification } from '../api/services';
@@ -23,6 +27,7 @@ type AuthContextValue = {
   login: (identifier: string, password: string) => Promise<void>;
   sendLoginOtp: (identifier: string) => Promise<void>;
   loginWithOtp: (identifier: string, otp: string) => Promise<void>;
+  authenticateWithBiometrics: (options: LocalAuthenticationOptions) => Promise<LocalAuthenticationResult>;
   unlockWithBiometrics: () => Promise<boolean>;
   setBiometricsEnabled: (enabled: boolean) => Promise<void>;
   logout: () => Promise<void>;
@@ -39,6 +44,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const TOKEN_KEY = 'aoklevart_token';
 const USER_KEY = 'aoklevart_user';
 const BIOMETRICS_KEY = 'aoklevart_biometrics_enabled';
+const BIOMETRICS_USER_KEY = 'aoklevart_biometrics_user_id';
+const BIOMETRIC_FOREGROUND_GRACE_MS = 1500;
 
 async function getBiometricAvailability() {
   if (Platform.OS === 'web') return false;
@@ -67,6 +74,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState('');
+  const biometricPromptActiveRef = useRef(false);
+  const biometricPromptFinishedAtRef = useRef(0);
   const notificationsRequestRef = useRef<{ key: string; promise: Promise<void> } | null>(null);
   const notificationGenerationRef = useRef(0);
   const notificationSessionKey = `${user?.id ?? ''}:${token ?? ''}:${locked ? 'locked' : 'unlocked'}`;
@@ -78,10 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await Promise.all([
       removeStoredValue(TOKEN_KEY),
       removeStoredValue(USER_KEY),
+      removeStoredValue(BIOMETRICS_KEY),
+      removeStoredValue(BIOMETRICS_USER_KEY),
     ]);
     setToken(null);
     setUser(null);
     setLocked(false);
+    setBiometricsEnabledState(false);
     setNotifications([]);
   }, []);
 
@@ -144,7 +156,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const returningToForeground = previousState !== 'active' && nextState === 'active';
       previousState = nextState;
 
-      if (!returningToForeground || !user || !token || locked) return;
+      // LocalAuthentication temporarily moves the app through inactive/background
+      // states. That is not a real app switch, so do not lock the session when the
+      // biometric prompt itself returns to the foreground.
+      const promptJustFinished = Date.now() - biometricPromptFinishedAtRef.current < BIOMETRIC_FOREGROUND_GRACE_MS;
+      if (biometricPromptActiveRef.current || promptJustFinished || !returningToForeground || !user || !token || locked) return;
       if (biometricsEnabled) {
         notificationGenerationRef.current += 1;
         setLocked(true);
@@ -160,29 +176,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [biometricsEnabled, locked, refreshNotifications, token, user]);
 
   useEffect(() => {
-    void Promise.all([
-      getStoredValue(TOKEN_KEY),
-      getStoredValue(USER_KEY),
-      getStoredValue(BIOMETRICS_KEY),
-      getBiometricAvailability().catch(() => false),
-    ]).then(([storedToken, storedUser, storedBiometricsEnabled, available]) => {
-      const isBiometricsEnabled = storedBiometricsEnabled === 'true';
-      const shouldLock = Platform.OS !== 'web'
-        && isBiometricsEnabled
-        && Boolean(storedToken && storedUser);
+    async function hydrateSession() {
+      try {
+        const [storedToken, storedUser, storedBiometricsEnabled, storedBiometricsUserId, available] = await Promise.all([
+          getStoredValue(TOKEN_KEY),
+          getStoredValue(USER_KEY),
+          getStoredValue(BIOMETRICS_KEY),
+          getStoredValue(BIOMETRICS_USER_KEY),
+          getBiometricAvailability().catch(() => false),
+        ]);
+        let parsedUser: User | null = null;
+        try {
+          parsedUser = storedUser ? (JSON.parse(storedUser) as User) : null;
+        } catch {
+          parsedUser = null;
+        }
 
-      setBiometricsEnabledState(isBiometricsEnabled);
-      setBiometricAvailable(available);
-      setLocked(shouldLock);
+        let isBiometricsEnabled = storedBiometricsEnabled === 'true';
+        const hasSession = Boolean(storedToken && parsedUser);
+        if (isBiometricsEnabled && hasSession) {
+          const biometricsBelongToUser = !storedBiometricsUserId
+            || storedBiometricsUserId === String(parsedUser?.id);
+          if (biometricsBelongToUser && !storedBiometricsUserId && parsedUser) {
+            // Migrate older opt-ins without ever storing a password.
+            await setStoredValue(BIOMETRICS_USER_KEY, String(parsedUser.id));
+          } else if (!biometricsBelongToUser) {
+            isBiometricsEnabled = false;
+            await Promise.all([
+              removeStoredValue(BIOMETRICS_KEY),
+              removeStoredValue(BIOMETRICS_USER_KEY),
+            ]);
+          }
+        } else if (isBiometricsEnabled) {
+          // A biometric preference without a session must never unlock anything.
+          isBiometricsEnabled = false;
+          await Promise.all([
+            removeStoredValue(BIOMETRICS_KEY),
+            removeStoredValue(BIOMETRICS_USER_KEY),
+          ]);
+        }
 
-      if (!shouldLock) {
-        setToken(storedToken);
-        setUser(storedUser ? (JSON.parse(storedUser) as User) : null);
+        const shouldLock = Platform.OS !== 'web' && isBiometricsEnabled && hasSession;
+        setBiometricsEnabledState(isBiometricsEnabled);
+        setBiometricAvailable(available);
+        setLocked(shouldLock);
+
+        if (!shouldLock) {
+          setToken(hasSession ? storedToken : null);
+          setUser(hasSession ? parsedUser : null);
+        }
+        setLoading(false);
+      } catch {
+        setLoading(false);
       }
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    }
+
+    void hydrateSession();
   }, []);
 
   useEffect(() => {
@@ -190,6 +239,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [refreshNotifications]);
 
   const persistSession = useCallback(async (nextToken: string, nextUser: User) => {
+    const [storedBiometricsEnabled, storedBiometricsUserId] = await Promise.all([
+      getStoredValue(BIOMETRICS_KEY),
+      getStoredValue(BIOMETRICS_USER_KEY),
+    ]);
+    if (storedBiometricsEnabled === 'true' && storedBiometricsUserId !== String(nextUser.id)) {
+      // A fallback login may switch accounts. Do not carry the previous
+      // account's biometric opt-in to the new account.
+      await Promise.all([
+        removeStoredValue(BIOMETRICS_KEY),
+        removeStoredValue(BIOMETRICS_USER_KEY),
+      ]);
+      setBiometricsEnabledState(false);
+    }
     await Promise.all([
       setStoredValue(TOKEN_KEY, nextToken),
       setStoredValue(USER_KEY, JSON.stringify(nextUser)),
@@ -199,10 +261,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocked(false);
   }, []);
 
+  const authenticateWithBiometrics = useCallback(async (
+    options: LocalAuthenticationOptions,
+  ): Promise<LocalAuthenticationResult> => {
+    if (biometricPromptActiveRef.current) {
+      return { success: false, error: 'app_cancel' };
+    }
+
+    biometricPromptActiveRef.current = true;
+    try {
+      return await LocalAuthentication.authenticateAsync(options);
+    } finally {
+      biometricPromptActiveRef.current = false;
+      biometricPromptFinishedAtRef.current = Date.now();
+    }
+  }, []);
+
   const unlockWithBiometrics = useCallback(async () => {
     if (Platform.OS === 'web' || !biometricsEnabled) return false;
 
-    const result = await LocalAuthentication.authenticateAsync({
+    const result = await authenticateWithBiometrics({
       promptMessage: 'Mở khóa Aoklevart',
       cancelLabel: 'Hủy',
       fallbackLabel: 'Dùng mật mã thiết bị',
@@ -211,27 +289,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!result.success) return false;
 
-    const [storedToken, storedUser] = await Promise.all([
+    const [storedToken, storedUser, storedBiometricsUserId] = await Promise.all([
       getStoredValue(TOKEN_KEY),
       getStoredValue(USER_KEY),
+      getStoredValue(BIOMETRICS_USER_KEY),
     ]);
     if (!storedToken || !storedUser) return false;
 
+    let parsedUser: User;
+    try {
+      parsedUser = JSON.parse(storedUser) as User;
+    } catch {
+      return false;
+    }
+    if (storedBiometricsUserId && storedBiometricsUserId !== String(parsedUser.id)) return false;
+
     setToken(storedToken);
-    setUser(JSON.parse(storedUser) as User);
+    setUser(parsedUser);
     setLocked(false);
     return true;
-  }, [biometricsEnabled]);
+  }, [authenticateWithBiometrics, biometricsEnabled]);
 
   const setBiometricsEnabled = useCallback(async (enabled: boolean) => {
     if (enabled) {
+      if (!user || !token) {
+        throw new Error('Bạn cần đăng nhập trước khi bật sinh trắc học.');
+      }
       const available = await getBiometricAvailability();
       setBiometricAvailable(available);
       if (!available) {
         throw new Error('Thiết bị chưa thiết lập Face ID, Touch ID hoặc vân tay.');
       }
 
-      const result = await LocalAuthentication.authenticateAsync({
+      const result = await authenticateWithBiometrics({
         promptMessage: 'Bật đăng nhập sinh trắc học',
         cancelLabel: 'Hủy',
         fallbackLabel: 'Dùng mật mã thiết bị',
@@ -242,9 +332,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    await setStoredValue(BIOMETRICS_KEY, String(enabled));
+    if (enabled) {
+      const biometricUserId = user?.id;
+      await Promise.all([
+        setStoredValue(BIOMETRICS_KEY, 'true'),
+        setStoredValue(BIOMETRICS_USER_KEY, String(biometricUserId)),
+      ]);
+    } else {
+      await Promise.all([
+        removeStoredValue(BIOMETRICS_KEY),
+        removeStoredValue(BIOMETRICS_USER_KEY),
+      ]);
+    }
     setBiometricsEnabledState(enabled);
-  }, []);
+  }, [authenticateWithBiometrics, token, user]);
 
   const markAllNotificationsAsRead = useCallback(async () => {
     if (!user || !token || locked) return;
@@ -295,6 +396,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const result = await authService.loginWithOtp(identifier, otp);
         await persistSession(result.token, result.user);
       },
+      authenticateWithBiometrics,
       unlockWithBiometrics,
       setBiometricsEnabled,
       logout: async () => {
@@ -314,6 +416,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [
       biometricAvailable,
       biometricsEnabled,
+      authenticateWithBiometrics,
       clearLocalSession,
       loading,
       locked,

@@ -45,7 +45,7 @@ function formatDate(value: string) {
 }
 
 export function RewardsScreen() {
-  const { user, updateUser, biometricsEnabled } = useAuth();
+  const { user, updateUser, biometricsEnabled, authenticateWithBiometrics } = useAuth();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -94,10 +94,10 @@ export function RewardsScreen() {
     void load();
   }, [load]);
 
-  const redeem = async (reward: Reward, enteredPin?: string) => {
+  const redeem = async (reward: Reward, enteredPin?: string, biometricVerified = false) => {
     setRedeemingKey(reward.key);
     try {
-      const response = await rewardService.redeem(reward.key, enteredPin);
+      const response = await rewardService.redeem(reward.key, enteredPin, biometricVerified);
       setPoints(response.loyalty_points);
       if (user) await updateUser({ ...user, loyalty_points: response.loyalty_points });
       if (reward.category === 'booking') {
@@ -182,19 +182,35 @@ export function RewardsScreen() {
         ]);
 
         if (hasHardware && isEnrolled) {
-          const result = await LocalAuthentication.authenticateAsync({
+          const result = await authenticateWithBiometrics({
             promptMessage: t('security.biometric'),
             cancelLabel: t('security.transactionPin'),
             disableDeviceFallback: true,
           });
-          if (!result.success) return;
+          if (result.success) {
+            await redeem(reward, undefined, true);
+            return;
+          }
         }
       } catch (authErr) {
         console.log('Biometric auth failed or unavailable:', authErr);
       }
     }
 
-    // Fallback: Open transaction PIN modal
+    if (!user?.transaction_pin_enabled) {
+      Alert.alert(
+        t('security.pinRequiredTitle'),
+        t('security.pinRequiredDesc'),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('security.pinRequiredSetup'), onPress: () => navigation.navigate('SetupPin', { returnToRewards: true }) },
+        ],
+      );
+      return;
+    }
+
+    // Fallback: open the transaction PIN modal when biometric verification is
+    // unavailable, cancelled, or unsuccessful.
     setSelectedReward(reward);
     setInputPin([...EMPTY_PIN]);
     setPinModalVisible(true);
@@ -206,7 +222,7 @@ export function RewardsScreen() {
   };
 
   const confirmRedeem = (reward: Reward) => {
-    if (!user?.transaction_pin_enabled) {
+    if (!biometricsEnabled && !user?.transaction_pin_enabled) {
       Alert.alert(
         t('security.pinRequiredTitle'),
         t('security.pinRequiredDesc'),

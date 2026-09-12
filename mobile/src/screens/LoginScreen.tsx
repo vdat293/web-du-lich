@@ -14,6 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
   const { t } = useTranslation();
+  const canDismiss = navigation.canGoBack();
 
   // Entrance animations
   const brandFade = useRef(new Animated.Value(0)).current;
@@ -58,15 +59,17 @@ export function LoginScreen({ navigation }: Props) {
     <SafeAreaView style={styles.screen} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.backButton,
-            pressed && { backgroundColor: colors.surfaceContainer },
-          ]}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.primary} />
-        </Pressable>
+        {canDismiss ? (
+          <Pressable
+            style={({ pressed }) => [
+              styles.backButton,
+              pressed && { backgroundColor: colors.surfaceContainer },
+            ]}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.primary} />
+          </Pressable>
+        ) : <View style={styles.placeholderButton} />}
         <Text style={styles.headerTitle}>{t('payment.login')}</Text>
         <View style={styles.placeholderButton} />
       </View>
@@ -96,7 +99,7 @@ export function LoginScreen({ navigation }: Props) {
             { opacity: formFade, transform: [{ translateY: formSlide }] },
           ]}
         >
-          <LoginForm onSuccess={() => navigation.goBack()} />
+          <LoginForm onSuccess={() => { if (canDismiss) navigation.goBack(); }} />
         </Animated.View>
 
         {/* Footer hint */}

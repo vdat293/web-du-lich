@@ -16,6 +16,7 @@ export function AppLockScreen() {
   const { biometricAvailable, biometricsEnabled, locked, unlockWithBiometrics } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
+  const canDismiss = navigation.canGoBack();
   const attemptedAutomatically = useRef(false);
   const [authenticating, setAuthenticating] = useState(false);
   const [showLogin, setShowLogin] = useState(!biometricsEnabled || !biometricAvailable);
@@ -55,9 +56,11 @@ export function AppLockScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.closeButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="close" size={22} color={colors.primary} />
-        </Pressable>
+        {canDismiss ? (
+          <Pressable style={styles.closeButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="close" size={22} color={colors.primary} />
+          </Pressable>
+        ) : null}
         <BrandLogo size={54} nameSize={26} />
 
         <View style={styles.lockIcon}>

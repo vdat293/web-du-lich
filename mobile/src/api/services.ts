@@ -136,11 +136,6 @@ export const bookingService = {
       authenticated: true,
       body: JSON.stringify(payload),
     }),
-  createForGuest: (payload: Record<string, unknown>) =>
-    apiRequest<{ booking_id: number; status: string }>('/api/guest/bookings', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
   cancel: (bookingId: number, note: string) =>
     apiRequest<{ status: string }>(`/api/bookings/${bookingId}/status`, {
       method: 'PATCH',
@@ -230,13 +225,13 @@ export const rewardService = {
       rewards: Reward[];
       redemptions: RewardRedemption[];
     }>('/api/user/rewards', { authenticated: true }),
-  redeem: (rewardKey: string, pin?: string) =>
+  redeem: (rewardKey: string, pin?: string, biometricVerified = false) =>
     apiRequest<{ message: string; loyalty_points: number; coupon_code: string }>(
       '/api/user/rewards',
       {
         method: 'POST',
         authenticated: true,
-        body: JSON.stringify({ reward_key: rewardKey, pin }),
+        body: JSON.stringify({ reward_key: rewardKey, pin, biometric_verified: biometricVerified }),
       },
     ),
 };

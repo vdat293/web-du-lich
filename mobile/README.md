@@ -37,8 +37,9 @@ App cần `EXPO_PUBLIC_EAS_PROJECT_ID` hoặc `extra.eas.projectId` trong cấu 
 - Tải và tìm kiếm chỗ nghỉ từ `/api/properties`.
 - Kiểm tra phòng trống trước khi thanh toán.
 - Đăng nhập JWT và lưu token bằng Secure Store.
+- Lần đầu mở app và sau khi đăng xuất phải đăng nhập lại; có thể bật Face ID/vân tay trong phần Bảo mật để mở app nhanh hơn.
 - Thanh toán thẻ sandbox với OTP hoặc đặt trước, trả tại chỗ nghỉ.
-- Tạo booking cho tài khoản hoặc khách chưa đăng nhập.
+- Tạo booking cho tài khoản đã đăng nhập.
 - Xem booking trong tab Chuyến đi.
 
 API trả về URL ảnh Cloudinary tuyệt đối để thiết bị mobile tải ảnh trực tiếp từ CDN, không phụ thuộc `client/public/assets`.

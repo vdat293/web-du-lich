@@ -19,7 +19,6 @@ import { useTranslation } from 'react-i18next';
 
 import { bookingService, couponService, paymentService } from '../api/services';
 import { BrandLogo } from '../components/BrandLogo';
-import { LoginForm } from '../components/LoginForm';
 import { useAuth } from '../context/AuthContext';
 import type { RootStackParamList } from '../navigation/types';
 import { getStoredValue, removeStoredValue } from '../storage';
@@ -35,9 +34,6 @@ export function PaymentScreen({ navigation, route }: Props) {
   const { draft } = route.params;
   const { user, refreshNotifications } = useAuth();
   const [method, setMethod] = useState<PaymentMethod>('card');
-  const [guestName, setGuestName] = useState('');
-  const [guestPhone, setGuestPhone] = useState('');
-  const [guestEmail, setGuestEmail] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -54,7 +50,6 @@ export function PaymentScreen({ navigation, route }: Props) {
   const [transactionId, setTransactionId] = useState('');
   const [otp, setOtp] = useState('');
   const [showOtp, setShowOtp] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [bookingId, setBookingId] = useState<number | null>(null);
@@ -139,16 +134,9 @@ export function PaymentScreen({ navigation, route }: Props) {
     return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
   }
 
-  function validateGuest() {
-    if (user) return true;
-    if (!guestName.trim() || !guestPhone.trim()) {
-      setError(i18n.language === 'en' ? 'Please enter the guest name and phone number.' : 'Vui lòng nhập họ tên và số điện thoại của khách đặt phòng.');
-      return false;
-    }
-    return true;
-  }
-
   async function createBooking(status: 'pending' | 'confirmed', paymentMethod: string) {
+    if (!user) throw new Error(t('payment.loginRequired'));
+
     const payload = {
       property_id: draft.property.id,
       room_type_id: draft.room.id,
@@ -161,15 +149,8 @@ export function PaymentScreen({ navigation, route }: Props) {
       status,
       payment_method: paymentMethod,
     };
-    const result = user
-      ? await bookingService.createForUser(payload)
-      : await bookingService.createForGuest({
-          ...payload,
-          guest_name: guestName.trim(),
-          phone: guestPhone.trim(),
-          email: guestEmail.trim() || null,
-        });
-    if (user && appliedCoupon) {
+    const result = await bookingService.createForUser(payload);
+    if (appliedCoupon) {
       try {
         await removeStoredValue(PENDING_BOOKING_COUPON_KEY);
       } catch {
@@ -178,7 +159,7 @@ export function PaymentScreen({ navigation, route }: Props) {
     }
     // The booking API creates the inbox item before returning. Refresh in the
     // background so a successful booking is immediately reflected in-app.
-    if (user && (status === 'confirmed' || paymentMethod === 'cash')) {
+    if (status === 'confirmed' || paymentMethod === 'cash') {
       void refreshNotifications();
     }
     return result.booking_id;
@@ -232,7 +213,11 @@ export function PaymentScreen({ navigation, route }: Props) {
   }
 
   async function submit() {
-    if (!validateGuest()) return;
+    if (!user) {
+      setError(t('payment.loginRequired'));
+      navigation.navigate('Login');
+      return;
+    }
     setError('');
     setProcessing(true);
     try {
@@ -409,56 +394,42 @@ export function PaymentScreen({ navigation, route }: Props) {
             </View>
           </View>
 
-          {!user ? (
-            <View style={styles.card}>
-              <View style={styles.cardHeadingRow}>
-                <Text style={styles.cardTitle}>{t('payment.customerInfo')}</Text>
-                <Pressable onPress={() => setShowLogin(true)}><Text style={styles.loginLink}>{t('payment.login')}</Text></Pressable>
-              </View>
-              <Field icon="person-outline" placeholder={t('payment.guestName')} value={guestName} onChangeText={setGuestName} />
-              <Field icon="call-outline" placeholder={t('payment.guestPhone')} keyboardType="phone-pad" value={guestPhone} onChangeText={setGuestPhone} />
-              <Field icon="mail-outline" placeholder={t('payment.guestEmail')} keyboardType="email-address" autoCapitalize="none" value={guestEmail} onChangeText={setGuestEmail} />
+          <View style={styles.signedInCard}>
+            <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+            <View style={styles.signedInCopy}>
+              <Text style={styles.signedInTitle}>{t('payment.signedInAs', { name: user?.name || '' })}</Text>
+              <Text style={styles.signedInMeta}>{user?.email}</Text>
             </View>
-          ) : (
-            <>
-              <View style={styles.signedInCard}>
-                <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-                <View style={styles.signedInCopy}>
-                  <Text style={styles.signedInTitle}>{t('payment.signedInAs', { name: user.name })}</Text>
-                  <Text style={styles.signedInMeta}>{user.email}</Text>
-                </View>
-              </View>
-              <View style={styles.card}>
-                <Text style={styles.cardTitle}>{t('payment.coupon')}</Text>
-                <View style={styles.couponRow}>
-                  <TextInput
-                    autoCapitalize="characters"
-                    value={couponCode}
-                    onChangeText={(value) => {
-                      setCouponCode(value.toUpperCase());
-                      setAppliedCoupon(null);
-                      setCouponMessage('');
-                    }}
-                    placeholder={t('payment.couponPlaceholder')}
-                    placeholderTextColor={colors.textMuted}
-                    style={styles.couponInput}
-                  />
-                  <Pressable
-                    disabled={applyingCoupon || !couponCode.trim()}
-                    style={[styles.couponButton, (!couponCode.trim() || applyingCoupon) && styles.disabled]}
-                    onPress={() => void applyCoupon()}
-                  >
-                    {applyingCoupon
-                      ? <ActivityIndicator size="small" color={colors.white} />
-                      : <Text style={styles.couponButtonText}>{t('payment.applyCoupon')}</Text>}
-                  </Pressable>
-                </View>
-                {couponMessage ? (
-                  <Text style={appliedCoupon ? styles.couponSuccess : styles.couponError}>{couponMessage}</Text>
-                ) : null}
-              </View>
-            </>
-          )}
+          </View>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>{t('payment.coupon')}</Text>
+            <View style={styles.couponRow}>
+              <TextInput
+                autoCapitalize="characters"
+                value={couponCode}
+                onChangeText={(value) => {
+                  setCouponCode(value.toUpperCase());
+                  setAppliedCoupon(null);
+                  setCouponMessage('');
+                }}
+                placeholder={t('payment.couponPlaceholder')}
+                placeholderTextColor={colors.textMuted}
+                style={styles.couponInput}
+              />
+              <Pressable
+                disabled={applyingCoupon || !couponCode.trim()}
+                style={[styles.couponButton, (!couponCode.trim() || applyingCoupon) && styles.disabled]}
+                onPress={() => void applyCoupon()}
+              >
+                {applyingCoupon
+                  ? <ActivityIndicator size="small" color={colors.white} />
+                  : <Text style={styles.couponButtonText}>{t('payment.applyCoupon')}</Text>}
+              </Pressable>
+            </View>
+            {couponMessage ? (
+              <Text style={appliedCoupon ? styles.couponSuccess : styles.couponError}>{couponMessage}</Text>
+            ) : null}
+          </View>
 
           <Text style={styles.sectionTitle}>{t('payment.paymentMethod')}</Text>
           <PaymentOption active={method === 'card'} icon="card-outline" title={t('payment.atmCard')} subtitle={t('payment.atmSubtitle')} onPress={() => { setMethod('card'); setError(''); }} />
@@ -534,17 +505,6 @@ export function PaymentScreen({ navigation, route }: Props) {
         </View>
       </Modal>
 
-      <Modal transparent visible={showLogin} animationType="slide" onRequestClose={() => setShowLogin(false)}>
-        <View style={styles.modalBackdropBottom}>
-          <View style={styles.loginSheet}>
-            <View style={styles.sheetHandle} />
-            <BrandLogo size={48} nameSize={24} />
-            <Text style={styles.modalMessage}>{t('payment.login')}</Text>
-            <LoginForm onSuccess={() => setShowLogin(false)} />
-            <Pressable style={styles.linkButton} onPress={() => setShowLogin(false)}><Text style={styles.linkText}>{t('payment.backToExplore')}</Text></Pressable>
-          </View>
-        </View>
-      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -602,8 +562,6 @@ const styles = StyleSheet.create({
   priceCard: { marginTop: 16, borderRadius: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, padding: 18 },
   card: { marginTop: 16, borderRadius: 18, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border, padding: 18 },
   cardTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 21, marginBottom: 15 },
-  cardHeadingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  loginLink: { color: colors.secondary, fontFamily: fonts.bold, fontSize: 13, marginBottom: 15 },
   priceLine: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 11 },
   priceLabel: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 13 },
   priceValue: { color: colors.text, fontFamily: fonts.medium, fontSize: 13 },
@@ -644,7 +602,6 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.6 },
   terms: { color: colors.textMuted, fontFamily: fonts.body, fontSize: 10, lineHeight: 16, textAlign: 'center', marginTop: 12 },
   modalBackdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(1,36,37,0.62)', padding: 20 },
-  modalBackdropBottom: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(1,36,37,0.5)' },
   modalCard: { width: '100%', borderRadius: 24, backgroundColor: colors.surface, padding: 24 },
   modalIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', alignSelf: 'center', backgroundColor: colors.surfaceContainer, marginBottom: 14 },
   modalTitle: { color: colors.primary, fontFamily: fonts.heading, fontSize: 26, textAlign: 'center' },
@@ -652,8 +609,6 @@ const styles = StyleSheet.create({
   otpInput: { height: 64, borderRadius: 14, borderWidth: 1, borderColor: colors.primary, color: colors.primary, backgroundColor: colors.white, fontFamily: fonts.bold, fontSize: 28, textAlign: 'center', letterSpacing: 9 },
   linkButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: 14 },
   linkText: { color: colors.secondary, fontFamily: fonts.bold, fontSize: 13 },
-  loginSheet: { borderTopLeftRadius: 26, borderTopRightRadius: 26, backgroundColor: colors.surface, paddingHorizontal: 22, paddingTop: 12, paddingBottom: 34 },
-  sheetHandle: { width: 44, height: 5, borderRadius: 3, backgroundColor: colors.outline, alignSelf: 'center', marginBottom: 18 },
   successScreen: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, backgroundColor: colors.surface },
   successIcon: { width: 78, height: 78, borderRadius: 39, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.success, marginBottom: 22 },
   successTitle: { color: colors.primary, fontFamily: fonts.display, fontSize: 32, textAlign: 'center' },

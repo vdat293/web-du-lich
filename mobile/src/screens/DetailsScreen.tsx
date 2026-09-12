@@ -116,6 +116,10 @@ export function DetailsScreen({ navigation, route }: Props) {
   }
 
   async function continueToPayment() {
+    if (!user) {
+      navigation.navigate(locked ? 'Unlock' : 'Login');
+      return;
+    }
     if (!selectedRoom) {
       setError(t('details.unavailableRoomType'));
       return;

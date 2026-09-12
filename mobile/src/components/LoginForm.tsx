@@ -39,7 +39,10 @@ export function LoginForm({
   const otpInputs = useRef<Array<TextInput | null>>([]);
   const lastAutoSubmittedOtp = useRef('');
   const lastAutoSubmittedForgotOtp = useRef('');
-  const [mode, setMode] = useState<LoginMode>('identifier');
+  // Password login is the primary path. OTP remains available as an explicit
+  // fallback, but should not block first-run authentication when delivery is
+  // handled by the server's email/SMS service.
+  const [mode, setMode] = useState<LoginMode>('password');
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState([...EMPTY_OTP]);

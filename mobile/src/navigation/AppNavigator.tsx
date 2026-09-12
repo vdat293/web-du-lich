@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Platform, View, StyleSheet, Pressable } from 'react-native';
-import {
-  NavigationContainer,
-  DefaultTheme,
-  createNavigationContainerRef,
-  type LinkingOptions,
-} from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, type LinkingOptions } from '@react-navigation/native';
 import {
   BottomTabBar,
   type BottomTabBarProps,
@@ -34,11 +29,11 @@ import { AppLockScreen } from '../screens/AppLockScreen';
 import { AdminDashboardScreen } from '../screens/admin/AdminDashboardScreen';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { getAuthGate } from './authGate';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
-const navigationRef = createNavigationContainerRef<RootStackParamList>();
 const TAB_TRANSITION_DURATION = 260;
 const tabTransitionEasing = Easing.bezier(0.22, 1, 0.36, 1);
 const linking: LinkingOptions<RootStackParamList> = {
@@ -213,42 +208,45 @@ function TabNavigator() {
 }
 
 export function AppNavigator() {
-  const { locked } = useAuth();
-
-  useEffect(() => {
-    if (!locked || !navigationRef.isReady()) return;
-    const currentRoute = navigationRef.getCurrentRoute();
-    if (currentRoute?.name !== 'Unlock') navigationRef.navigate('Unlock');
-  }, [locked]);
+  const { locked, user } = useAuth();
+  const authGate = getAuthGate({ locked, hasUser: Boolean(user) });
 
   return (
     <NavigationContainer
-      ref={navigationRef}
+      // Reset the navigation state whenever the auth gate changes. Without
+      // this, React Navigation can preserve the old Login route when the app
+      // stack is mounted because it also declares a Login screen for modal
+      // re-authentication.
+      key={authGate}
       linking={linking}
-      onReady={() => {
-        if (locked && navigationRef.getCurrentRoute()?.name !== 'Unlock') {
-          navigationRef.navigate('Unlock');
-        }
-      }}
       theme={{
         ...DefaultTheme,
         colors: { ...DefaultTheme.colors, background: colors.surface, card: colors.surface },
       }}
     >
-      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
-        <Stack.Screen name="Tabs" component={TabNavigator} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="Details" component={DetailsScreen} />
-        <Stack.Screen name="Payment" component={PaymentScreen} />
-        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
-        <Stack.Screen name="Security" component={SecurityScreen} />
-        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-        <Stack.Screen name="SetupPin" component={SetupPinScreen} />
-        <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
-        <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
-        <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="Unlock" component={AppLockScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-      </Stack.Navigator>
+      {authGate === 'login' ? (
+        <Stack.Navigator key="login" screenOptions={{ headerShown: false, gestureEnabled: false, contentStyle: { backgroundColor: colors.surface } }}>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ animation: 'none', gestureEnabled: false }} />
+        </Stack.Navigator>
+      ) : authGate === 'unlock' ? (
+        <Stack.Navigator key="unlock" screenOptions={{ headerShown: false, gestureEnabled: false, contentStyle: { backgroundColor: colors.surface } }}>
+          <Stack.Screen name="Unlock" component={AppLockScreen} options={{ animation: 'none', gestureEnabled: false }} />
+        </Stack.Navigator>
+      ) : (
+        <Stack.Navigator key="app" screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.surface } }}>
+          <Stack.Screen name="Tabs" component={TabNavigator} />
+          <Stack.Screen name="Search" component={SearchScreen} />
+          <Stack.Screen name="Details" component={DetailsScreen} />
+          <Stack.Screen name="Payment" component={PaymentScreen} />
+          <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+          <Stack.Screen name="Security" component={SecurityScreen} />
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+          <Stack.Screen name="SetupPin" component={SetupPinScreen} />
+          <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+          <Stack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
   );
 }
