@@ -50,6 +50,10 @@ function responseMessage(body: unknown, fallback: string) {
   return fallback;
 }
 
+function isDevelopmentBuild() {
+  return Boolean((globalThis as { __DEV__?: boolean }).__DEV__);
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const {
     authenticated = false,
@@ -115,13 +119,22 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   if (!response.ok) {
     if (response.status === 401 && authenticated) notifyUnauthorized();
     const errorBody = body && typeof body === 'object'
-      ? body as { code?: unknown; details?: unknown }
+      ? body as { code?: unknown; details?: unknown; error?: unknown }
+      : undefined;
+    const serverError = typeof errorBody?.error === 'string' && errorBody.error.trim()
+      ? errorBody.error
       : undefined;
     throw new ApiError(
-      responseMessage(body, 'Yêu cầu không thành công.'),
+      response.status >= 500 && isDevelopmentBuild() && serverError
+        ? serverError
+        : responseMessage(body, 'Yêu cầu không thành công.'),
       response.status,
       typeof errorBody?.code === 'string' ? errorBody.code : undefined,
-      errorBody?.details,
+      {
+        apiPath: path,
+        serverError,
+        details: errorBody?.details,
+      },
     );
   }
   return body as T;
